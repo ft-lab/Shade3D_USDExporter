@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dialog default_button="true" title="USD Export">
+	<group label="ファイル出力">
+		<selection id="101" label="出力形式:|usda (ASCII)|usdc (バイナリ)" />
+		<bool id="102" label="usdzを出力" />
+	</group>
+
+	<group label="出力オプション">
+		<selection id="201" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
+		<selection id="202" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />
+		<bool id="206" label="Subdivison" />
+		<bool id="203" label="ボーンとスキンを出力" />
+		<bool id="204" label="頂点カラーを出力" />
+		<bool id="205" label="アニメーションを出力" />
+	</group>
+</dialog>
