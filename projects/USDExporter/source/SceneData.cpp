@@ -189,12 +189,25 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 	nodeD.jointMotion.clear();
 	if (!Shade3DUtil::isBone(*shape)) return;
 
+	// ルートボーンの場合、変換行列を計算.
+	sxsdk::mat4 boneRootMat = sxsdk::mat4::identity;
+	try {
+		if (shape->has_dad()) {
+			sxsdk::shape_class* pParentShape = shape->get_dad();
+			if (pParentShape->get_type() == sxsdk::enums::part) {
+				if (pParentShape->get_part().get_part_type() == sxsdk::enums::simple_part) {
+					boneRootMat = shape->get_local_to_world_matrix();
+				}
+			}
+		}
+	} catch (...) { }
+
 	try {
 		if (!shape->has_motion()) return;
 
 		const sxsdk::vec3 boneWCenter = Shade3DUtil::getBoneCenter(*shape, NULL);
 		const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
-		const sxsdk::vec3 boneLCenter = (boneWCenter * inv(lwMat));
+		const sxsdk::vec3 boneLCenter = (boneWCenter * inv(lwMat)) * boneRootMat;
 
 		compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
 		const int pointsCou = motion->get_number_of_motion_points();
@@ -346,6 +359,7 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		if (matIndex < 0) {
 			// ユニークなマテリアル名を取得.
 			const std::string newName = m_findNames.appendName(materialD2.name, USD_DATA::NODE_TYPE::material_node);
+			materialD = materialD2;
 			materialD.name = newName;
 			matIndex = (int)materialsList.size();
 			materialsList.push_back(materialD);
@@ -862,11 +876,25 @@ void CSceneData::m_exportSkeletonAndJoints (CUSDExporter& usdExport)
 		if ((nodeBaseD.nodeType) != USD_DATA::NODE_TYPE::bone_node) continue;
 
 		CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
+		if (nodeD.shapeHandle == NULL) continue;
 		if (nodeD.name.find(rootN) != 0) continue;
 		const std::string boneName = nodeD.name.substr(rootN.length());		// 先頭の「/root/」を省いた名前.
 
-		// boneNameのうち、「/」が含まれないのがボーンのルートになる.
-		if (boneName.find("/") == std::string::npos) {
+		// 形状の親が普通のパートの場合（ルートパートも含む）は、nodeDがボーンルート.
+		bool rootBoneF = false;
+		try {
+			sxsdk::shape_class* shape = m_pScene->get_shape_by_handle(nodeD.shapeHandle);
+			if (shape->has_dad()) {
+				sxsdk::shape_class* pParentShape = shape->get_dad();
+				if (pParentShape->get_type() == sxsdk::enums::part) {
+					if (pParentShape->get_part().get_part_type() == sxsdk::enums::simple_part) {
+						rootBoneF = true;
+					}
+				}
+			}
+		} catch (...) { }
+
+		if (rootBoneF) {
 			rootIndexList.push_back(sLoop);
 			skelRootNames.push_back(boneName);
 		}
@@ -882,24 +910,27 @@ void CSceneData::m_exportSkeletonAndJoints (CUSDExporter& usdExport)
 		// ルートボーンの要素を格納.
 		CSkeletonData skelD;
 		skelD.rootName = rootName;
-		sxsdk::mat4 rootLWMat = sxsdk::mat4::identity;
 		{
 			const int index = rootIndexList[sLoop];
 			CNodeBaseData& nodeBaseD = *nodesList[index];
 			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
 
+			// ルートボーンのローカルワールド変換行列.
+			sxsdk::shape_class* shape = m_pScene->get_shape_by_handle(nodeD.shapeHandle);
+			const sxsdk::mat4 lwMat0 = shape->get_local_to_world_matrix();
+			const sxsdk::mat4 mat = (shape->get_transformation()) * lwMat0;
+
+			// nodeDのワールド座標変換行列を計算.
+			const sxsdk::mat4 lwMat = Shade3DUtil::convUnit_mm_to_cm(mat);
+
 			CSkelJointData jointD;
 			jointD.name = rootName;
-			USD_DATA::setMatrix4x4(&(nodeD.matrix[0][0]), jointD.bindTransforms);
-			USD_DATA::setMatrix4x4(&(nodeD.matrix[0][0]), jointD.restTransforms);
+			USD_DATA::setMatrix4x4(&(lwMat[0][0]), jointD.bindTransforms);
+			USD_DATA::setMatrix4x4(&(lwMat[0][0]), jointD.restTransforms);
 			jointD.jointMotion = nodeD.jointMotion;
 			jointD.shapeHandle = nodeD.shapeHandle;
 			skelD.rootShapeHandle = nodeD.shapeHandle;
 			skelD.joints.push_back(jointD);
-
-			// ルートボーンのローカルワールド変換行列.
-			sxsdk::shape_class* shape = m_pScene->get_shape_by_handle(nodeD.shapeHandle);
-			rootLWMat = (shape->get_local_to_world_matrix());
 		}
 
 		// ルートボーンを親とする子ボーン要素を格納.
@@ -915,7 +946,8 @@ void CSceneData::m_exportSkeletonAndJoints (CUSDExporter& usdExport)
 			// 形状のローカル・ワールド変換行列を取得.
 			if (!nodeD.shapeHandle) continue;
 			sxsdk::shape_class* shape = m_pScene->get_shape_by_handle(nodeD.shapeHandle);
-			sxsdk::mat4 lwMat = ((shape->get_transformation()) * (shape->get_local_to_world_matrix())) * inv(rootLWMat);
+			const sxsdk::mat4 lwMat0 = shape->get_local_to_world_matrix();
+			sxsdk::mat4 lwMat = (shape->get_transformation()) * lwMat0;
 			lwMat = Shade3DUtil::convUnit_mm_to_cm(lwMat);
 
 			CSkelJointData jointD;

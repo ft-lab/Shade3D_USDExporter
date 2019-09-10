@@ -483,6 +483,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	case USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_metallic:
 		mappingD = materialData.metallicTexture;
 		mappingSource = USD_DATA::getTextureSourceString(textureSource);
+		if (mappingSource == "rgb") mappingSource = "r";
 		texName = "/metallicTexture";
 		connectSource = "metallic";
 		break;
@@ -490,6 +491,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	case USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_roughness:
 		mappingD = materialData.roughnessTexture;
 		mappingSource = USD_DATA::getTextureSourceString(textureSource);
+		if (mappingSource == "rgb") mappingSource = "r";
 		texName = "/roughnessTexture";
 		connectSource = "roughness";
 		break;
@@ -504,6 +506,8 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	case USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_occlusion:
 		mappingD = materialData.occlusionTexture;
 		mappingSource = USD_DATA::getTextureSourceString(textureSource);
+		if (mappingSource == "rgb") mappingSource = "r";
+
 		texName = "/occlusionTexture";
 		connectSource = "occlusion";
 		break;
