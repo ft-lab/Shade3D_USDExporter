@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dialog default_button="true" title="USD Export">
 	<group label="ファイル出力">
+		<bool id="103" label="Appleのusdz互換" />
 		<selection id="101" label="出力形式:|usda (ASCII)|usdc (バイナリ)" />
 		<bool id="102" label="usdzを出力" />
 	</group>

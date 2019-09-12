@@ -45,6 +45,7 @@ namespace USD_DATA {
 class CExportParam
 {
 public:
+	bool exportAppleUSDZ;									// Appleのusdz互換.
 	USD_DATA::EXPORT::FILE_TYPE exportFileType;				// 出力形式.
 	bool exportUSDZ;										// usdzを出力.
 
@@ -60,6 +61,7 @@ public:
 	~CExportParam ();
 
 	CExportParam (const CExportParam& v) {
+		this->exportAppleUSDZ      = v.exportAppleUSDZ;
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
 		this->optTextureType       = v.optTextureType;
@@ -71,6 +73,7 @@ public:
 	}
 
     CExportParam& operator = (const CExportParam &v) {
+		this->exportAppleUSDZ      = v.exportAppleUSDZ;
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
 		this->optTextureType       = v.optTextureType;

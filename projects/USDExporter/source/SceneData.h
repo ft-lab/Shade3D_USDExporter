@@ -135,6 +135,11 @@ private:
 	 */
 	void m_setMeshSkeletonRef (const CNodeMeshData& nodeMeshData, USD_DATA::MeshData& meshData);
 
+	/**
+	 * ジョイントの回転情報を、QuaternionからEulerに変換し格納.
+	 */
+	 void m_calcJointQuaternionToEuler (CJointMotionData& motionData);
+
 public:
 	CSceneData ();
 	~CSceneData ();
@@ -175,9 +180,8 @@ public:
 	 * @param[in] shape     対象の形状クラス.
 	 * @param[in] namePath  形状パス (/root/objects/xxx のような形式).
 	 * @param[in] matrix    変換行列.
-	 * @param[in] isBone    ボーンの場合はtrue.
 	 */
-	void appendNodeNull (sxsdk::shape_class* shape, const std::string& namePath, const sxsdk::mat4& matrix, const bool isBone = false);
+	void appendNodeNull (sxsdk::shape_class* shape, const std::string& namePath, const sxsdk::mat4& matrix);
 
 	/**
 	 * Meshを追加.

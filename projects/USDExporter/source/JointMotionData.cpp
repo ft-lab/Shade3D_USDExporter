@@ -50,6 +50,7 @@ void CJointRotationData::clear ()
 {
 	frame = 0.0f;
 	x = y = z = 0.0f;
+	eulerX = eulerY = eulerZ = 0.0f;
 	w = 1.0f;
 }
 
@@ -71,3 +72,12 @@ void CJointMotionData::clear ()
 	rotations.clear();
 	scales.clear();
 }
+
+/**
+ * モーション情報を持つか.
+ */
+bool CJointMotionData::hasMotion () const
+{
+	return (!translations.empty() || !rotations.empty() || !scales.empty());
+}
+

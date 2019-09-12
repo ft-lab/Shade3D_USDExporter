@@ -14,6 +14,7 @@ CExportParam::~CExportParam ()
 
 void CExportParam::clear ()
 {
+	exportAppleUSDZ = false;
 	exportFileType = USD_DATA::EXPORT::FILE_TYPE::file_type_usdc;
 	exportUSDZ = true;
 	optTextureType = USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name;

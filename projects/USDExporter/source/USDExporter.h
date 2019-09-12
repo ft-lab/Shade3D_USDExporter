@@ -7,6 +7,7 @@
 #include "USDData.h"
 #include "MaterialData.h"
 #include "SkeletonData.h"
+#include "JointMotionData.h"
 
 #include <string>
 #include <vector>
@@ -30,6 +31,11 @@ public:
 	 * 球を作成するだけのサンプル.
 	 */
 	void testCreateSphere (const std::string& fileName);
+
+	/**
+	 * NURBSを配置するサンプル.
+	 */
+	void testCreateNURBSCurves (const std::string& fileName);
 
 	/**
 	 * ノードや形状の位置、回転、スケール指定のサンプル.
@@ -64,6 +70,11 @@ private:
 	 * 指定のメッシュがスキンを持つか.
 	 */
 	bool m_hasSkinMesh (const USD_DATA::MeshData& meshData);
+
+	/**
+	 * ノードに対してモーション情報(transform animation)を格納.
+	 */
+	void m_setTransformAnimation (const std::string& nodeName, const CJointMotionData& jointMotion);
 
 public:
 	//-----------------------------------------------------------.
@@ -101,8 +112,9 @@ public:
 	 * NULLノードを出力.
 	 * @param[in] nodeName  ノード名 (/root/xxx/mesh1 などのパス形式).
 	 * @param[in] matrix    変換要素.
+	 * @param[in] jointMotion  ノードでモーション情報を持つ場合のモーション情報.
 	 */
-	void appendNodeNull (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix);
+	void appendNodeNull (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix, const CJointMotionData& jointMotion);
 
 	/**
 	 * Meshノードを出力.

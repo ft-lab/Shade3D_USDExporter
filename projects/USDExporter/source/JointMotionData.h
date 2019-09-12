@@ -78,6 +78,7 @@ class CJointRotationData {
 public:
 	float frame;		// フレーム位置.
 	float x, y, z, w;	// クォータニオン値.
+	float eulerX, eulerY, eulerZ;		// オイラー角での回転 (ラジアン)。これは、transform animationで使用.
 
 public:
 	CJointRotationData ();
@@ -89,6 +90,9 @@ public:
 		this->y = v.y;
 		this->z = v.z;
 		this->w = v.w;
+		this->eulerX = v.eulerX;
+		this->eulerY = v.eulerY;
+		this->eulerZ = v.eulerZ;
 	}
 
     CJointRotationData& operator = (const CJointRotationData &v) {
@@ -97,6 +101,9 @@ public:
 		this->y = v.y;
 		this->z = v.z;
 		this->w = v.w;
+		this->eulerX = v.eulerX;
+		this->eulerY = v.eulerY;
+		this->eulerZ = v.eulerZ;
 		return (*this);
 	}
 
@@ -136,6 +143,11 @@ public:
 	}
 
 	void clear ();
+
+	/**
+	 * モーション情報を持つか.
+	 */
+	bool hasMotion () const;
 };
 
 #endif

@@ -17,6 +17,7 @@ namespace USD_DATA {
 		null_node = 0,		// NULLノード (パート).
 		mesh_node,			// Mesh.
 		bone_node,			// Bone (joint).
+		ball_joint_node,	// BallJoint (joint).これはtransform animation要素とする.
 		material_node,		// Material.
 		texture_node,		// Texture.
 	};

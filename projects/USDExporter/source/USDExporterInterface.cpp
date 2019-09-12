@@ -13,12 +13,15 @@
 enum {
 	dlg_file_export_type = 101,				// 出力形式.
 	dlg_file_usdz = 102,					// usdzを出力.
+	dlg_file_export_apple_usdz = 103,		// Appleのusdz互換.
+
 	dlg_option_texture = 201,				// テクスチャ出力.
 	dlg_option_max_texture_size = 202,		// 最大テクスチャサイズ.
 	dlg_option_bone_skin = 203,				// ボーンとスキンを出力.
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
 	dlg_option_animation = 205,				// アニメーションを出力.
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
+
 };
 
 CUSDExporterInterface::CUSDExporterInterface (sxsdk::shade_interface& shade) : shade(shade)
@@ -37,7 +40,7 @@ CUSDExporterInterface::~CUSDExporterInterface ()
  */
 const char *CUSDExporterInterface::get_file_extension (void *)
 {
-	return (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda) ? "usda" : "usdc";
+	return (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda && !m_exportParam.exportAppleUSDZ) ? "usda" : "usdc";
 }
 
 /**
@@ -71,11 +74,6 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 
 	// streamに、ダイアログボックスのパラメータを保存.
 	StreamCtrl::saveExportDialogParam(shade, m_exportParam);
-
-	{
-		CUSDExporter usdExp;
-		usdExp.testCreateSphereWithAnimation("K:\\Modeling\\USD\\Shade3D\\OcclusionTest\\anim.usda");
-	}
 
 	m_sceneData.clear();
 	m_sceneData.setSceneInterface(scene);
@@ -117,7 +115,7 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
  */
 bool CUSDExporterInterface::must_round_polymesh (void *)
 {
-	return !m_exportParam.optSubdivision;
+	return !m_exportParam.optSubdivision || m_exportParam.exportAppleUSDZ;
 }
 
 /**
@@ -152,7 +150,7 @@ void CUSDExporterInterface::clean_up (void *)
 			fileExt = m_orgFilePath.substr(iPos + 1);
 		}
 
-		if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda) {
+		if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda && !m_exportParam.exportAppleUSDZ) {
 			filePath2 = filePath2 + std::string(".usda");
 		} else {
 			filePath2 = filePath2 + std::string(".usdc");
@@ -163,9 +161,10 @@ void CUSDExporterInterface::clean_up (void *)
 	m_sceneData.exportUSD(shade, filePath2);
 
 	// USDZファイルを出力.
-	if (m_exportParam.exportUSDZ) {
+	std::string usdzFilePath = "";
+	if (m_exportParam.exportUSDZ || m_exportParam.exportAppleUSDZ) {
 		// usdzのファイルパス.
-		std::string usdzFilePath, fileExt;
+		std::string fileExt;
 		usdzFilePath = m_orgFilePath;
 		fileExt = "";
 		int iPos = m_orgFilePath.find_last_of(".");
@@ -178,7 +177,11 @@ void CUSDExporterInterface::clean_up (void *)
 		m_sceneData.exportUSDZ(usdzFilePath);		// usdzファイルとして出力.
 	}
 
-	shade.message(filePath2);
+	shade.message(std::string("Export : ") + filePath2);
+
+	if (usdzFilePath != "") {
+		shade.message(std::string("Export : ") + usdzFilePath);
+	}
 
 	// 元のシーケンスモードに戻す.
 	if (m_exportParam.optOutputBoneSkin) {
@@ -259,7 +262,7 @@ void CUSDExporterInterface::begin (void *)
 			// Shade3Dでのmm単位をcmに変換.
 			const sxsdk::mat4 m = Shade3DUtil::convUnit_mm_to_cm(m_pCurrentShape->get_transformation());
 
-			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m, Shade3DUtil::isBone(*m_pCurrentShape));
+			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
 		}
 	}
 }
@@ -362,9 +365,17 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 			pos = sxsdk::vec3(v4.x, v4.y, v4.z);
 		}
 	}
+	// 親パートがボールジョイントの場合、ボールジョイントの中心にposが来るように調整.
+	sxsdk::vec3 centerPos(0, 0, 0);
+	if (m_pCurrentShape->has_dad()) {
+		sxsdk::shape_class* pParent = m_pCurrentShape->get_dad();
+		if (Shade3DUtil::isBallJoint(*pParent)) {
+			centerPos = Shade3DUtil::getJointCenter(*pParent, NULL);
+		}
+	}
 
 	// 頂点の座標変換 (Shade3Dはmm、USDはcm).
-	const sxsdk::vec3 v2 = Shade3DUtil::convUnit_mm_to_cm(pos);
+	const sxsdk::vec3 v2 = Shade3DUtil::convUnit_mm_to_cm(pos - centerPos);
 
 	m_sceneData.tmpMeshData.vertices[i] = v2;
 
@@ -554,12 +565,20 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_file_export_type));
 		item->set_selection((int)m_exportParam.exportFileType);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
 	{
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_file_usdz));
 		item->set_bool(m_exportParam.exportUSDZ);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_file_export_apple_usdz));
+		item->set_bool(m_exportParam.exportAppleUSDZ);
+	}
+
 	{
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_texture));
@@ -589,6 +608,7 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_subdivision));
 		item->set_bool(m_exportParam.optSubdivision);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
 }
 
@@ -610,6 +630,11 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 		m_dlgOK = true;
 	}
 
+	if (id == dlg_file_export_apple_usdz) {
+		m_exportParam.exportAppleUSDZ = item.get_bool();
+		load_dialog_data(dialog);		// UIのディム状態を更新.
+		return true;
+	}
 	if (id == dlg_file_export_type) {
 		m_exportParam.exportFileType = (USD_DATA::EXPORT::FILE_TYPE)item.get_selection();
 		return true;

@@ -77,9 +77,14 @@ namespace Shade3DUtil {
 	bool isBone (sxsdk::shape_class& shape);
 
 	/**
-	 * ボーンのワールド座標での中心位置とボーンサイズを取得.
+	 * 指定の形状がボールジョイントかどうか.
 	 */
-	sxsdk::vec3 getBoneCenter (sxsdk::shape_class& shape, float *size);
+	bool isBallJoint (sxsdk::shape_class& shape);
+
+	/**
+	 * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
+	 */
+	sxsdk::vec3 getJointCenter (sxsdk::shape_class& shape, float *size);
 }
 
 #endif

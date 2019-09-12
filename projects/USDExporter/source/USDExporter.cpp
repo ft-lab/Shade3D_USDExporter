@@ -15,6 +15,7 @@
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdGeom/sphere.h"
 #include "pxr/usd/usdGeom/mesh.h"
+#include "pxr/usd/usdGeom/nurbsCurves.h"
 
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdShade/shader.h"
@@ -25,6 +26,9 @@
 #include "pxr/usd/usdSkel/skeleton.h"
 #include "pxr/usd/usdSkel/animation.h"
 #include "pxr/usd/usdSkel/bindingAPI.h"
+
+#include "pxr/base/gf/rotation.h"		// GfRotation で使用.
+#include "pxr/base/gf/matrix4f.h"		// GfMatrix4f で使用.
 
 #include <vector>
 #include <cstdlib>
@@ -101,6 +105,22 @@ void CUSDExporter::testCreateSphere (const std::string& fileName)
 	std::vector<GfVec3f> colorList;
 	colorList.push_back(GfVec3f(1.0f, 0.2f, 0.0f));
 	UsdGeomGprim(sphere).GetDisplayColorAttr().Set(VtVec3fArray(colorList.begin(), colorList.end()));
+
+	stage->Save();
+}
+
+/**
+ * NURBSを配置するサンプル (TODO).
+ */
+void CUSDExporter::testCreateNURBSCurves (const std::string& fileName)
+{
+	UsdStageRefPtr stage = UsdStage::CreateNew(fileName);
+
+	stage->DefinePrim(SdfPath("/hello"), TfToken("Xform"));
+	UsdPrim prim = stage->DefinePrim(SdfPath("/hello/nurbs"), TfToken("NurbsCurve"));
+	UsdGeomNurbsCurves nurbs(prim);
+
+	UsdAttribute knots = nurbs.CreateKnotsAttr();
 
 	stage->Save();
 }
@@ -354,7 +374,7 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	// "/Materials"が存在しない場合は追加.
 	const std::string materialsName = MATERIAL_ROOT_PATH;
 	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(materialsName));
-	if (prim.GetPath().GetString() == "") {
+	if (!prim.IsValid()) {
 		g_stage->DefinePrim(SdfPath(materialsName), TfToken("Scope"));
 	}
 
@@ -446,11 +466,11 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource)
 {
 	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(materialData.name));
-	if (primMat.GetPath().GetString() == "") return;
+	if (!primMat.IsValid()) return;
 	UsdShadeMaterial mat(primMat);
 
 	UsdPrim primShader = g_stage->GetPrimAtPath(SdfPath(materialData.name + std::string("/PBRShader")));
-	if (primShader.GetPath().GetString() == "") return;
+	if (!primShader.IsValid()) return;
 	UsdShadeShader shader(primShader);
 
 	// マッピングの種類ごとの情報を取得.
@@ -521,7 +541,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	const std::string stReaderPath = materialData.name + std::string((uvIndex == 0) ? "/stReader" : "/stReader2");
 	UsdPrim primReader = g_stage->GetPrimAtPath(SdfPath(stReaderPath));
 	UsdShadeShader shaderReader;
-	if (primReader.GetPath().GetString() == "") {
+	if (!primReader.IsValid()) {
 		primReader = g_stage->DefinePrim(SdfPath(stReaderPath), TfToken("Shader"));
 		shaderReader = UsdShadeShader(primReader);
 		shaderReader.CreateIdAttr().Set(TfToken("UsdPrimvarReader_float2"));
@@ -577,14 +597,77 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
  * NULLノードを出力.
  * @param[in] nodeName  ノード名 (/root/xxx/mesh1 などのパス形式).
  * @param[in] matrix    変換要素.
+ * @param[in] jointMotion  ノードでモーション情報を持つ場合のモーション情報.
  */
-void CUSDExporter::appendNodeNull (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix)
+void CUSDExporter::appendNodeNull (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix, const CJointMotionData& jointMotion)
 {
 	if (!g_stage) return;
 	UsdPrim node = g_stage->DefinePrim(SdfPath(nodeName), TfToken("Xform"));
 
 	// 変換行列を指定.
-	::m_setMatrix(node, matrix);
+	if (!jointMotion.hasMotion()) {		// モーション情報を持たない場合.
+		::m_setMatrix(node, matrix);
+	}
+
+	// モーション情報を指定.
+	m_setTransformAnimation(nodeName, jointMotion);
+}
+
+/**
+ * ノードに対してモーション情報(transform animation)を格納.
+ */
+void CUSDExporter::m_setTransformAnimation (const std::string& nodeName, const CJointMotionData& jointMotion)
+{
+	if (!g_stage) return;
+	if (!jointMotion.hasMotion()) return;
+
+	UsdPrim node = g_stage->GetPrimAtPath(SdfPath(nodeName));
+	if (!node.IsValid()) return;
+
+	// 移動アニメーションを指定.
+	if (!jointMotion.translations.empty()) {
+		UsdGeomXformOp transOp = UsdGeomXform(node).AddTranslateOp(UsdGeomXformOp::PrecisionFloat);
+		for (size_t i = 0; i < jointMotion.rotations.size(); ++i) {
+			const CJointTranslationData& transD = jointMotion.translations[i];
+			transOp.Set(GfVec3f(transD.x, transD.y, transD.z), transD.frame);
+		}
+	}
+
+	// 回転アニメーションを指定.
+	if (!jointMotion.rotations.empty()) {
+#if false
+		// クォータニオンで渡す.
+		UsdGeomXformOp transOp = UsdGeomXform(node).AddOrientOp(UsdGeomXformOp::PrecisionFloat);
+
+		// 第一引数は値、第二引数はフレーム位置.
+		for (size_t i = 0; i < jointMotion.rotations.size(); ++i) {
+			const CJointRotationData& rotD = jointMotion.rotations[i];
+			transOp.Set(GfQuatf(rotD.w, rotD.x, rotD.y, rotD.z), rotD.frame);
+		}
+#else
+		// Eulerの回転角度で渡す.
+		UsdGeomXformOp transOp = UsdGeomXform(node).AddRotateXYZOp(UsdGeomXformOp::PrecisionFloat);
+
+		// 第一引数は値、第二引数はフレーム位置.
+		for (size_t i = 0; i < jointMotion.rotations.size(); ++i) {
+			const CJointRotationData& rotD = jointMotion.rotations[i];
+			transOp.Set(GfVec3f(rotD.eulerX, rotD.eulerY, rotD.eulerZ), rotD.frame);
+		}
+
+#endif
+
+	}
+
+	// スケールアニメーションを指定.
+	if (!jointMotion.scales.empty()) {
+		UsdGeomXformOp transOp = UsdGeomXform(node).AddScaleOp(UsdGeomXformOp::PrecisionFloat);
+
+		// 第一引数は値、第二引数はフレーム位置.
+		for (size_t i = 0; i < jointMotion.scales.size(); ++i) {
+			const CJointScaleData& scaleD = jointMotion.scales[i];
+			transOp.Set(GfVec3f(scaleD.x, scaleD.y, scaleD.z), scaleD.frame);
+		}
+	}
 }
 
 /**
@@ -746,7 +829,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 	// マテリアルの参照を追加.
 	if (meshData.refMaterialName != "") {
 		UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(meshData.refMaterialName));
-		if (primMat.GetPath().GetString() != "") {
+		if (primMat.IsValid()) {
 			UsdShadeMaterial mat(primMat);
 			mat.Bind(prim);
 		}
@@ -807,7 +890,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 			{
 				const std::string skelPath = std::string("/Skeletons/") + skelD.rootName + std::string("/Skel/Anim");
 				UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(skelPath));
-				if (prim.GetPath().GetString() != "") {
+				if (prim.IsValid()) {
 					UsdSkelBindingAPI binding = UsdSkelBindingAPI::Apply(geomMesh.GetPrim());
 					binding.CreateAnimationSourceRel().SetTargets(SdfPathVector({prim.GetPath()}));
 				}
@@ -817,7 +900,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 			{
 				const std::string skelPath = std::string("/Skeletons/") + skelD.rootName + std::string("/Skel");
 				UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(skelPath));
-				if (prim.GetPath().GetString() != "") {
+				if (prim.IsValid()) {
 					UsdSkelBindingAPI binding = UsdSkelBindingAPI::Apply(geomMesh.GetPrim());
 					binding.CreateSkeletonRel().SetTargets(SdfPathVector({prim.GetPath()}));
 				}
@@ -871,7 +954,7 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 	// Skeletonのルート.
 	{
 		UsdPrim skelP = g_stage->GetPrimAtPath(SdfPath(SKELETONS_ROOT_PATH));
-		if (skelP.GetPath().GetString() == "") {
+		if (!skelP.IsValid()) {
 			skelP = g_stage->DefinePrim(SdfPath(SKELETONS_ROOT_PATH), TfToken("Scope"));
 		}
 	}

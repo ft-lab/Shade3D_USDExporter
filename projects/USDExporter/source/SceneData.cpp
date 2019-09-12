@@ -62,6 +62,7 @@ bool CSceneData::checkConvertMesh (sxsdk::shape_class* shape)
 	if (type == sxsdk::enums::part) {
 		const int partType = shape->get_part().get_part_type();
 		if (partType == sxsdk::enums::simple_part) return false;
+		if (partType == sxsdk::enums::ball_joint || partType == sxsdk::enums::bone_joint) return false;
 		if (partType == sxsdk::enums::surface_part) return true;
 	} else if (type == sxsdk::enums::line) {
 		if (shape->get_line().get_closed()) return true;
@@ -166,16 +167,18 @@ std::string CSceneData::getShapePath (sxsdk::shape_class* shape)
  * @param[in] shape     対象の形状クラス.
  * @param[in] namePath  形状パス (/root/objects/xxx のような形式).
  * @param[in] matrix    変換行列.
- * @param[in] isBone    ボーンの場合はtrue.
  */
-void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& namePath, const sxsdk::mat4& matrix, const bool isBone)
+void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& namePath, const sxsdk::mat4& matrix)
 {
 	nodesList.push_back(std::make_shared<CNodeNullData>());
 
 	CNodeNullData& nodeD = static_cast<CNodeNullData &>(*(nodesList.back()));
 	nodeD.name     = namePath;
 	nodeD.matrix   = matrix;
-	nodeD.nodeType = isBone ? USD_DATA::NODE_TYPE::bone_node : USD_DATA::NODE_TYPE::null_node;
+	nodeD.nodeType = USD_DATA::NODE_TYPE::null_node;
+	if (Shade3DUtil::isBone(*shape)) nodeD.nodeType = USD_DATA::NODE_TYPE::bone_node;
+	if (Shade3DUtil::isBallJoint(*shape)) nodeD.nodeType = USD_DATA::NODE_TYPE::ball_joint_node;
+
 	nodeD.shapeHandle = shape->get_handle();
 
 	m_getJointMotionData(shape, nodeD);
@@ -187,7 +190,7 @@ void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& n
 void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData& nodeD)
 {
 	nodeD.jointMotion.clear();
-	if (!Shade3DUtil::isBone(*shape)) return;
+	if (!shape->has_motion()) return;
 
 	// ルートボーンの場合、変換行列を計算.
 	sxsdk::mat4 boneRootMat = sxsdk::mat4::identity;
@@ -202,52 +205,101 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 		}
 	} catch (...) { }
 
-	try {
-		if (!shape->has_motion()) return;
+	if (Shade3DUtil::isBone(*shape)) {				// ボーンの場合.
+		try {
+			const sxsdk::vec3 boneWCenter = Shade3DUtil::getJointCenter(*shape, NULL);
+			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
+			const sxsdk::vec3 boneLCenter = (boneWCenter * inv(lwMat)) * boneRootMat;
 
-		const sxsdk::vec3 boneWCenter = Shade3DUtil::getBoneCenter(*shape, NULL);
-		const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
-		const sxsdk::vec3 boneLCenter = (boneWCenter * inv(lwMat)) * boneRootMat;
+			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
+			const int pointsCou = motion->get_number_of_motion_points();
+			if (pointsCou == 0) return;
 
-		compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
-		const int pointsCou = motion->get_number_of_motion_points();
-		if (pointsCou == 0) return;
+			// 移動(offset)/回転要素をキーフレームとして格納.
+			CJointMotionData& jointMotionD = nodeD.jointMotion;
+			CJointTranslationData transD;
+			CJointRotationData rotD;
+			float oldSeqPos = -1.0f;
+			for (int loop = 0; loop < pointsCou; ++loop) {
+				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
+				float seqPos = motionPoint->get_sequence();
 
-		// 移動(offset)/回転要素をキーフレームとして格納.
-		CJointMotionData& jointMotionD = nodeD.jointMotion;
-		CJointTranslationData transD;
-		CJointRotationData rotD;
-		float oldSeqPos = -1.0f;
-		for (int loop = 0; loop < pointsCou; ++loop) {
-			compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
-			float seqPos = motionPoint->get_sequence();
+				// 同一のフレーム位置が格納済みの場合はスキップ.
+				if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
+				if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
+				oldSeqPos = seqPos;
 
-			// 同一のフレーム位置が格納済みの場合はスキップ.
-			if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
-			if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
-			oldSeqPos = seqPos;
+				const sxsdk::vec3 offset        = motionPoint->get_offset();
+				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + boneLCenter);		// cmに変換.
+				const sxsdk::quaternion_class q = motionPoint->get_rotation();
 
-			const sxsdk::vec3 offset        = motionPoint->get_offset();
-			sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + boneLCenter);		// cmに変換.
-			const sxsdk::quaternion_class q = motionPoint->get_rotation();
+				// 移動情報を格納.
+				transD.frame = seqPos;
+				transD.x = offset2.x;
+				transD.y = offset2.y;
+				transD.z = offset2.z;
+				jointMotionD.translations.push_back(transD);
 
-			// 移動情報を格納.
-			transD.frame = seqPos;
-			transD.x = offset2.x;
-			transD.y = offset2.y;
-			transD.z = offset2.z;
-			jointMotionD.translations.push_back(transD);
+				// 回転情報を格納.
+				rotD.frame = seqPos;
+				rotD.x = q.x;
+				rotD.y = q.y;
+				rotD.z = q.z;
+				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
 
-			// 回転情報を格納.
-			rotD.frame = seqPos;
-			rotD.x = q.x;
-			rotD.y = q.y;
-			rotD.z = q.z;
-			rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
-			jointMotionD.rotations.push_back(rotD);
-		}
+				jointMotionD.rotations.push_back(rotD);
+			}
 
-	} catch (...) { }
+		} catch (...) { }
+
+	} else if (Shade3DUtil::isBallJoint(*shape)) {				// ボールジョイントの場合.
+		try {
+			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
+			const sxsdk::vec3 wCenter = Shade3DUtil::getJointCenter(*shape, NULL);
+
+			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
+			const int pointsCou = motion->get_number_of_motion_points();
+			if (pointsCou == 0) return;
+
+			// 移動(offset)/回転要素をキーフレームとして格納.
+			CJointMotionData& jointMotionD = nodeD.jointMotion;
+			CJointTranslationData transD;
+			CJointRotationData rotD;
+			float oldSeqPos = -1.0f;
+			sxsdk::vec3 dirV;
+			for (int loop = 0; loop < pointsCou; ++loop) {
+				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
+				float seqPos = motionPoint->get_sequence();
+
+				// 同一のフレーム位置が格納済みの場合はスキップ.
+				if (oldSeqPos >= 0.0f && MathUtil::isZero(seqPos - oldSeqPos)) continue;
+				if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
+				oldSeqPos = seqPos;
+
+				const sxsdk::vec3 offset        = motionPoint->get_offset();
+				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + wCenter);		// cmに変換.
+				const sxsdk::quaternion_class q = motionPoint->get_rotation();
+
+				// 移動情報を格納.
+				transD.frame = seqPos;
+				transD.x = offset2.x;
+				transD.y = offset2.y;
+				transD.z = offset2.z;
+				jointMotionD.translations.push_back(transD);
+
+				// 回転情報を格納.
+				rotD.frame = seqPos;
+				rotD.x = q.x;
+				rotD.y = q.y;
+				rotD.z = q.z;
+				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
+
+				jointMotionD.rotations.push_back(rotD);
+			}
+
+		} catch (...) { }
+	}
+
 }
 
 /**
@@ -446,13 +498,50 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 	if (!nodesList.empty()) {
 		for (size_t i = 0; i < nodesList.size(); ++i) {
 			CNodeBaseData& nodeBaseD = *nodesList[i];
-			if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node) {
+			if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node || (nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::ball_joint_node) {
 				CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
+
+				// モーション情報を持つ場合、モーション要素にnodeD.matrixを乗算する.
+				if (nodeD.jointMotion.hasMotion()) {
+					if (!nodeD.jointMotion.translations.empty()) {
+						for (size_t j = 0; j < nodeD.jointMotion.translations.size(); ++j) {
+							CJointTranslationData& transD = nodeD.jointMotion.translations[j];
+							sxsdk::vec3 v(transD.x, transD.y, transD.z);
+							v = v * nodeD.matrix;
+							transD.x = v.x;
+							transD.y = v.y;
+							transD.z = v.z;
+						}
+					}
+
+					if (!nodeD.jointMotion.rotations.empty()) {
+						sxsdk::mat4 m = nodeD.matrix;
+						m[3][0] = m[3][1] = m[3][2] = 0.0f;
+						sxsdk::vec3 eularV;
+						for (size_t j = 0; j < nodeD.jointMotion.rotations.size(); ++j) {
+							CJointRotationData& rotD = nodeD.jointMotion.rotations[j];
+							sxsdk::quaternion_class q(-rotD.w, sxsdk::vec3(rotD.x, rotD.y, rotD.z));
+
+							q = sxsdk::quaternion_class(sxsdk::mat4(q) * m);
+							rotD.x = q.x;
+							rotD.y = q.y;
+							rotD.z = q.z;
+							rotD.w = -q.w;
+							q.get_euler(eularV);
+						}
+					}
+
+					// ジョイントの回転情報を、QuaternionからEulerに変換し格納.
+					// これは、iOS(12.4.1)環境でtransform animationのxformOp:orientが機能しないため.
+					m_calcJointQuaternionToEuler(nodeD.jointMotion);
+
+					nodeD.matrix = sxsdk::mat4::identity;
+				}
 
 				// 変換行列.
 				const USD_DATA::NodeMatrixData usdMatrix = m_convMatrix(nodeD.matrix);
 
-				usdExport.appendNodeNull(nodeD.name, usdMatrix);
+				usdExport.appendNodeNull(nodeD.name, usdMatrix, nodeD.jointMotion);
 
 			} else if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::mesh_node) {
 				CNodeMeshData& nodeD = static_cast<CNodeMeshData &>(nodeBaseD);
@@ -1060,4 +1149,60 @@ void CSceneData::m_setMeshSkeletonRef (const CNodeMeshData& nodeMeshData, USD_DA
 	}
 
 }
+
+
+/**
+ * ジョイントの回転情報を、QuaternionからEulerに変換し格納.
+ */
+ void CSceneData::m_calcJointQuaternionToEuler (CJointMotionData& motionData)
+ {
+	 if (motionData.rotations.empty()) return;
+
+	 // QuaternionからEuler(度数)に変換して格納.
+	 const size_t mCou = motionData.rotations.size();
+	 std::vector<sxsdk::vec3> eulerList;
+	 {
+		 sxsdk::vec3 eulerV;
+		 eulerList.resize(mCou);
+		 for (size_t i = 0; i < mCou; ++i) {
+			 // rotD.wは格納時にマイナスで指定していたので、ここでは元に戻す.
+			 const CJointRotationData& rotD = motionData.rotations[i];
+			 sxsdk::quaternion_class q(sxsdk::vec4(rotD.x, rotD.y, rotD.z, -rotD.w));
+			 q.get_euler(eulerV);
+			 eulerV.x = eulerV.x * 180.0f / sx::pi;
+			 eulerV.y = eulerV.y * 180.0f / sx::pi;
+			 eulerV.z = eulerV.z * 180.0f / sx::pi;
+			 eulerList[i] = eulerV;
+		 }
+	 }
+
+#if true
+	// キーフレーム間で、角度が180度よりも大きい場合は逆転しているとみて補正.
+	const float maxAngle = 180.0f;
+	float fD = 0.0f;
+	for (size_t i = 1; i < mCou; ++i) {
+		sxsdk::vec3 eV1 = eulerList[i - 1];
+		sxsdk::vec3 eV2 = eulerList[i];
+
+		for (int j = 0; j < 3; ++j) {
+			if (std::abs(eV1[j] - eV2[j]) >= maxAngle) {
+				fD = 0.0f;
+				if (std::abs(eV1[j] - (eV2[j] + 360.0f)) < std::abs(eV1[j] - (eV2[j] - 360.0f))) {
+					fD += 360.0f;
+				} else {
+					fD -= 360.0f;
+				}
+				for (size_t k = i; k < mCou; ++k) eulerList[k][j] += fD;
+			}
+		}
+	}
+#endif
+
+	 for (size_t i = 0; i < mCou; ++i) {
+		 CJointRotationData& rotD = motionData.rotations[i];
+		 rotD.eulerX = eulerList[i].x;
+		 rotD.eulerY = eulerList[i].y;
+		 rotD.eulerZ = eulerList[i].z;
+	 }
+ }
 

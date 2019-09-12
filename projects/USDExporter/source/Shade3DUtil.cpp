@@ -307,32 +307,53 @@ bool Shade3DUtil::isBone (sxsdk::shape_class& shape)
 {
 	if (shape.get_type() != sxsdk::enums::part) return false;
 	sxsdk::part_class& part = shape.get_part();
-	if (part.get_part_type() == sxsdk::enums::bone_joint) return true;
-	return false;
+	return (part.get_part_type() == sxsdk::enums::bone_joint);
 }
 
 /**
- * ボーンのワールド座標での中心位置とボーンサイズを取得.
+ * 指定の形状がボールジョイントかどうか.
  */
-sxsdk::vec3 Shade3DUtil::getBoneCenter (sxsdk::shape_class& shape, float *size)
+bool Shade3DUtil::isBallJoint (sxsdk::shape_class& shape)
+{
+	if (shape.get_type() != sxsdk::enums::part) return false;
+	sxsdk::part_class& part = shape.get_part();
+	return part.is_ball_joint();
+}
+
+/**
+ * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
+ */
+sxsdk::vec3 Shade3DUtil::getJointCenter (sxsdk::shape_class& shape, float *size)
 {
 	if (size) *size = 0.0f;
-	if (!Shade3DUtil::isBone(shape)) return sxsdk::vec3(0, 0, 0);
 
 	// シーケンスOff時の中心位置を取得する.
 	// この場合は、bone->get_matrix()を使用.
 	// shape.get_transformation() を取得すると、これはシーケンスOn時の変換行列になる.
-	try {
-		compointer<sxsdk::bone_joint_interface> bone(shape.get_bone_joint_interface());
-		const sxsdk::mat4 m = bone->get_matrix();
+	if (Shade3DUtil::isBone(shape)) {
+		try {
+			compointer<sxsdk::bone_joint_interface> bone(shape.get_bone_joint_interface());
+			const sxsdk::mat4 m = bone->get_matrix();
 
-		const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
-		const sxsdk::vec3 center = sxsdk::vec3(0, 0, 0) * m * lwMat;
+			const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+			const sxsdk::vec3 center = sxsdk::vec3(0, 0, 0) * m * lwMat;
 
-		if (size) *size = bone->get_size();
+			if (size) *size = bone->get_size();
 
-		return center;
-	} catch (...) { }
+			return center;
+		} catch (...) { }
+	}
+	if (Shade3DUtil::isBallJoint(shape)) {
+		try {
+			compointer<sxsdk::ball_joint_interface> ball(shape.get_ball_joint_interface());
+			const sxsdk::vec3 pos = ball->get_position();
+
+			const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+			const sxsdk::vec3 center = pos * lwMat;
+
+			return center;
+		} catch (...) { }
+	}
 
 	return sxsdk::vec3(0, 0, 0);
 
