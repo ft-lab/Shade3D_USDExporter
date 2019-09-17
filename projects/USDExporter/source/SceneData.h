@@ -66,6 +66,7 @@ private:
 	std::vector<CElementData> m_elementsList;	// 要素情報を格納する.
 
 	std::vector<std::string> m_exportFilesList;		// 出力したファイルのフルパスを保持。usdz出力時に使用する.
+	std::string m_usdzFileName;						// 出力したUSDZファイル名.
 
 	std::vector<CSkeletonData> m_skeletonList;		// アニメーション用のスケルトンリスト.
 
@@ -185,6 +186,11 @@ public:
 	 * usdzファイルを出力。exportUSDのあとに実行すること.
 	 */
 	void exportUSDZ (const std::string& filePath);
+
+	/**
+	 * エクスポートしたファイル一覧を取得 (usdzも含む).
+	 */
+	std::vector<std::string> getExportFilesList () const;
 };
 
 #endif

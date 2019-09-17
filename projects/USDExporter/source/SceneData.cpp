@@ -463,6 +463,7 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 	CUSDExporter usdExport;
 	USD_DATA::MeshData tmpMeshData;
 
+	m_usdzFileName = "";
 	m_exportFilesList.clear();
 	m_exportFilesList.push_back(filePath);
 
@@ -624,7 +625,19 @@ void CSceneData::exportUSDZ (const std::string& filePath)
 
 	CUSDExporter usdExport;
 	usdExport.exportUSDZ(filePath, m_exportFilesList);
+	m_usdzFileName = filePath;
 }
+
+/**
+ * エクスポートしたファイル一覧を取得 (usdzも含む).
+ */
+std::vector<std::string> CSceneData::getExportFilesList () const
+{
+	std::vector<std::string> filesList = m_exportFilesList;
+	if (m_usdzFileName != "") filesList.push_back(m_usdzFileName);
+	return filesList;
+}
+
 
 /**
  * アニメーション情報を取得.

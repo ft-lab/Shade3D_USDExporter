@@ -42,6 +42,8 @@ private:
 	bool m_flipFace;							// 面を反転する場合.
 
 	std::string m_orgFilePath;					// 出力先のファイル名.
+	std::string m_tempPath;						// 出力先の作業用ディレクトリ.
+	std::string m_tempFileName;					// 出力先の作業用ファイル名.
 
 	std::string m_currentPathName;				// USDとしてのパス名.
 

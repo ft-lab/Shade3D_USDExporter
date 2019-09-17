@@ -7,6 +7,7 @@
 #include "USDData.h"
 #include "Shade3DUtil.h"
 #include "StreamCtrl.h"
+#include "StringUtil.h"
 #include "MathUtil.h"
 
 // ダイアログボックスのパラメータ.
@@ -138,16 +139,25 @@ void CUSDExporterInterface::finish (void *)
  */
 void CUSDExporterInterface::clean_up (void *)
 {
+	// 作業用のパス.
+	m_tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
+
+	// 作業用ファイル名のフルパス.
+	{
+		m_tempFileName = m_tempPath;
+		const std::string fName = StringUtil::getFileName(m_orgFilePath);
+		m_tempFileName += std::string("/") + fName;
+	}
+
 	// USDのファイルの種類により拡張子を変える.
-	std::string filePath2 = m_orgFilePath;
+	std::string filePath2 = m_tempFileName;
 	{
 		std::string fileExt;
-		filePath2 = m_orgFilePath;
 		fileExt = "";
-		int iPos = m_orgFilePath.find_last_of(".");
+		int iPos = m_tempFileName.find_last_of(".");
 		if (iPos != std::string::npos) {
-			filePath2 = m_orgFilePath.substr(0, iPos);
-			fileExt = m_orgFilePath.substr(iPos + 1);
+			filePath2 = m_tempFileName.substr(0, iPos);
+			fileExt = m_tempFileName.substr(iPos + 1);
 		}
 
 		if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda && !m_exportParam.exportAppleUSDZ) {
@@ -165,16 +175,37 @@ void CUSDExporterInterface::clean_up (void *)
 	if (m_exportParam.exportUSDZ || m_exportParam.exportAppleUSDZ) {
 		// usdzのファイルパス.
 		std::string fileExt;
-		usdzFilePath = m_orgFilePath;
+		usdzFilePath = m_tempFileName;
 		fileExt = "";
-		int iPos = m_orgFilePath.find_last_of(".");
+		int iPos = m_tempFileName.find_last_of(".");
 		if (iPos != std::string::npos) {
 			usdzFilePath = usdzFilePath.substr(0, iPos);
-			fileExt = m_orgFilePath.substr(iPos + 1);
+			fileExt = m_tempFileName.substr(iPos + 1);
 		}
 		usdzFilePath = usdzFilePath + std::string(".usdz");
 
 		m_sceneData.exportUSDZ(usdzFilePath);		// usdzファイルとして出力.
+	}
+
+	// 作業用ディレクトリから、m_orgFilePathのフォルダにコピー.
+	{
+		const std::string dstDir = StringUtil::getFileDir(m_orgFilePath);
+		const std::vector<std::string> filesList = m_sceneData.getExportFilesList();
+		for (size_t i = 0; i < filesList.size(); ++i) {
+			const std::string srcPathName = filesList[i];
+			const std::string srcName = StringUtil::getFileName(srcPathName);
+			const std::string dstPathName = dstDir + std::string("/") + srcName;
+			shade.copy_file(srcPathName.c_str(), dstPathName.c_str());
+		}
+
+		// 作業フォルダを削除.
+		shade.remove_directory_and_files(m_tempPath.c_str());
+
+		filePath2 = m_orgFilePath;
+		if (usdzFilePath != "") {
+			const std::string fName = StringUtil::getFileName(usdzFilePath);
+			usdzFilePath = dstDir + std::string("/") + fName;
+		}
 	}
 
 	shade.message(std::string("Export : ") + filePath2);
