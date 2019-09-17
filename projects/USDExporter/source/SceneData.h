@@ -14,6 +14,7 @@
 #include "AnimationData.h"
 #include "USDExporter.h"
 #include "TextureTransform.h"
+#include "MaterialTextureBake.h"
 
 #include <string>
 #include <vector>
@@ -22,8 +23,7 @@
 class CSceneData
 {
 private:
-	CFindNames m_findNames;		// USDでの同一パス名検索クラス.
-	CFindNames m_findImageFileNames;	// 画像ファイル名が同じにならないようにするクラス.
+	CFindNames m_findNames;				// USDでの同一パス名検索クラス.
 
 	/**
 	 * 格納情報 (形状、マテリアル、画像).
@@ -69,23 +69,16 @@ private:
 
 	std::vector<CSkeletonData> m_skeletonList;		// アニメーション用のスケルトンリスト.
 
+	std::unique_ptr<CMaterialTextureBake> m_materialTextureBake;		// マテリアルで使用するテクスチャベイク用.
+
 public:
 	std::string filePath;					// 保存ファイルパス.
 	CTempMeshData tmpMeshData;				// メッシュ情報の一時格納用.
 
 	std::vector< std::shared_ptr<CNodeBaseData> > nodesList;			// ノード情報を格納.
 	std::vector<CMaterialData> materialsList;							// マテリアルを格納.
-	std::vector<CImageData> imagesList;									// テクスチャイメージを格納.
 
 private:
-	/**
-	 * 同一のマスターイメージがすでにimagesListに格納済みか.
-	 * @param[in]  masterImage     追加するMasterImage.
-	 * @param[in]  texTransform    マッピングの変換情報.
-	 * @param[in]  channelMix      mapping_layerのchanelMixの指定.
-	 */
-	int m_findMasterImageInImagesList (sxsdk::master_image_class* masterImage, const CTextureTransform& texTransform, const int channelMix);
-
 	/**
 	 * テクスチャイメージの出力.
 	 * filePathのフォルダにテクスチャを出力する.
@@ -105,15 +98,6 @@ private:
 	 * Shade3Dの変換行列から USD_DATA::NodeMatrixData に変換.
 	 */
 	USD_DATA::NodeMatrixData m_convMatrix (const sxsdk::mat4& m);
-
-	/**
-	 * 指定のマスターサーフェスから、表面材質情報を取得.
-	 * @param[in]  masterSurface  対象のマスターサーフェス.
-	 * @param[in]  surface        masterSurfaceがnullの場合はこのsurfaceを参照する.
-	 * @param[out] materialDat   マテリアル情報が返る.
-	 * @return マテリアル情報を取得した場合はtrue.
-	 */
-	bool m_getMaterialFromMasterSurface (sxsdk::master_surface_class* masterSurface, sxsdk::surface_class* surface, CMaterialData& materialDat);
 
 	/**
 	 * Skeletonとjoint構造を出力.
@@ -147,14 +131,11 @@ public:
 	void clear ();
 
 	/**
-	 * エクスポートパラメータを指定.
+	 * エクスポート開始の情報を渡す.
+	 * @param[in] scene        Shade3Dのシーンクラス.
+	 * @param[in] exportParam  エクスポートパラメータ.
 	 */
-	void setExportParam (const CExportParam& exportParam);
-
-	/**
-	 * シーンクラスを受け取る.
-	 */
-	void setSceneInterface (sxsdk::scene_interface* scene);
+	void setupExport (sxsdk::scene_interface* scene, const CExportParam& exportParam);
 
 	/**
 	 * 指定の形状を格納する.
@@ -204,15 +185,6 @@ public:
 	 * usdzファイルを出力。exportUSDのあとに実行すること.
 	 */
 	void exportUSDZ (const std::string& filePath);
-
-	/**
-	 * 指定の形状から、表面材質情報を取得.
-	 * なお、その形状が表面材質を持たない場合は親をたどる.
-	 * @param[in]  shape         対象形状.
-	 * @param[out] materialDat   マテリアル情報が返る.
-	 * @return マテリアル情報を取得した場合はtrue.
-	 */
-	bool getMaterialFromShape (sxsdk::shape_class* shape, CMaterialData& materialDat);
 };
 
 #endif

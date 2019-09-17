@@ -21,6 +21,7 @@ enum {
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
 	dlg_option_animation = 205,				// アニメーションを出力.
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
+	dlg_option_material_texture_bake = 207,	// 表面材質の複数テクスチャをベイク.
 
 };
 
@@ -76,8 +77,7 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 	StreamCtrl::saveExportDialogParam(shade, m_exportParam);
 
 	m_sceneData.clear();
-	m_sceneData.setSceneInterface(scene);
-	m_sceneData.setExportParam(m_exportParam);
+	m_sceneData.setupExport(scene, m_exportParam);
 
 	try {
 		m_pluginExporter = plugin_exporter;
@@ -610,6 +610,11 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		item->set_bool(m_exportParam.optSubdivision);
 		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_material_texture_bake));
+		item->set_bool(m_exportParam.optMaterialTexturesBake);
+	}
 }
 
 void CUSDExporterInterface::save_dialog_data (sxsdk::dialog_interface &dialog,void *)
@@ -666,6 +671,9 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	if (id == dlg_option_subdivision) {
 		m_exportParam.optSubdivision = item.get_bool();
 		return true;
+	}
+	if (id == dlg_option_material_texture_bake) {
+		m_exportParam.optMaterialTexturesBake = item.get_bool();
 	}
 
 	return false;

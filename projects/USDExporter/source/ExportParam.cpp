@@ -23,4 +23,5 @@ void CExportParam::clear ()
 	optOutputVertexColor = true;
 	optOutputAnimation = true;
 	optSubdivision = false;
+	optMaterialTexturesBake = true;
 }

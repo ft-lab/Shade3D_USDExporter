@@ -9,6 +9,7 @@
 	<group label="出力オプション">
 		<selection id="201" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
 		<selection id="202" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />
+		<bool id="207" label="表面材質の複数テクスチャをベイク" />
 		<bool id="206" label="Subdivison" />
 		<bool id="203" label="ボーンとスキンを出力" />
 		<bool id="204" label="頂点カラーを出力" />

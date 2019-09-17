@@ -284,6 +284,7 @@
     <ClCompile Include="..\source\JointMotionData.cpp" />
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\MaterialData.cpp" />
+    <ClCompile Include="..\source\MaterialTextureBake.cpp" />
     <ClCompile Include="..\source\MathUtil.cpp" />
     <ClCompile Include="..\source\MeshData.cpp" />
     <ClCompile Include="..\source\OcclusionShaderInterface.cpp" />
@@ -307,6 +308,7 @@
     <ClInclude Include="..\source\ImageData.h" />
     <ClInclude Include="..\source\JointMotionData.h" />
     <ClInclude Include="..\source\MaterialData.h" />
+    <ClInclude Include="..\source\MaterialTextureBake.h" />
     <ClInclude Include="..\source\MathUtil.h" />
     <ClInclude Include="..\source\MeshData.h" />
     <ClInclude Include="..\source\NodeData.h" />

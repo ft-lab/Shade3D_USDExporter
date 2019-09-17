@@ -406,9 +406,8 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 		shader.CreateInput(TfToken("opacity"), SdfValueTypeNames->Float).Set(materialData.opacity);
 	}
 
-	if (!MathUtil::isZero(1.0f - materialData.ior)) {
-		shader.CreateInput(TfToken("ior"), SdfValueTypeNames->Float).Set(materialData.ior);
-	}
+	// 透過ピクセルがあるの場合、iorが影響するためior=1.0も出力する必要がある.
+	shader.CreateInput(TfToken("ior"), SdfValueTypeNames->Float).Set(materialData.ior);
 
 	if (materialData.emissiveTexture.fileName == "") {
 		if (!MathUtil::isZero(materialData.emissiveColor[0]) || !MathUtil::isZero(materialData.emissiveColor[1]) || !MathUtil::isZero(materialData.emissiveColor[2])) {

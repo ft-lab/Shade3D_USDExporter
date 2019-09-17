@@ -60,6 +60,10 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			iDat = data.exportAppleUSDZ ? 1 : 0;
 			stream->write_int(iDat);
 		}
+		{
+			iDat = data.optMaterialTexturesBake ? 1 : 0;
+			stream->write_int(iDat);
+		}
 
 	} catch (...) { }
 }
@@ -116,6 +120,10 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		{
 			stream->read_int(iDat);
 			data.exportAppleUSDZ = iDat ? true: false;
+		}
+		{
+			stream->read_int(iDat);
+			data.optMaterialTexturesBake = iDat ? true: false;
 		}
 
 	} catch (...) { }

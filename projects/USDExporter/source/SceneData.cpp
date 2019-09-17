@@ -23,32 +23,28 @@ CSceneData::~CSceneData ()
 
 void CSceneData::clear ()
 {
+	m_materialTextureBake.reset();
 	m_pScene = NULL;
 	filePath = "";
 	m_findNames.clear();
-	m_findImageFileNames.clear();
 	m_elementsList.clear();
 	tmpMeshData.clear();
 	nodesList.clear();
 	materialsList.clear();
-	imagesList.clear();
 	m_exportFilesList.clear();
 }
 
 /**
- * シーンクラスを受け取る.
+ * エクスポート開始の情報を渡す.
+ * @param[in] scene        Shade3Dのシーンクラス.
+ * @param[in] exportParam  エクスポートパラメータ.
  */
-void CSceneData::setSceneInterface (sxsdk::scene_interface* scene)
+void CSceneData::setupExport (sxsdk::scene_interface* scene, const CExportParam& exportParam)
 {
 	m_pScene = scene;
-}
-
-/**
- * エクスポートパラメータを指定.
- */
-void CSceneData::setExportParam (const CExportParam& exportParam)
-{
 	m_exportParam = exportParam;
+
+	m_materialTextureBake.reset(new CMaterialTextureBake(m_pScene, m_exportParam));
 }
 
 /**
@@ -326,7 +322,8 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 	std::vector<CMaterialData> tmpMaterials;
 	std::vector<sxsdk::master_surface_class *> tmpMaterialMasterSurfaces;
 
-	getMaterialFromShape(shape, materialD);		// shapeの形状に割り当てられているマテリアルを取得.
+	// shapeの形状に割り当てられているマテリアルを取得.
+	m_materialTextureBake->getMaterialDataFromShape(shape, materialD);
 	tmpMaterials.push_back(materialD);
 	tmpMaterialMasterSurfaces.push_back(NULL);
 
@@ -337,7 +334,7 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		for (int i = 0; i < fgCou; ++i) {
 			sxsdk::master_surface_class* pMasterSurface = pMesh.get_face_group_surface(i);
 			if (pMasterSurface) {
-				if (m_getMaterialFromMasterSurface(pMasterSurface, NULL, materialD)) {
+				if (m_materialTextureBake->getMaterialFromMasterSurface(pMasterSurface, NULL, materialD)) {
 					tmpMaterialMasterSurfaces.push_back(pMasterSurface);
 					tmpMaterials.push_back(materialD);
 				}
@@ -582,6 +579,7 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 	const std::string fileDir = StringUtil::getFileDir(filePath);
 
 	// テクスチャをファイル出力.
+	const std::vector<CImageData>& imagesList = m_materialTextureBake->getImagesList();
 	for (size_t i = 0; i < imagesList.size(); ++i) {
 		const CImageData& imageD = imagesList[i];
 		if (imageD.fileName != "" && imageD.pMasterImageHandle) {
@@ -626,302 +624,6 @@ void CSceneData::exportUSDZ (const std::string& filePath)
 
 	CUSDExporter usdExport;
 	usdExport.exportUSDZ(filePath, m_exportFilesList);
-}
-
-/**
- * 同一のマスターイメージがすでにimagesListに格納済みか.
- * @param[in]  masterImage     追加するMasterImage.
- * @param[in]  texTransform    マッピングの変換情報.
- * @param[in]  channelMix      mapping_layerのchanelMixの指定.
- */
-int CSceneData::m_findMasterImageInImagesList (sxsdk::master_image_class* masterImage, const CTextureTransform& texTransform, const int channelMix)
-{
-	if (!masterImage || imagesList.empty()) return -1;
-	void* mHandle = masterImage->get_handle();
-
-	int retI = -1;
-	for (size_t i = 0; i < imagesList.size(); ++i) {
-		const CImageData& imageD = imagesList[i];
-
-		// 有効なRGBA要素をチェック.
-		bool chkF = false;
-		switch (channelMix) {
-			case sxsdk::enums::mapping_grayscale_red_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
-
-			case sxsdk::enums::mapping_grayscale_green_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
-
-			case sxsdk::enums::mapping_grayscale_blue_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
-
-			case sxsdk::enums::mapping_grayscale_alpha_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
-
-			default:
-				if (imageD.texTransform.isSame(texTransform)) chkF = true;
-		}
-		if (!chkF) continue;
-
-		if (imageD.pMasterImageHandle == mHandle) {
-			retI = (int)i;
-			break;
-		}
-	}
-
-	return retI;
-}
-
-/**
- * 指定の形状から、表面材質情報を取得.
- * なお、その形状が表面材質を持たない場合は親をたどる.
- * @param[in]  shape         対象形状.
- * @param[out] materialDat   マテリアル情報が返る.
- * @return マテリアル情報を取得した場合はtrue.
- */
-bool CSceneData::getMaterialFromShape (sxsdk::shape_class* shape, CMaterialData& materialDat)
-{
-	materialDat.clear();
-	materialDat.name = std::string(MATERIAL_ROOT_PATH) + std::string("/material");
-
-	// 表面材質情報を持つ形状をたどる (なければshape自身).
-	sxsdk::shape_class* pS = Shade3DUtil::getHasSurfaceParentShape(shape);
-	if (!(pS->has_surface())) return false;
-
-	sxsdk::master_surface_class* pMasterSurface = pS->get_master_surface();
-
-	return m_getMaterialFromMasterSurface(pMasterSurface, pS->get_surface(), materialDat);
-}
-
-/**
- * 指定のマスターサーフェスから、表面材質情報を取得.
- * @param[in]  masterSurface  対象のマスターサーフェス.
- * @param[in]  surface        masterSurfaceがnullの場合はこのsurfaceを参照する.
- * @param[out] materialDat   マテリアル情報が返る.
- * @return マテリアル情報を取得した場合はtrue.
- */
-bool CSceneData::m_getMaterialFromMasterSurface (sxsdk::master_surface_class* masterSurface, sxsdk::surface_class* surface, CMaterialData& materialDat)
-{
-	materialDat.clear();
-	materialDat.name = std::string(MATERIAL_ROOT_PATH) + std::string("/material");
-
-	try {
-		// マスターサーフェス名を取得.
-		if (masterSurface) {
-			std::string mName = std::string(masterSurface->get_name());
-			materialDat.name = std::string(MATERIAL_ROOT_PATH) + std::string("/") + mName;
-			materialDat.pMasterSurfaceHandle = masterSurface->get_handle();
-
-			// doublesidedが含まれる場合は、doubleSidedを持つとする.
-			std::transform(mName.begin(), mName.end(), mName.begin(), ::tolower);
-			if (mName.find("doublesided") != std::string::npos) {
-				materialDat.doubleSided = true;
-			}
-			surface = masterSurface->get_surface();
-		}
-		if (!surface) return false;
-
-		// 表面材質情報を取得.
-		if (surface->get_has_diffuse()) {
-			const sxsdk::rgb_class col = (surface->get_diffuse_color()) * (surface->get_diffuse());
-			materialDat.diffuseColor[0] = col.red;
-			materialDat.diffuseColor[1] = col.green;
-			materialDat.diffuseColor[2] = col.blue;
-		}
-
-		if (surface->get_has_glow()) {
-			const sxsdk::rgb_class col = (surface->get_glow_color()) * (surface->get_glow());
-			materialDat.emissiveColor[0] = col.red;
-			materialDat.emissiveColor[1] = col.green;
-			materialDat.emissiveColor[2] = col.blue;
-		}
-
-		if (surface->get_has_reflection()) {
-			materialDat.metallic = surface->get_reflection();
-		}
-
-		if (surface->get_has_roughness()) {
-			materialDat.roughness = surface->get_roughness();
-		}
-		if (surface->get_has_transparency()) {
-			materialDat.opacity = 1.0f - (surface->get_transparency());
-		}
-		if (surface->get_has_refraction()) {
-			materialDat.ior = surface->get_refraction();
-		}
-
-		const int mappingLayersCou = surface->get_number_of_mapping_layers();
-		if (!(surface->get_has_mapping_layers()) || mappingLayersCou == 0) return true;
-
-		// テクスチャを取得.
-		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
-			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
-			const int mType = mappingLayer.get_type();
-			CTextureTransform texTransform;
-			texTransform.flipColor = mappingLayer.get_flip_color();
-
-			// オクルージョンレイヤの場合.
-			if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) {
-				const float weight = mappingLayer.get_weight();
-				texTransform.occlusion = true;
-				texTransform.textureWeight = weight;
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.occlusionTexture, true);
-			}
-
-			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
-
-			if (mType == sxsdk::enums::diffuse_mapping) {
-				// アルファ透明を使用.
-				if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
-					materialDat.useDiffuseAlpha = true;
-				}
-				texTransform.multiR = materialDat.diffuseColor[0];
-				texTransform.multiG = materialDat.diffuseColor[1];
-				texTransform.multiB = materialDat.diffuseColor[2];
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.diffuseTexture, materialDat.useDiffuseAlpha);
-			}
-
-			if (mType == sxsdk::enums::glow_mapping) {
-				texTransform.multiR = materialDat.emissiveColor[0];
-				texTransform.multiG = materialDat.emissiveColor[1];
-				texTransform.multiB = materialDat.emissiveColor[2];
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.emissiveTexture);
-			}
-			if (mType == sxsdk::enums::normal_mapping) {
-				const float weight = mappingLayer.get_weight();
-				texTransform.textureNormal = true;
-				texTransform.textureWeight = weight;
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.normalTexture);
-			}
-			if (mType == sxsdk::enums::roughness_mapping) {
-				texTransform.multiR = texTransform.multiG = texTransform.multiB = materialDat.roughness;
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.roughnessTexture);
-			}
-			if (mType == sxsdk::enums::reflection_mapping) {
-				texTransform.multiR = texTransform.multiG = texTransform.multiB = materialDat.metallic;
-				m_setTextureMappingData(mappingLayer, texTransform, materialDat.metallicTexture);
-			}
-		}
-
-	} catch (...) { }
-
-	return true;
-}
-
-/**
- * テクスチャマッピング情報を追加.
- * @param[in]  mappingLayer    マッピングレイヤ情報.
- * @param[in]  texTransform    マッピングの変換情報.
- * @param[out] texMappingData  マッピング情報の格納先.
- */
-void CSceneData::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, 
-	const bool occlusionF)
-{
-	if (texMappingData.fileName != "") return;
-
-	try {
-		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-		if (!image) return;
-		if (!image->has_image()) return;
-
-		// imageからマスターイメージを取得.
-		sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
-		if (!masterImage) return;
-
-		std::string masterImageName = "";
-		const int channelMix = mappingLayer.get_channel_mix();
-
-		// 同一のマスターイメージが格納済みか.
-		int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, channelMix);
-		if (imageIndex >= 0) {
-			const CImageData& imageD = imagesList[imageIndex];
-			masterImageName = imageD.fileName;
-		} else {
-			// イメージ名をASCIIのファイル名にする.
-			masterImageName = masterImage->get_name();
-			if (!StringUtil::checkASCII(masterImageName)) {
-				masterImageName = "texture";
-			}
-
-			// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
-			if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
-				// 拡張子がある場合はそれを採用し、ない場合はpngにする.
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
-
-			} else {
-				const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
-			}
-
-			// ユニークファイル名として追加.
-			// 同一名がある場合は、連番付きで返す.
-			masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
-
-			imageIndex = (int)imagesList.size();
-			imagesList.push_back(CImageData());
-		}
-
-		if (imageIndex >= 0) {
-			CImageData& imageD = imagesList[imageIndex];
-			imageD.pMasterImageHandle = masterImage->get_handle();
-			imageD.fileName = masterImageName;
-			imageD.occlusionF = occlusionF;
-
-			texMappingData.fileName = masterImageName;
-			texMappingData.textureParam.imageIndex = imageIndex;
-			texMappingData.textureParam.uvLayerIndex = mappingLayer.get_uv_mapping();
-			if (texMappingData.textureParam.uvLayerIndex < 0 || texMappingData.textureParam.uvLayerIndex > 1) {
-				texMappingData.textureParam.uvLayerIndex = 0;
-			}
-			if (occlusionF) {
-				COcclusionShaderData occlusionShaderD;
-				if (StreamCtrl::loadOcclusionParam(mappingLayer, occlusionShaderD)) {
-					texMappingData.textureParam.uvLayerIndex = occlusionShaderD.uvIndex;
-				}
-			}
-
-			texMappingData.textureParam.repeatU = mappingLayer.get_repetition_x();
-			texMappingData.textureParam.repeatV = mappingLayer.get_repetition_y();
-
-			switch (channelMix) {
-			case sxsdk::enums::mapping_grayscale_red_mode:
-				texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
-				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
-				break;
-
-			case sxsdk::enums::mapping_grayscale_green_mode:
-				texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_g;
-				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_g;
-				break;
-
-			case sxsdk::enums::mapping_grayscale_blue_mode:
-				texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_b;
-				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_b;
-				break;
-
-			case sxsdk::enums::mapping_grayscale_alpha_mode:
-				texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
-				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
-				break;
-
-			default:
-				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_rgb;
-			}
-			imageD.texTransform = texTransform;
-		}
-	} catch (...) { }
 }
 
 /**

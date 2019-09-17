@@ -191,6 +191,7 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 		const int width  = image->get_size().x;
 		const int height = image->get_size().y;
 		retImage = compointer<sxsdk::image_interface>(image->duplicate_image());
+		const float weight = textureTrans.textureWeight;
 
 		std::vector<sxsdk::rgba_class> colLines;
 		colLines.resize(width);
@@ -201,10 +202,9 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 				sxsdk::rgba_class& col = colLines[x];
 
 				if (textureTrans.textureNormal) {		// 法線マップ時.
-					fV = textureTrans.textureWeight;
-					col.red   = col.red   * fV + 0.5f * (1.0f - fV);
-					col.green = col.green * fV + 0.5f * (1.0f - fV);
-					col.blue  = col.blue  * fV + 1.0f * (1.0f - fV);
+					col.red   = col.red   * weight + 0.5f * (1.0f - weight);
+					col.green = col.green * weight + 0.5f * (1.0f - weight);
+					col.blue  = col.blue  * weight + 1.0f * (1.0f - weight);
 					continue;
 				}
 
@@ -216,10 +216,15 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 
 				if (textureTrans.occlusion) {
 					// Occlusionの場合、textureTrans.multiRが0.0に近いほど白にする.
-					fV = col.red * textureTrans.textureWeight + 1.0f * (1.0f - textureTrans.textureWeight);
+					fV = col.red * weight + 1.0f * (1.0f - weight);
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
+
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
+					col.red   = col.red   * weight + 1.0f * (1.0f - weight);
+					col.green = col.green * weight + 1.0f * (1.0f - weight);
+					col.blue  = col.blue  * weight + 1.0f * (1.0f - weight);
+
 					col.red   = col.red   * textureTrans.multiR + textureTrans.offsetR;
 					col.green = col.green * textureTrans.multiG + textureTrans.offsetG;
 					col.blue  = col.blue  * textureTrans.multiB + textureTrans.offsetB;
