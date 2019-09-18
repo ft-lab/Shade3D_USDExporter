@@ -281,8 +281,9 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				}
 			}
 
-			texMappingData.textureParam.repeatU = mappingLayer.get_repetition_x();
-			texMappingData.textureParam.repeatV = mappingLayer.get_repetition_y();
+			texMappingData.textureParam.repeatU    = mappingLayer.get_repetition_x();
+			texMappingData.textureParam.repeatV    = mappingLayer.get_repetition_y();
+			texMappingData.textureParam.wrapRepeat = mappingLayer.get_repeat_image();
 
 			switch (channelMix) {
 			case sxsdk::enums::mapping_grayscale_red_mode:

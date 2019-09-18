@@ -564,8 +564,9 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	//shaderTexture.CreateOutput(TfToken("rgb"), SdfValueTypeNames->Float3);
 
 	// wrap指定 (repeatで繰り返し指定).
-	shaderTexture.CreateInput(TfToken("wrapS"), SdfValueTypeNames->Token).Set(TfToken("repeat"));
-	shaderTexture.CreateInput(TfToken("wrapT"), SdfValueTypeNames->Token).Set(TfToken("repeat"));
+	const std::string wrapS = mappingD.textureParam.wrapRepeat ? "repeat" : "clamp";
+	shaderTexture.CreateInput(TfToken("wrapS"), SdfValueTypeNames->Token).Set(TfToken(wrapS));
+	shaderTexture.CreateInput(TfToken("wrapT"), SdfValueTypeNames->Token).Set(TfToken(wrapS));
 
 	// input.bias / input.scaleは効かない ? (USD 19.07).
 #if false
