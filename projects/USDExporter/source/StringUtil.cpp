@@ -16,6 +16,18 @@
 #include <vector>
 
 /**
+ * パスのセパレータを取得.
+ */
+const std::string StringUtil::getFileSeparator ()
+{
+#if _WINDOWS
+	return "\\";
+#else
+	return "/";
+#endif
+}
+
+/**
  * ファイルパスからファイル名のみを取得.
  * @param[in] filePath      ファイルフルパス.
  * @param[in] hasExtension  trueの場合は拡張子も付ける.

@@ -34,6 +34,11 @@ namespace StringUtil
 	const std::string getFileExtension (const std::string& filePath);
 
 	/**
+	 * パスのセパレータを取得.
+	 */
+	const std::string getFileSeparator ();
+
+	/**
 	 * すべてがASCII文字列かどうか.
 	 */
 	bool checkASCII (const std::string& name);

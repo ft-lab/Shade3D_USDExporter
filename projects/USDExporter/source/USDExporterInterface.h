@@ -42,9 +42,6 @@ private:
 	bool m_flipFace;							// 面を反転する場合.
 
 	std::string m_orgFilePath;					// 出力先のファイル名.
-	std::string m_tempPath;						// 出力先の作業用ディレクトリ.
-	std::string m_tempFileName;					// 出力先の作業用ファイル名.
-
 	std::string m_currentPathName;				// USDとしてのパス名.
 
 	bool m_oldSequenceMode;						// エクスポート前のシーケンスモード.
@@ -54,6 +51,11 @@ private:
 
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }
+
+	/**
+	 * アプリケーション終了時に呼ばれる.
+	 */
+	virtual void cleanup (void *aux=0);
 
 	/**
 	 * ファイル拡張子.

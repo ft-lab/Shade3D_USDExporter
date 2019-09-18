@@ -10,6 +10,8 @@
 #include "StringUtil.h"
 #include "MathUtil.h"
 
+#include <time.h>
+
 // ダイアログボックスのパラメータ.
 enum {
 	dlg_file_export_type = 101,				// 出力形式.
@@ -52,6 +54,23 @@ const char *CUSDExporterInterface::get_file_description (void *)
 {
 	return "USD (Universal Scene Description)";
 }
+
+/**
+ * アプリケーション終了時に呼ばれる.
+ */
+void CUSDExporterInterface::cleanup (void *)
+{
+	// 作業フォルダを削除.
+	// 作業フォルダは、shade.get_temporary_path()で与えた後に削除すると、.
+	// アプリ内では再度作業フォルダを作成できない。そのため、removeはアプリ終了時に呼んでいる.
+	try {
+		const std::string tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
+		if (tempPath != "") {
+			shade.remove_directory_and_files(tempPath.c_str());
+		}
+	} catch (...) { }
+}
+
 
 /**
  * シーンを開いたときに呼ばれる.
@@ -140,24 +159,39 @@ void CUSDExporterInterface::finish (void *)
 void CUSDExporterInterface::clean_up (void *)
 {
 	// 作業用のパス.
-	m_tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
+	const std::string tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
+
+	// 出力ファイル名のみを取得.
+	std::string sFileName = "";
+	bool changedName = false;
+	{
+		sFileName = StringUtil::getFileName(m_orgFilePath);
+		if (!StringUtil::checkASCII(sFileName)) {
+			// ASCII名でない場合は、ファイル名を置き換え.
+			char szStr[256];
+			time_t t = time(NULL);
+			strftime(szStr, sizeof(szStr), "%Y%m%d_%H%M%S", localtime(&t));
+
+			sFileName = std::string("output_") + std::string(szStr);
+			changedName = true;
+		}
+	}
 
 	// 作業用ファイル名のフルパス.
+	std::string tempFileName = "";
 	{
-		m_tempFileName = m_tempPath;
-		const std::string fName = StringUtil::getFileName(m_orgFilePath);
-		m_tempFileName += std::string("/") + fName;
+		tempFileName = tempPath + StringUtil::getFileSeparator() + sFileName;
 	}
 
 	// USDのファイルの種類により拡張子を変える.
-	std::string filePath2 = m_tempFileName;
+	std::string filePath2 = tempFileName;
 	{
 		std::string fileExt;
 		fileExt = "";
-		int iPos = m_tempFileName.find_last_of(".");
+		int iPos = tempFileName.find_last_of(".");
 		if (iPos != std::string::npos) {
-			filePath2 = m_tempFileName.substr(0, iPos);
-			fileExt = m_tempFileName.substr(iPos + 1);
+			filePath2 = tempFileName.substr(0, iPos);
+			fileExt = tempFileName.substr(iPos + 1);
 		}
 
 		if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda && !m_exportParam.exportAppleUSDZ) {
@@ -165,6 +199,8 @@ void CUSDExporterInterface::clean_up (void *)
 		} else {
 			filePath2 = filePath2 + std::string(".usdc");
 		}
+
+		sFileName = StringUtil::getFileName(filePath2);
 	}
 
 	// USDファイルを出力.
@@ -175,12 +211,12 @@ void CUSDExporterInterface::clean_up (void *)
 	if (m_exportParam.exportUSDZ || m_exportParam.exportAppleUSDZ) {
 		// usdzのファイルパス.
 		std::string fileExt;
-		usdzFilePath = m_tempFileName;
+		usdzFilePath = tempFileName;
 		fileExt = "";
-		int iPos = m_tempFileName.find_last_of(".");
+		int iPos = tempFileName.find_last_of(".");
 		if (iPos != std::string::npos) {
 			usdzFilePath = usdzFilePath.substr(0, iPos);
-			fileExt = m_tempFileName.substr(iPos + 1);
+			fileExt = tempFileName.substr(iPos + 1);
 		}
 		usdzFilePath = usdzFilePath + std::string(".usdz");
 
@@ -194,18 +230,26 @@ void CUSDExporterInterface::clean_up (void *)
 		for (size_t i = 0; i < filesList.size(); ++i) {
 			const std::string srcPathName = filesList[i];
 			const std::string srcName = StringUtil::getFileName(srcPathName);
-			const std::string dstPathName = dstDir + std::string("/") + srcName;
-			shade.copy_file(srcPathName.c_str(), dstPathName.c_str());
+			const std::string dstPathName = dstDir + StringUtil::getFileSeparator() + srcName;
+			try {
+				shade.copy_file(srcPathName.c_str(), dstPathName.c_str());
+			} catch (...) { }
 		}
 
-		// 作業フォルダを削除.
-		shade.remove_directory_and_files(m_tempPath.c_str());
-
-		filePath2 = m_orgFilePath;
+		filePath2 = dstDir + StringUtil::getFileSeparator() + sFileName;
 		if (usdzFilePath != "") {
 			const std::string fName = StringUtil::getFileName(usdzFilePath);
-			usdzFilePath = dstDir + std::string("/") + fName;
+			usdzFilePath = dstDir + StringUtil::getFileSeparator() + fName;
 		}
+	}
+
+	if (changedName) {
+		shade.message(shade.gettext("msg_not_ascii_file_name"));
+
+		// ファイルサイズが0の出力を削除.
+		try {
+			shade.delete_file(m_orgFilePath.c_str());
+		} catch (...) { }
 	}
 
 	shade.message(std::string("Export : ") + filePath2);

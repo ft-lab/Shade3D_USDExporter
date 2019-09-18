@@ -585,7 +585,7 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 		const CImageData& imageD = imagesList[i];
 		if (imageD.fileName != "" && imageD.pMasterImageHandle) {
 			try {
-				const std::string fileName = fileDir + std::string("/") + imageD.fileName;
+				const std::string fileName = fileDir + StringUtil::getFileSeparator() + imageD.fileName;
 				sxsdk::master_image_class& masterImage = m_pScene->get_shape_by_handle(imageD.pMasterImageHandle)->get_master_image();
 				compointer<sxsdk::image_interface> image(masterImage.get_image());
 				if (image) {
@@ -605,11 +605,9 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 						} else {
 							image->save(fileName.c_str());
 						}
-
-						// USDZ出力時のためのファイル名保持。画像の場合は、ファイル名のみを追加.
-//						m_exportFilesList.push_back(imageD.fileName);
-						m_exportFilesList.push_back(fileName);
 					}
+					// USDZ出力時のためのファイル名保持.
+					m_exportFilesList.push_back(fileName);
 				}
 			} catch (...) { }
 		}
