@@ -118,22 +118,24 @@ void CTempMeshData::optimize (const bool removeUnusedVertices)
 			for (int i = rCou - 1; i >= 0; --i) {
 				const int faceIndex = removeFaceIndexList[i];
 				const int iPos = faceVOffset[faceIndex];
-				for (int j = 0; j < faceIndex; ++j) faceIndices.erase(faceIndices.begin() + iPos);
+				const int fvCou = faceVertexCounts[faceIndex];
+				for (int j = 0; j < fvCou; ++j) faceIndices.erase(faceIndices.begin() + iPos);
 				if (!faceFaceGroupIndex.empty()) {
 					faceFaceGroupIndex.erase(faceFaceGroupIndex.begin() + faceIndex);
 				}
 				if (!faceNormals.empty()) {
-					for (int j = 0; j < faceIndex; ++j) faceNormals.erase(faceNormals.begin() + iPos);
+					for (int j = 0; j < fvCou; ++j) faceNormals.erase(faceNormals.begin() + iPos);
 				}
 				if (!faceUV0.empty()) {
-					for (int j = 0; j < faceIndex; ++j) faceUV0.erase(faceUV0.begin() + iPos);
+					for (int j = 0; j < fvCou; ++j) faceUV0.erase(faceUV0.begin() + iPos);
 				}
 				if (!faceUV1.empty()) {
-					for (int j = 0; j < faceIndex; ++j) faceUV1.erase(faceUV1.begin() + iPos);
+					for (int j = 0; j < fvCou; ++j) faceUV1.erase(faceUV1.begin() + iPos);
 				}
 				if (!faceColor0.empty()) {
-					for (int j = 0; j < faceIndex; ++j) faceColor0.erase(faceColor0.begin() + iPos);
+					for (int j = 0; j < fvCou; ++j) faceColor0.erase(faceColor0.begin() + iPos);
 				}
+				faceVertexCounts.erase(faceVertexCounts.begin() + faceIndex);
 			}
 		}
 	}
