@@ -452,7 +452,7 @@ int CNodeMeshData::convert (const CTempMeshData& tempMeshData, std::vector<CNode
 			}
 			for (int i = 0; i < faceVCou; ++i, fOffset2 += fInc) {
 				newMeshD.faceIndices.push_back(srcMeshD.faceIndices[fOffset2]);
-				if (!srcMeshD.faceNormals.empty()) newMeshD.faceNormals.push_back(srcMeshD.faceNormals[fOffset2]);
+				if (!srcMeshD.faceNormals.empty()) newMeshD.faceNormals.push_back(srcMeshD.faceNormals[fOffset2] * (srcMeshD.flipFaces ? -1.0f : 1.0f));
 				if (!srcMeshD.faceUV0.empty()) newMeshD.faceUV0.push_back(srcMeshD.faceUV0[fOffset2]);
 				if (!srcMeshD.faceUV1.empty()) newMeshD.faceUV1.push_back(srcMeshD.faceUV1[fOffset2]);
 				if (!srcMeshD.faceColor0.empty()) newMeshD.faceColor0.push_back(srcMeshD.faceColor0[fOffset2]);
@@ -496,7 +496,7 @@ int CNodeMeshData::convert (const CTempMeshData& tempMeshData, std::vector<CNode
 			}
 			for (int i = 0; i < faceVCou; ++i, fOffset2 += fInc) {
 				newMeshD.faceIndices.push_back(srcMeshD.faceIndices[fOffset2]);
-				if (!srcMeshD.faceNormals.empty()) newMeshD.faceNormals.push_back(srcMeshD.faceNormals[fOffset2]);
+				if (!srcMeshD.faceNormals.empty()) newMeshD.faceNormals.push_back(srcMeshD.faceNormals[fOffset2] * (srcMeshD.flipFaces ? -1.0f : 1.0f));
 				if (!srcMeshD.faceUV0.empty()) newMeshD.faceUV0.push_back(srcMeshD.faceUV0[fOffset2]);
 				if (!srcMeshD.faceUV1.empty()) newMeshD.faceUV1.push_back(srcMeshD.faceUV1[fOffset2]);
 				if (!srcMeshD.faceColor0.empty()) newMeshD.faceColor0.push_back(srcMeshD.faceColor0[fOffset2]);

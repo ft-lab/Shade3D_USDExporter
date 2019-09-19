@@ -176,6 +176,7 @@ std::string CFindNames::m_convASCIIString (const std::string& str, const bool ch
 	std::string str2 = str;
 	if (str2 == "") return str2;
 
+	str2 = StringUtil::replaceString(str2, " ", "_");
 	str2 = StringUtil::replaceString(str2, "!", "_");
 	str2 = StringUtil::replaceString(str2, "\"", "_");
 	str2 = StringUtil::replaceString(str2, "'", "_");

@@ -951,6 +951,8 @@ void CUSDExporter::setAnimationData (const float startFrame, const float endFram
  */
 void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 {
+	if (!g_stage) return;
+
 	// Skeletonのルート.
 	{
 		UsdPrim skelP = g_stage->GetPrimAtPath(SdfPath(SKELETONS_ROOT_PATH));

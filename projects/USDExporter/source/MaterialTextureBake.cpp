@@ -134,8 +134,12 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		materialData.ior = surface->get_refraction();
 
 		// マッピングレイヤ情報を取得.
-		//if (m_exportParam.optMaterialTexturesBake) {		// 単純なベイクを行う.
+		//if (!m_exportParam.optMaterialTexturesBake) {
+			// 単純なベイクを行う.
 			return m_getSimpleMaterialMappingFromSurface(surface, materialData);
+		//} else {
+			// 複数マッピングを合成.
+		//	return m_getMaterialMultiMappingFromSurface(surface, materialData);
 		//}
 
 	} catch (...) { }
@@ -368,5 +372,31 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
 	}
 
 	return retI;
+}
+
+/**
+ * マッピングレイヤで、複数テクスチャをベイク.
+ * @param[in]  surface           表面材質クラス.
+ * @param[out] materialData  マテリアル情報が返る.
+ */
+bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData)
+{
+	try {
+		// マッピングレイヤ情報を取得.
+		const int mappingLayersCou = surface->get_number_of_mapping_layers();
+		if (!(surface->get_has_mapping_layers()) || mappingLayersCou == 0) return true;
+
+		// テクスチャを取得.
+		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
+			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
+			const int mType = mappingLayer.get_type();
+			CTextureTransform texTransform;
+			texTransform.flipColor     = mappingLayer.get_flip_color();
+			texTransform.textureWeight = mappingLayer.get_weight();
+		}
+
+	} catch (...) { }
+
+	return true;
 }
 

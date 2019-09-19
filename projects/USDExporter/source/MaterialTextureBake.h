@@ -46,6 +46,13 @@ private:
 	bool m_getSimpleMaterialMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData);
 
 	/**
+	 * マッピングレイヤで、複数テクスチャをベイク.
+	 * @param[in]  surface           表面材質クラス.
+	 * @param[out] materialData  マテリアル情報が返る.
+	 */
+	bool m_getMaterialMultiMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData);
+
+	/**
 	 * テクスチャマッピング情報を追加.
 	 * @param[in]  mappingLayer    マッピングレイヤ情報.
 	 * @param[in]  texTransform    マッピングの変換情報.
