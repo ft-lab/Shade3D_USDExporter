@@ -73,6 +73,7 @@ public:
 	CTextureMappingData metallicTexture;	// Metallicテクスチャ.
 	CTextureMappingData emissiveTexture;	// Emissiveテクスチャ (RGB).
 	CTextureMappingData occlusionTexture;	// Occlusionテクスチャ.
+	CTextureMappingData opacityTexture;		// Opacityテクスチャ(1.0 - Transparency).
 
 	void* pMasterSurfaceHandle;				// Shade3Dでの対応するマスターサーフェスのハンドル.
 
@@ -104,6 +105,7 @@ public:
 		this->metallicTexture  = v.metallicTexture;
 		this->emissiveTexture  = v.emissiveTexture;
 		this->occlusionTexture = v.occlusionTexture;
+		this->opacityTexture   = v.opacityTexture;
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
 	}
@@ -132,6 +134,7 @@ public:
 		this->metallicTexture  = v.metallicTexture;
 		this->emissiveTexture  = v.emissiveTexture;
 		this->occlusionTexture = v.occlusionTexture;
+		this->opacityTexture   = v.opacityTexture;
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
 

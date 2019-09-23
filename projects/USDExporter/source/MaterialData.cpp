@@ -71,6 +71,7 @@ void CMaterialData::clear ()
 	metallicTexture.clear();
 	emissiveTexture.clear();
 	occlusionTexture.clear();
+	opacityTexture.clear();
 
 	pMasterSurfaceHandle = NULL;
 }
@@ -99,6 +100,7 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 	if (!metallicTexture.isSame(mDat.metallicTexture)) return false;
 	if (!emissiveTexture.isSame(mDat.emissiveTexture)) return false;
 	if (!occlusionTexture.isSame(mDat.occlusionTexture)) return false;
+	if (!opacityTexture.isSame(mDat.opacityTexture)) return false;
 
 	return true;
 }

@@ -14,8 +14,8 @@
 class CTextureTransform
 {
 public:
-	float multiR, multiG, multiB;		// 色に乗算.
-	float offsetR, offsetG, offsetB;	// 色に加算.
+	float multiR, multiG, multiB, multiA;		// 色に乗算.
+	float offsetR, offsetG, offsetB, offsetA;	// 色に加算.
 	bool flipColor;						// 色反転.
 	bool occlusion;						// オクルージョンレイヤの場合.
 	bool textureNormal;					// 法線マップの場合.
@@ -30,9 +30,11 @@ public:
 		this->multiR    = v.multiR;
 		this->multiG    = v.multiG;
 		this->multiB    = v.multiB;
+		this->multiA    = v.multiA;
 		this->offsetR   = v.offsetR;
 		this->offsetG   = v.offsetG;
 		this->offsetB   = v.offsetB;
+		this->offsetA   = v.offsetA;
 		this->occlusion = v.occlusion;
 		this->textureWeight = v.textureWeight;
 		this->textureNormal = v.textureNormal;
@@ -43,9 +45,11 @@ public:
 		this->multiR    = v.multiR;
 		this->multiG    = v.multiG;
 		this->multiB    = v.multiB;
+		this->multiA    = v.multiA;
 		this->offsetR   = v.offsetR;
 		this->offsetG   = v.offsetG;
 		this->offsetB   = v.offsetB;
+		this->offsetA   = v.offsetA;
 		this->occlusion = v.occlusion;
 		this->textureWeight = v.textureWeight;
 		this->textureNormal = v.textureNormal;

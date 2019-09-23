@@ -12,6 +12,7 @@ class COcclusionShaderData
 {
 public:
 	int uvIndex;			// UV層番号 (0 or 1).
+	int channelMix;			// チャンネル合成（0:Red、1:Green、2:Blue、3:Alpha）.
 
 public:
 	COcclusionShaderData () {
@@ -20,6 +21,7 @@ public:
 
 	void clear () {
 		uvIndex = 0;
+		channelMix = 0;
 	}
 };
 

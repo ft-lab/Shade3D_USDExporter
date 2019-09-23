@@ -402,7 +402,7 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 		shader.CreateInput(TfToken("metallic"), SdfValueTypeNames->Float).Set(materialData.metallic);
 	}
 
-	if (!MathUtil::isZero(1.0f - materialData.opacity) && !materialData.useDiffuseAlpha) {
+	if (materialData.opacityTexture.fileName == "") {
 		shader.CreateInput(TfToken("opacity"), SdfValueTypeNames->Float).Set(materialData.opacity);
 	}
 
@@ -450,6 +450,11 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	// OcclusionTexture.
 	if (materialData.occlusionTexture.fileName != "") {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_occlusion, materialData.occlusionTexture.textureSource);
+	}
+
+	// OpacityTexture.
+	if (materialData.opacityTexture.fileName != "") {
+		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity, materialData.opacityTexture.textureSource);
 	}
 
 	// MaterialからShaderをつなぐ.
@@ -516,8 +521,9 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 		break;
 
 	case USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity:
-		mappingD = materialData.diffuseTexture;
-		mappingSource = "a";
+		mappingD = materialData.opacityTexture;
+		mappingSource = USD_DATA::getTextureSourceString(textureSource);
+		if (mappingSource == "rgb") mappingSource = "r";
 		texName = "/opacityTexture";
 		connectSource = "opacity";
 		break;
@@ -537,6 +543,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	// UVレイヤ番号 (0 or 1).
 	const int uvIndex = mappingD.textureParam.uvLayerIndex;
 
+	// UVのReader.
 	const std::string stReaderPath = materialData.name + std::string((uvIndex == 0) ? "/stReader" : "/stReader2");
 	UsdPrim primReader = g_stage->GetPrimAtPath(SdfPath(stReaderPath));
 	UsdShadeShader shaderReader;
@@ -548,6 +555,28 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 		shaderReader = UsdShadeShader(primReader);
 	}
 
+	// UsdTransform2d.
+	// テクスチャの反復指定をUsdTransform2dのscaleで表現.
+	bool useTransform2D = false;
+	UsdPrim transform2DShader;
+	if (mappingD.textureParam.repeatU > 1 || mappingD.textureParam.repeatV > 1) {
+		useTransform2D = true;
+		const std::string transform2DName = materialData.name + std::string(texName) + std::string("_Transform2d");
+		transform2DShader = g_stage->DefinePrim(SdfPath(transform2DName), TfToken("Shader"));
+		UsdShadeShader tShader = UsdShadeShader(transform2DShader);
+		tShader.CreateIdAttr().Set(TfToken("UsdTransform2d"));
+
+		// float2 inputs:inは、Readerに接続.
+		tShader.CreateInput(TfToken("in"), SdfValueTypeNames->Token).ConnectToSource(shaderReader, TfToken("result"));
+
+		// 回転/移動スケール/を指定.
+		tShader.CreateInput(TfToken("rotation"), SdfValueTypeNames->Float).Set(0.0f);
+		tShader.CreateInput(TfToken("translation"), SdfValueTypeNames->Float2).Set(GfVec2f(0.0f, 0.0f));
+		const float scaleU = (float)mappingD.textureParam.repeatU;
+		const float scaleV = (float)mappingD.textureParam.repeatV;
+		tShader.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2).Set(GfVec2f(scaleU, scaleV));
+	}
+
 	UsdPrim texShader = g_stage->DefinePrim(SdfPath(materialData.name + std::string(texName)), TfToken("Shader"));
 	UsdShadeShader shaderTexture(texShader);
 
@@ -556,19 +585,23 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	// ファイル名を指定.
 	shaderTexture.CreateInput(TfToken("file"), SdfValueTypeNames->Asset).Set(SdfAssetPath(mappingD.fileName));
 
-	// UVのためのReaderと接続.
 	// UV0の場合は"st"、UV1の場合は"st2"とつなぐ.
-	shaderTexture.CreateInput(TfToken((uvIndex == 0) ? "st" : "st2"), SdfValueTypeNames->Float2).ConnectToSource(shaderReader, TfToken("result"));
-
-	// Textureの出力指定.
-	//shaderTexture.CreateOutput(TfToken("rgb"), SdfValueTypeNames->Float3);
+	if (useTransform2D) {
+		// UsdTransform2dに接続.
+		shaderTexture.CreateInput(TfToken((uvIndex == 0) ? "st" : "st2"), SdfValueTypeNames->Float2).ConnectToSource(UsdShadeShader(transform2DShader), TfToken("result"));
+	} else {
+		// UVのためのReaderと接続.
+		shaderTexture.CreateInput(TfToken((uvIndex == 0) ? "st" : "st2"), SdfValueTypeNames->Float2).ConnectToSource(shaderReader, TfToken("result"));
+	}
 
 	// wrap指定 (repeatで繰り返し指定).
 	const std::string wrapS = mappingD.textureParam.wrapRepeat ? "repeat" : "clamp";
 	shaderTexture.CreateInput(TfToken("wrapS"), SdfValueTypeNames->Token).Set(TfToken(wrapS));
 	shaderTexture.CreateInput(TfToken("wrapT"), SdfValueTypeNames->Token).Set(TfToken(wrapS));
 
-	// input.bias / input.scaleは効かない ? (USD 19.07).
+	// scaleは、テクスチャに対してRGBなどのFactorを乗算したい場合に使用する.
+	// input.bias / input.scaleは効かない ? (USD 19.07とiOS12.4.1).
+	// iOS13ではinput.scaleが効く.
 #if false
 	shaderTexture.CreateInput(TfToken("bias"), SdfValueTypeNames->Float4).Set(GfVec4f(0.0f, 0.0f, 0.0f, 0.0f));
 	shaderTexture.CreateInput(TfToken("scale"), SdfValueTypeNames->Float4).Set(GfVec4f(1.0f, 1.0f, 1.0f, 1.0f));
@@ -636,6 +669,7 @@ void CUSDExporter::m_setTransformAnimation (const std::string& nodeName, const C
 	// 回転アニメーションを指定.
 	if (!jointMotion.rotations.empty()) {
 #if false
+		// iOS 12.4.1では以下は効かず。iOS 13では効く.
 		// クォータニオンで渡す.
 		UsdGeomXformOp transOp = UsdGeomXform(node).AddOrientOp(UsdGeomXformOp::PrecisionFloat);
 

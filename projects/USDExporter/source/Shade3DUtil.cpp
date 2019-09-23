@@ -180,7 +180,7 @@ sxsdk::mat4 Shade3DUtil::convUnit_mm_to_cm (const sxsdk::mat4& m)
 }
 
 /**
- * 指定のイメージで、テクスチャの変換をを行う.
+ * 指定のイメージで、テクスチャの変換を行う.
  */
 compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk::image_interface* image, const USD_DATA::TEXTURE_SOURE& textureSource,  const CTextureTransform& textureTrans)
 {
@@ -209,9 +209,10 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 				}
 
 				if (textureTrans.flipColor) {
-					col.red   = 1.0f - col.red;
-					col.green = 1.0f - col.green;
-					col.blue  = 1.0f - col.blue;
+					col.red    = 1.0f - col.red;
+					col.green  = 1.0f - col.green;
+					col.blue   = 1.0f - col.blue;
+					col.alpha  = 1.0f - col.alpha;
 				}
 
 				if (textureTrans.occlusion) {
@@ -241,6 +242,11 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
 					fV = col.blue * textureTrans.multiB + textureTrans.offsetB;
+					col.red = col.green = col.blue = fV;
+					col.alpha = 1.0f;
+
+				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
+					fV = col.alpha * textureTrans.multiR + textureTrans.offsetR;
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 				}

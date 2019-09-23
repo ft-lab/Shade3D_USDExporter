@@ -205,6 +205,11 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 				texTransform.multiR = texTransform.multiG = texTransform.multiB = materialData.metallic;
 				m_setTextureMappingData(mappingLayer, texTransform, materialData.metallicTexture);
 			}
+			if (mType == sxsdk::enums::transparency_mapping) {
+				texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f - materialData.opacity;		// TODO.
+				texTransform.flipColor = !texTransform.flipColor;		// 透明度とOpacityは逆になる.
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.opacityTexture);
+			}
 		}
 
 		return true;
@@ -313,6 +318,14 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			default:
 				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_rgb;
 			}
+
+			if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
+				const int mType = mappingLayer.get_type();
+				if (mType == sxsdk::enums::roughness_mapping || mType == sxsdk::enums::reflection_mapping || mType == sxsdk::enums::transparency_mapping) {
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
+				}
+			}
+
 			imageD.texTransform = texTransform;
 		}
 	} catch (...) { }
@@ -335,6 +348,7 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
 
 		// 有効なRGBA要素をチェック.
 		bool chkF = false;
+/*
 		switch (channelMix) {
 			case sxsdk::enums::mapping_grayscale_red_mode:
 				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r && imageD.texTransform.isSame(texTransform)) {
@@ -363,6 +377,9 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
 			default:
 				if (imageD.texTransform.isSame(texTransform)) chkF = true;
 		}
+		if (!chkF) continue;
+*/
+		if (imageD.texTransform.isSame(texTransform)) chkF = true;
 		if (!chkF) continue;
 
 		if (imageD.pMasterImageHandle == mHandle) {
