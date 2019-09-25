@@ -51,12 +51,14 @@ public:
 
 	USD_DATA::EXPORT::TEXTURE_TYPE optTextureType;			// テクスチャ出力.
 	USD_DATA::EXPORT::MAX_TEXTURE_SIZE optMaxTextureSize;	// 最大テクスチャサイズ.
-	bool optMaterialTexturesBake;							// 表面材質の複数テクスチャをベイク.
 	bool optOutputBoneSkin;									// ボーンとスキンを出力.
 	bool optOutputVertexColor;								// 頂点カラーを出力.
 	bool optOutputAnimation;								// アニメーションを出力.
-	bool optSubdivision;										// Subdivisionを有効にする場合はtrue.
+	bool optSubdivision;									// Subdivisionを有効にする場合はtrue.
 
+	// テクスチャオプション.
+	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
+	bool texOptBakeMultiTextures;							// 複数テクスチャをベイク.
 
 public:
 	CExportParam ();
@@ -72,7 +74,9 @@ public:
 		this->optOutputVertexColor = v.optOutputVertexColor;
 		this->optOutputAnimation   = v.optOutputAnimation;
 		this->optSubdivision       = v.optSubdivision;
-		this->optMaterialTexturesBake = v.optMaterialTexturesBake;
+
+		this->texOptConvGrayscale     = v.texOptConvGrayscale;
+		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
 	}
 
     CExportParam& operator = (const CExportParam &v) {
@@ -85,7 +89,10 @@ public:
 		this->optOutputVertexColor = v.optOutputVertexColor;
 		this->optOutputAnimation   = v.optOutputAnimation;
 		this->optSubdivision       = v.optSubdivision;
-		this->optMaterialTexturesBake = v.optMaterialTexturesBake;
+
+		this->texOptConvGrayscale     = v.texOptConvGrayscale;
+		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
+
 		return (*this);
 	}
 	void clear ();

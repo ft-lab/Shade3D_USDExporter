@@ -18,14 +18,15 @@ enum {
 	dlg_file_usdz = 102,					// usdzを出力.
 	dlg_file_export_apple_usdz = 103,		// Appleのusdz互換.
 
-	dlg_option_texture = 201,				// テクスチャ出力.
-	dlg_option_max_texture_size = 202,		// 最大テクスチャサイズ.
 	dlg_option_bone_skin = 203,				// ボーンとスキンを出力.
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
 	dlg_option_animation = 205,				// アニメーションを出力.
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
-	dlg_option_material_texture_bake = 207,	// 表面材質の複数テクスチャをベイク.
 
+	dlg_option_texture = 301,				// テクスチャ出力.
+	dlg_option_max_texture_size = 302,		// 最大テクスチャサイズ.
+	dlg_option_texture_grayscale = 303,		// R/G/B/A指定をグレイスケールに分けて出力.
+	dlg_option_texture_bake_multi = 304,	// 複数テクスチャをベイク.
 };
 
 CUSDExporterInterface::CUSDExporterInterface (sxsdk::shade_interface& shade) : shade(shade)
@@ -687,8 +688,13 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 	}
 	{
 		sxsdk::dialog_item_class* item;
-		item = &(d.get_dialog_item(dlg_option_material_texture_bake));
-		item->set_bool(m_exportParam.optMaterialTexturesBake);
+		item = &(d.get_dialog_item(dlg_option_texture_grayscale));
+		item->set_bool(m_exportParam.texOptConvGrayscale);
+	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_texture_bake_multi));
+		item->set_bool(m_exportParam.texOptBakeMultiTextures);
 	}
 }
 
@@ -747,8 +753,11 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 		m_exportParam.optSubdivision = item.get_bool();
 		return true;
 	}
-	if (id == dlg_option_material_texture_bake) {
-		m_exportParam.optMaterialTexturesBake = item.get_bool();
+	if (id == dlg_option_texture_grayscale) {
+		m_exportParam.texOptConvGrayscale = item.get_bool();
+	}
+	if (id == dlg_option_texture_bake_multi) {
+		m_exportParam.texOptBakeMultiTextures = item.get_bool();
 	}
 
 	return false;

@@ -217,7 +217,22 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 
 				if (textureTrans.occlusion) {
 					// Occlusionの場合、textureTrans.multiRが0.0に近いほど白にする.
-					fV = col.red * weight + 1.0f * (1.0f - weight);
+					fV = col.red;
+					switch (textureSource) {
+					case USD_DATA::TEXTURE_SOURE::texture_source_r:
+						fV = col.red;
+						break;
+					case USD_DATA::TEXTURE_SOURE::texture_source_g:
+						fV = col.green;
+						break;
+					case USD_DATA::TEXTURE_SOURE::texture_source_b:
+						fV = col.blue;
+						break;
+					case USD_DATA::TEXTURE_SOURE::texture_source_a:
+						fV = col.alpha;
+						break;
+					}
+					fV = fV * weight + 1.0f * (1.0f - weight);
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 

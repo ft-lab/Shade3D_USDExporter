@@ -404,6 +404,10 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 
 	if (materialData.opacityTexture.fileName == "") {
 		shader.CreateInput(TfToken("opacity"), SdfValueTypeNames->Float).Set(materialData.opacity);
+	} else {
+		if (materialData.opacity < 1e-4) {
+			shader.CreateInput(TfToken("opacityThreshold"), SdfValueTypeNames->Float).Set(0.95f);
+		}
 	}
 
 	// 透過ピクセルがあるの場合、iorが影響するためior=1.0も出力する必要がある.
@@ -418,13 +422,6 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	// DiffuseTexture.
 	if (materialData.diffuseTexture.fileName != "") {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_difuseColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
-
-		// 不透明度の指定.
-		if (materialData.useDiffuseAlpha) {
-			shader.CreateInput(TfToken("opacityThreshold"), SdfValueTypeNames->Float).Set(0.95f);
-
-			m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity, USD_DATA::TEXTURE_SOURE::texture_source_a);
-		}
 	}
 
 	// EmissiveTexture.

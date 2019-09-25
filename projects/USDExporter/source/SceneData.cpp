@@ -590,10 +590,9 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 				compointer<sxsdk::image_interface> image(masterImage.get_image());
 				if (image) {
 					// テクスチャのピクセルを加工する場合.
-					if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r ||
+					if ((imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r ||
 						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g ||
-						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
-
+						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) && m_exportParam.texOptConvGrayscale) {
 						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
 						image2->save(fileName.c_str());
 
@@ -601,7 +600,6 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 						if (!imageD.texTransform.isDefault()) {		// 変換要素がある場合.
 							compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
 							image2->save(fileName.c_str());
-
 						} else {
 							image->save(fileName.c_str());
 						}

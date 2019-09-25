@@ -61,7 +61,11 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 		{
-			iDat = data.optMaterialTexturesBake ? 1 : 0;
+			iDat = data.texOptConvGrayscale ? 1 : 0;
+			stream->write_int(iDat);
+		}
+		{
+			iDat = data.texOptBakeMultiTextures ? 1 : 0;
 			stream->write_int(iDat);
 		}
 
@@ -123,7 +127,11 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		}
 		{
 			stream->read_int(iDat);
-			data.optMaterialTexturesBake = iDat ? true: false;
+			data.texOptConvGrayscale = iDat ? true: false;
+		}
+		{
+			stream->read_int(iDat);
+			data.texOptBakeMultiTextures = iDat ? true: false;
 		}
 
 	} catch (...) { }

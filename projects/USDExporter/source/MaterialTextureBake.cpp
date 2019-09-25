@@ -134,7 +134,7 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		materialData.ior = surface->get_refraction();
 
 		// マッピングレイヤ情報を取得.
-		//if (!m_exportParam.optMaterialTexturesBake) {
+		//if (!m_exportParam.texOptBakeMultiTextures) {
 			// 単純なベイクを行う.
 			return m_getSimpleMaterialMappingFromSurface(surface, materialData);
 		//} else {
@@ -239,7 +239,26 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 		if (!masterImage) return;
 
 		std::string masterImageName = "";
-		const int channelMix = mappingLayer.get_channel_mix();
+		int channelMix = mappingLayer.get_channel_mix();
+
+		// Occlusion情報を取得.
+		COcclusionShaderData occlusionD;
+		if (StreamCtrl::loadOcclusionParam(mappingLayer, occlusionD)) {
+			switch (occlusionD.channelMix) {
+			case 0:
+				channelMix = sxsdk::enums::mapping_grayscale_red_mode;
+				break;
+			case 1:
+				channelMix = sxsdk::enums::mapping_grayscale_green_mode;
+				break;
+			case 2:
+				channelMix = sxsdk::enums::mapping_grayscale_blue_mode;
+				break;
+			case 3:
+				channelMix = sxsdk::enums::mapping_grayscale_alpha_mode;
+				break;
+			}
+		}
 
 		// 同一のマスターイメージが格納済みか.
 		int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, channelMix);
@@ -283,11 +302,11 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			if (texMappingData.textureParam.uvLayerIndex < 0 || texMappingData.textureParam.uvLayerIndex > 1) {
 				texMappingData.textureParam.uvLayerIndex = 0;
 			}
+
+			int occlusionChannelMix = 0;
 			if (occlusionF) {
-				COcclusionShaderData occlusionShaderD;
-				if (StreamCtrl::loadOcclusionParam(mappingLayer, occlusionShaderD)) {
-					texMappingData.textureParam.uvLayerIndex = occlusionShaderD.uvIndex;
-				}
+				texMappingData.textureParam.uvLayerIndex = occlusionD.uvIndex;
+				occlusionChannelMix = occlusionD.channelMix;		// チャンネル合成（0:Red、1:Green、2:Blue、3:Alpha）.
 			}
 
 			texMappingData.textureParam.repeatU    = mappingLayer.get_repetition_x();
@@ -319,6 +338,27 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_rgb;
 			}
 
+			if (occlusionF) {
+				switch (occlusionChannelMix) {
+				case 0:
+					texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
+					break;
+				case 1:
+					texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_g;
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_g;
+					break;
+				case 2:
+					texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_b;
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_b;
+					break;
+				case 3:
+					texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+					break;
+				}
+			}
+
 			if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
 				const int mType = mappingLayer.get_type();
 				if (mType == sxsdk::enums::roughness_mapping || mType == sxsdk::enums::reflection_mapping || mType == sxsdk::enums::transparency_mapping) {
@@ -348,38 +388,38 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
 
 		// 有効なRGBA要素をチェック.
 		bool chkF = false;
-/*
-		switch (channelMix) {
-			case sxsdk::enums::mapping_grayscale_red_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
+		if (m_exportParam.texOptConvGrayscale) {		// グレイスケールとして出力する場合.
+			switch (channelMix) {
+				case sxsdk::enums::mapping_grayscale_red_mode:
+					if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r && imageD.texTransform.isSame(texTransform)) {
+						chkF = true;
+					}
+					break;
 
-			case sxsdk::enums::mapping_grayscale_green_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
+				case sxsdk::enums::mapping_grayscale_green_mode:
+					if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g && imageD.texTransform.isSame(texTransform)) {
+						chkF = true;
+					}
+					break;
 
-			case sxsdk::enums::mapping_grayscale_blue_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
+				case sxsdk::enums::mapping_grayscale_blue_mode:
+					if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b && imageD.texTransform.isSame(texTransform)) {
+						chkF = true;
+					}
+					break;
 
-			case sxsdk::enums::mapping_grayscale_alpha_mode:
-				if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a && imageD.texTransform.isSame(texTransform)) {
-					chkF = true;
-				}
-				break;
+				case sxsdk::enums::mapping_grayscale_alpha_mode:
+					if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a && imageD.texTransform.isSame(texTransform)) {
+						chkF = true;
+					}
+					break;
 
-			default:
-				if (imageD.texTransform.isSame(texTransform)) chkF = true;
+				default:
+					if (imageD.texTransform.isSame(texTransform)) chkF = true;
+			}
+		} else {
+			if (imageD.texTransform.isSame(texTransform)) chkF = true;
 		}
-		if (!chkF) continue;
-*/
-		if (imageD.texTransform.isSame(texTransform)) chkF = true;
 		if (!chkF) continue;
 
 		if (imageD.pMasterImageHandle == mHandle) {
