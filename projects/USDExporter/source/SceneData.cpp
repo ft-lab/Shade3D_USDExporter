@@ -10,7 +10,8 @@
 #include "StreamCtrl.h"
 #include "SkeletonData.h"
 
-#define MATERIAL_ROOT_PATH  "/Materials"
+#define MATERIAL_ROOT_PATH  "/root/Materials"
+#define ROOT_PATH  "/root"
 
 CSceneData::CSceneData ()
 {
@@ -83,7 +84,7 @@ std::string CSceneData::appendShape (sxsdk::shape_class* shape)
 	// ルートノード名.
 	if (!shape->has_dad()) {
 		if (!StringUtil::checkASCII(name2)) {
-			name2 = std::string("/root");
+			name2 = std::string(ROOT_PATH);
 		}
 	}
 
@@ -172,7 +173,14 @@ void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& n
 	nodeD.name     = namePath;
 	nodeD.matrix   = matrix;
 	nodeD.nodeType = USD_DATA::NODE_TYPE::null_node;
-	if (Shade3DUtil::isBone(*shape)) nodeD.nodeType = USD_DATA::NODE_TYPE::bone_node;
+	if (Shade3DUtil::isBone(*shape)) {
+		nodeD.nodeType = USD_DATA::NODE_TYPE::bone_node;
+
+		// もし、末端ボーンの場合は回転をクリア.
+		if (Shade3DUtil::isBoneEnd(*shape)) {
+			nodeD.matrix = Shade3DUtil::clearMatrixRotate(nodeD.matrix);
+		}
+	}
 	if (Shade3DUtil::isBallJoint(*shape)) nodeD.nodeType = USD_DATA::NODE_TYPE::ball_joint_node;
 
 	nodeD.shapeHandle = shape->get_handle();
@@ -475,6 +483,7 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 
 	// マテリアルを追加.
 	if (!materialsList.empty()) {
+		usdExport.SetImagesList(m_materialTextureBake->getImagesList());
 		for (size_t i = 0; i < materialsList.size(); ++i) {
 			const CMaterialData& matD = materialsList[i];
 			usdExport.appendNodeMaterial(matD);
@@ -748,6 +757,12 @@ void CSceneData::m_exportSkeletonAndJoints (CUSDExporter& usdExport)
 			sxsdk::shape_class* shape = m_pScene->get_shape_by_handle(nodeD.shapeHandle);
 			const sxsdk::mat4 lwMat0 = shape->get_local_to_world_matrix();
 			sxsdk::mat4 lwMat = (shape->get_transformation()) * lwMat0;
+
+			// もし、末端ボーンの場合は回転をクリア.
+			if (Shade3DUtil::isBoneEnd(*shape)) {
+				lwMat = Shade3DUtil::clearMatrixRotate(lwMat);
+			}
+
 			lwMat = Shade3DUtil::convUnit_mm_to_cm(lwMat);
 
 			CSkelJointData jointD;

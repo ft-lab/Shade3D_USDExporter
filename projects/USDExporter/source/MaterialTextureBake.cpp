@@ -25,7 +25,7 @@
 
 */
 
-#define MATERIAL_ROOT_PATH  "/Materials"
+#define MATERIAL_ROOT_PATH  "/root/Materials"
 
 CMaterialTextureBake::CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam)
 {
@@ -166,6 +166,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 			CTextureTransform texTransform;
 			texTransform.flipColor     = mappingLayer.get_flip_color();
 			texTransform.textureWeight = mappingLayer.get_weight();
+			texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = 1.0f;
 
 			// オクルージョンレイヤの場合.
 			if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) {
@@ -206,8 +207,9 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 				m_setTextureMappingData(mappingLayer, texTransform, materialData.metallicTexture);
 			}
 			if (mType == sxsdk::enums::transparency_mapping) {
-				texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f - materialData.opacity;		// TODO.
+				texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f;
 				texTransform.flipColor = !texTransform.flipColor;		// 透明度とOpacityは逆になる.
+				texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = materialData.opacity;
 				m_setTextureMappingData(mappingLayer, texTransform, materialData.opacityTexture);
 			}
 		}
@@ -227,7 +229,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
  */
 void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF)
 {
-	if (texMappingData.fileName != "") return;
+	if (texMappingData.textureParam.imageIndex >= 0) return;
 
 	try {
 		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
@@ -296,7 +298,6 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			imageD.fileName = masterImageName;
 			imageD.occlusionF = occlusionF;
 
-			texMappingData.fileName = masterImageName;
 			texMappingData.textureParam.imageIndex = imageIndex;
 			texMappingData.textureParam.uvLayerIndex = mappingLayer.get_uv_mapping();
 			if (texMappingData.textureParam.uvLayerIndex < 0 || texMappingData.textureParam.uvLayerIndex > 1) {
@@ -312,6 +313,8 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			texMappingData.textureParam.repeatU    = mappingLayer.get_repetition_x();
 			texMappingData.textureParam.repeatV    = mappingLayer.get_repetition_y();
 			texMappingData.textureParam.wrapRepeat = mappingLayer.get_repeat_image();
+
+			bool useAlpha = false;
 
 			switch (channelMix) {
 			case sxsdk::enums::mapping_grayscale_red_mode:
@@ -332,6 +335,7 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			case sxsdk::enums::mapping_grayscale_alpha_mode:
 				texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
 				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+				useAlpha = true;
 				break;
 
 			default:
@@ -355,7 +359,17 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				case 3:
 					texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
 					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+					useAlpha = true;
 					break;
+				}
+			}
+
+			// アルファ要素を持つ場合でファイル名がjpgの場合は、pngに置き換え.
+			if (useAlpha) {
+				if (StringUtil::getFileExtension(masterImageName) == "jpg") {
+					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+					masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
+					imageD.fileName = masterImageName;
 				}
 			}
 

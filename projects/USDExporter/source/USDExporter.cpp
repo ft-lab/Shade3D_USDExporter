@@ -40,9 +40,9 @@ using namespace PXR_INTERNAL_NS;
 
  UsdStageRefPtr g_stage = NULL;		// USDエクスポート時のクラス.
 
- #define MATERIAL_ROOT_PATH  "/Materials"
-
- #define SKELETONS_ROOT_PATH  "/Skeletons"
+#define ROOT_PATH  "/root"
+#define MATERIAL_ROOT_PATH  "/root/Materials"
+#define SKELETONS_ROOT_PATH  "/root/Skeletons"
 
  namespace {
 	 /**
@@ -331,6 +331,7 @@ void CUSDExporter::clear ()
 	m_pathStack.clear();
 	m_currentPath.clear();
 	m_skeletonsList.clear();
+	m_imagesList.clear();
 }
 
 /**
@@ -339,6 +340,14 @@ void CUSDExporter::clear ()
 void CUSDExporter::beginExport (const std::string& fileName)
 {
 	g_stage = UsdStage::CreateNew(fileName);
+
+	// rootノードを出力.
+	if (g_stage) {
+		UsdPrim prim = g_stage->DefinePrim(SdfPath(ROOT_PATH), TfToken("Xform"));
+
+		// 外部参照される場合のデフォルトPrimの指定.
+		g_stage->SetDefaultPrim(prim);
+	}
 }
 
 /**
@@ -361,6 +370,14 @@ void CUSDExporter::endExport ()
 void CUSDExporter::setSkeletonsData (const std::vector<CSkeletonData>& skelData)
 {
 	m_skeletonsList = skelData;
+}
+
+/**
+ * イメージ情報を渡す.
+ */
+void CUSDExporter::SetImagesList (const std::vector<CImageData>& imagesList)
+{
+	m_imagesList = imagesList;
 }
 
 /**
@@ -390,19 +407,19 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 
 	shader.CreateIdAttr().Set(TfToken("UsdPreviewSurface"));
 
-	if (materialData.diffuseTexture.fileName == "") {
+	if (materialData.diffuseTexture.textureParam.imageIndex < 0) {
 		shader.CreateInput(TfToken("diffuseColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(materialData.diffuseColor[0], materialData.diffuseColor[1], materialData.diffuseColor[2]));
 	}
 
-	if (materialData.roughnessTexture.fileName == "") {
+	if (materialData.roughnessTexture.textureParam.imageIndex < 0) {
 		shader.CreateInput(TfToken("roughness"), SdfValueTypeNames->Float).Set(materialData.roughness);
 	}
 
-	if (materialData.metallicTexture.fileName == "") {
+	if (materialData.metallicTexture.textureParam.imageIndex < 0) {
 		shader.CreateInput(TfToken("metallic"), SdfValueTypeNames->Float).Set(materialData.metallic);
 	}
 
-	if (materialData.opacityTexture.fileName == "") {
+	if (materialData.opacityTexture.textureParam.imageIndex < 0) {
 		shader.CreateInput(TfToken("opacity"), SdfValueTypeNames->Float).Set(materialData.opacity);
 	} else {
 		if (materialData.opacity < 1e-4) {
@@ -413,44 +430,44 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	// 透過ピクセルがあるの場合、iorが影響するためior=1.0も出力する必要がある.
 	shader.CreateInput(TfToken("ior"), SdfValueTypeNames->Float).Set(materialData.ior);
 
-	if (materialData.emissiveTexture.fileName == "") {
+	if (materialData.emissiveTexture.textureParam.imageIndex < 0) {
 		if (!MathUtil::isZero(materialData.emissiveColor[0]) || !MathUtil::isZero(materialData.emissiveColor[1]) || !MathUtil::isZero(materialData.emissiveColor[2])) {
 			shader.CreateInput(TfToken("emissiveColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(materialData.emissiveColor[0], materialData.emissiveColor[1], materialData.emissiveColor[2]));
 		}
 	}
 
 	// DiffuseTexture.
-	if (materialData.diffuseTexture.fileName != "") {
+	if (materialData.diffuseTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_difuseColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// EmissiveTexture.
-	if (materialData.emissiveTexture.fileName != "") {
+	if (materialData.emissiveTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_emissiveColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// NormalTexture.
-	if (materialData.normalTexture.fileName != "") {
+	if (materialData.normalTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_normal, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// RoughnessTexture.
-	if (materialData.roughnessTexture.fileName != "") {
+	if (materialData.roughnessTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_roughness, materialData.roughnessTexture.textureSource);
 	}
 
 	// MetallicTexture.
-	if (materialData.metallicTexture.fileName != "") {
+	if (materialData.metallicTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_metallic, materialData.metallicTexture.textureSource);
 	}
 
 	// OcclusionTexture.
-	if (materialData.occlusionTexture.fileName != "") {
+	if (materialData.occlusionTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_occlusion, materialData.occlusionTexture.textureSource);
 	}
 
 	// OpacityTexture.
-	if (materialData.opacityTexture.fileName != "") {
+	if (materialData.opacityTexture.textureParam.imageIndex >= 0) {
 		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity, materialData.opacityTexture.textureSource);
 	}
 
@@ -535,7 +552,8 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 		break;
 	}
 
-	if (mappingD.fileName == "" || mappingSource == "" || texName == "") return;
+	if (mappingD.textureParam.imageIndex < 0 || mappingSource == "" || texName == "") return;
+	if (m_imagesList.size() <= mappingD.textureParam.imageIndex) return;
 
 	// UVレイヤ番号 (0 or 1).
 	const int uvIndex = mappingD.textureParam.uvLayerIndex;
@@ -580,7 +598,8 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	shaderTexture.CreateIdAttr().Set(TfToken("UsdUVTexture"));
 
 	// ファイル名を指定.
-	shaderTexture.CreateInput(TfToken("file"), SdfValueTypeNames->Asset).Set(SdfAssetPath(mappingD.fileName));
+	const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+	shaderTexture.CreateInput(TfToken("file"), SdfValueTypeNames->Asset).Set(SdfAssetPath(fileName));
 
 	// UV0の場合は"st"、UV1の場合は"st2"とつなぐ.
 	if (useTransform2D) {
@@ -735,7 +754,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 		if (iPos != std::string::npos) {
 			meshName = meshName.substr(iPos + 1);
 		}
-		meshPath = std::string("/Skeletons/") + skelD.rootName + std::string("/") + meshName;
+		meshPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/") + meshName;
 	}
 
 	UsdPrim prim = g_stage->DefinePrim(SdfPath(meshPath), TfToken("Mesh"));
@@ -919,7 +938,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 			// MeshからSkelAnimationへの参照.
 			const CSkeletonData& skelD = m_skeletonsList[meshData.skinSkeletonIndex];
 			{
-				const std::string skelPath = std::string("/Skeletons/") + skelD.rootName + std::string("/Skel/Anim");
+				const std::string skelPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/Skel/Anim");
 				UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(skelPath));
 				if (prim.IsValid()) {
 					UsdSkelBindingAPI binding = UsdSkelBindingAPI::Apply(geomMesh.GetPrim());
@@ -929,7 +948,7 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 
 			// SkeletonからMeshへのバインド.
 			{
-				const std::string skelPath = std::string("/Skeletons/") + skelD.rootName + std::string("/Skel");
+				const std::string skelPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/Skel");
 				UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(skelPath));
 				if (prim.IsValid()) {
 					UsdSkelBindingAPI binding = UsdSkelBindingAPI::Apply(geomMesh.GetPrim());

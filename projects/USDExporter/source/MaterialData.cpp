@@ -16,7 +16,6 @@ CTextureMappingData::~CTextureMappingData ()
 
 void CTextureMappingData::clear ()
 {
-	fileName = "";
 	textureSource = USD_DATA::TEXTURE_SOURE::texture_source_rgb;
 	textureParam.clear();
 }
@@ -26,7 +25,6 @@ void CTextureMappingData::clear ()
  */
 bool CTextureMappingData::isSame (const CTextureMappingData& tmDat) const
 {
-	if (fileName != tmDat.fileName) return false;
 	if (textureSource != tmDat.textureSource) return false;
 	if (textureParam.uvLayerIndex != tmDat.textureParam.uvLayerIndex) return false;
 	if (textureParam.repeatU != tmDat.textureParam.repeatU) return false;

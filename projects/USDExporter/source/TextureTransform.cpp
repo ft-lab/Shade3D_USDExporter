@@ -20,6 +20,7 @@ void CTextureTransform::clear ()
 	occlusion = false;
 	textureWeight = 1.0f;
 	textureNormal = false;
+	factor[0] = factor[1] = factor[2] = factor[3] = 1.0f;
 }
 
 /**

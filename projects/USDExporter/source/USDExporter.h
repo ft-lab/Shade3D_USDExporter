@@ -8,6 +8,7 @@
 #include "MaterialData.h"
 #include "SkeletonData.h"
 #include "JointMotionData.h"
+#include "ImageData.h"
 
 #include <string>
 #include <vector>
@@ -17,6 +18,7 @@ private:
 	std::vector<std::string> m_pathStack;			// パスの格納スタック.
 	std::string m_currentPath;						// カレントの形状パス.
 	std::vector<CSkeletonData> m_skeletonsList;		// アニメーション時のスケルトン情報.
+	std::vector<CImageData> m_imagesList;			// 出力するイメージ情報のリスト.
 
 public:
 	CUSDExporter ();
@@ -94,6 +96,11 @@ public:
 	 * スケルトン情報を渡す.
 	 */
 	void setSkeletonsData (const std::vector<CSkeletonData>& skelData);
+
+	/**
+	 * イメージ情報を渡す.
+	 */
+	void SetImagesList (const std::vector<CImageData>& imagesList);
 
 	/**
 	 * usdzファイルを出力.

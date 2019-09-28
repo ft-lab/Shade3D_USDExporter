@@ -20,6 +20,7 @@ public:
 	bool occlusion;						// オクルージョンレイヤの場合.
 	bool textureNormal;					// 法線マップの場合.
 	float textureWeight;				// テクスチャマッピングでのウエイト値 (0.0に近づくほどテクスチャの影響が弱くなる).
+	float factor[4];					// RGBAの乗算値.
 
 public:
 	CTextureTransform ();
@@ -38,6 +39,10 @@ public:
 		this->occlusion = v.occlusion;
 		this->textureWeight = v.textureWeight;
 		this->textureNormal = v.textureNormal;
+		this->factor[0] = v.factor[0];
+		this->factor[1] = v.factor[1];
+		this->factor[2] = v.factor[2];
+		this->factor[3] = v.factor[3];
 	}
 
     CTextureTransform& operator = (const CTextureTransform &v) {
@@ -53,6 +58,10 @@ public:
 		this->occlusion = v.occlusion;
 		this->textureWeight = v.textureWeight;
 		this->textureNormal = v.textureNormal;
+		this->factor[0] = v.factor[0];
+		this->factor[1] = v.factor[1];
+		this->factor[2] = v.factor[2];
+		this->factor[3] = v.factor[3];
 		return (*this);
 	}
 

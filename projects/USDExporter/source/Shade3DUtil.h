@@ -77,6 +77,16 @@ namespace Shade3DUtil {
 	bool isBone (sxsdk::shape_class& shape);
 
 	/**
+	 * 指定の形状がボーンで先端かどうか.
+	 */
+	bool isBoneEnd (sxsdk::shape_class& shape);
+
+	/**
+	 * 行列の回転要素をクリアする.
+	 */
+	sxsdk::mat4 clearMatrixRotate (const sxsdk::mat4& m);
+
+	/**
 	 * 指定の形状がボールジョイントかどうか.
 	 */
 	bool isBallJoint (sxsdk::shape_class& shape);

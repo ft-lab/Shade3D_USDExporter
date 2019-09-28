@@ -18,7 +18,6 @@
 class CTextureMappingData
 {
 public:
-	std::string fileName;						// テクスチャファイル名.
 	USD_DATA::TEXTURE_SOURE textureSource;		// テクスチャの採用要素(RGB/R/G/B).
 
 	CTextureParamData textureParam;				// テクスチャパラメータ.
@@ -28,13 +27,11 @@ public:
 	~CTextureMappingData ();
 
 	CTextureMappingData (const CTextureMappingData& v) {
-		this->fileName      = v.fileName;
 		this->textureSource = v.textureSource;
 		this->textureParam  = v.textureParam;
 	}
 
     CTextureMappingData& operator = (const CTextureMappingData &v) {
-		this->fileName      = v.fileName;
 		this->textureSource = v.textureSource;
 		this->textureParam  = v.textureParam;
 		return (*this);

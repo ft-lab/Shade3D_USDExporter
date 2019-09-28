@@ -180,6 +180,19 @@ sxsdk::mat4 Shade3DUtil::convUnit_mm_to_cm (const sxsdk::mat4& m)
 }
 
 /**
+ * 行列の回転要素をクリアする.
+ */
+sxsdk::mat4 Shade3DUtil::clearMatrixRotate (const sxsdk::mat4& m)
+{
+	sxsdk::vec3 scale ,shear, rotation, trans;
+
+	// 要素ごとに分解.
+	m.unmatrix(scale ,shear, rotation, trans);
+
+	return sxsdk::mat4::scale(scale) * sxsdk::mat4::shear(shear) * sxsdk::mat4::translate(trans);
+}
+
+/**
  * 指定のイメージで、テクスチャの変換を行う.
  */
 compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk::image_interface* image, const USD_DATA::TEXTURE_SOURE& textureSource,  const CTextureTransform& textureTrans)
@@ -237,31 +250,39 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 					col.alpha = 1.0f;
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
-					col.red   = col.red   * weight + 1.0f * (1.0f - weight);
-					col.green = col.green * weight + 1.0f * (1.0f - weight);
-					col.blue  = col.blue  * weight + 1.0f * (1.0f - weight);
+					col.red   = col.red   * weight + textureTrans.factor[0] * (1.0f - weight);
+					col.green = col.green * weight + textureTrans.factor[1] * (1.0f - weight);
+					col.blue  = col.blue  * weight + textureTrans.factor[2] * (1.0f - weight);
 
 					col.red   = col.red   * textureTrans.multiR + textureTrans.offsetR;
 					col.green = col.green * textureTrans.multiG + textureTrans.offsetG;
 					col.blue  = col.blue  * textureTrans.multiB + textureTrans.offsetB;
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r) {
-					fV = col.red * textureTrans.multiR + textureTrans.offsetR;
+					fV = col.red;
+					fV = fV * weight + textureTrans.factor[0] * (1.0f - weight);
+					fV = fV * textureTrans.multiR + textureTrans.offsetR;
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g) {
-					fV = col.green * textureTrans.multiG + textureTrans.offsetG;
+					fV = col.green;
+					fV = fV * weight + textureTrans.factor[1] * (1.0f - weight);
+					fV = fV * textureTrans.multiG + textureTrans.offsetG;
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
-					fV = col.blue * textureTrans.multiB + textureTrans.offsetB;
+					fV = col.blue;
+					fV = fV * weight + textureTrans.factor[2] * (1.0f - weight);
+					fV = fV * textureTrans.multiB + textureTrans.offsetB;
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 
 				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
-					fV = col.alpha * textureTrans.multiR + textureTrans.offsetR;
+					fV = col.alpha;
+					fV = fV * weight + textureTrans.factor[3] * (1.0f - weight);
+					fV = fV * textureTrans.multiR + textureTrans.offsetR;
 					col.red = col.green = col.blue = fV;
 					col.alpha = 1.0f;
 				}
@@ -334,6 +355,30 @@ bool Shade3DUtil::isBone (sxsdk::shape_class& shape)
 	if (shape.get_type() != sxsdk::enums::part) return false;
 	sxsdk::part_class& part = shape.get_part();
 	return (part.get_part_type() == sxsdk::enums::bone_joint);
+}
+
+/**
+ * 指定の形状がボーンで先端かどうか.
+ */
+bool Shade3DUtil::isBoneEnd (sxsdk::shape_class& shape)
+{
+	if (!Shade3DUtil::isBone(shape)) return false;
+	if (!shape.has_son()) return true;
+
+	// 子要素にボーンを持つか.
+	try {
+		sxsdk::shape_class* pS = shape.get_son();
+		bool hasChildBone = false;
+		while(pS->has_bro()) {
+			pS = pS->get_bro();
+			if (Shade3DUtil::isBone(*pS)) {
+				hasChildBone = true;
+				break;
+			}
+		}
+		return !hasChildBone;
+	} catch (...) { }
+	return false;
 }
 
 /**
