@@ -936,6 +936,8 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 		// スケルトンの割り当て.
 		{
 			// MeshからSkelAnimationへの参照.
+			// USDの仕様ではいらないが、iOS12.4では以下がないとスキンアニメーションが動作しない。.
+			// iOS13ではこれが不要になった.
 			const CSkeletonData& skelD = m_skeletonsList[meshData.skinSkeletonIndex];
 			{
 				const std::string skelPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/Skel/Anim");

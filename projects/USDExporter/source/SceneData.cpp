@@ -603,16 +603,17 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g ||
 						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) && m_exportParam.texOptConvGrayscale) {
 						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
-						image2->save(fileName.c_str());
+						m_saveTextureImage(fileName, image2);
 
 					} else {
 						if (!imageD.texTransform.isDefault()) {		// 変換要素がある場合.
 							compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
-							image2->save(fileName.c_str());
+							m_saveTextureImage(fileName, image2);
 						} else {
-							image->save(fileName.c_str());
+							m_saveTextureImage(fileName, image);
 						}
 					}
+
 					// USDZ出力時のためのファイル名保持.
 					m_exportFilesList.push_back(fileName);
 				}
@@ -620,6 +621,27 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 		}
 	}
 }
+
+ /**
+  * テクスチャをエクスポートパラメータでリサイズしてファイル出力.
+  * @param[in] fileName  出力ファイル名.
+  * @param[in] image     imageクラス.
+  */
+ void CSceneData::m_saveTextureImage (const std::string fileName, sxsdk::image_interface* image)
+ {
+	const int texSize = USD_DATA::EXPORT::getTextureSize(m_exportParam.optMaxTextureSize);
+
+	 try {
+		if (m_exportParam.optMaxTextureSize == USD_DATA::EXPORT::texture_size_none) {
+			image->save(fileName.c_str());
+		} else {
+			// イメージを2の累乗にリサイズ.
+			const sx::vec<int,2> newSize = Shade3DUtil::calcImageSizePowerOf2(image->get_size(), texSize);
+			compointer<sxsdk::image_interface> image2(Shade3DUtil::resizeImageWithAlpha(m_pScene, image, newSize));
+			image2->save(fileName.c_str());
+		}
+	 } catch (...) { }
+ }
 
 /**
  * usdzファイルを出力。exportUSDのあとに実行すること.

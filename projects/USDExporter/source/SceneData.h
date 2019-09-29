@@ -125,6 +125,13 @@ private:
 	 */
 	 void m_calcJointQuaternionToEuler (CJointMotionData& motionData);
 
+	 /**
+	  * テクスチャをエクスポートパラメータでリサイズしてファイル出力.
+	  * @param[in] fileName  出力ファイル名.
+	  * @param[in] image     imageクラス.
+	  */
+	 void m_saveTextureImage (const std::string fileName, sxsdk::image_interface* image);
+
 public:
 	CSceneData ();
 	~CSceneData ();

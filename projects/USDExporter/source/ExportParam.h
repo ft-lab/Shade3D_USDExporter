@@ -36,6 +36,11 @@ namespace USD_DATA {
 			texture_size_2048,						// 2048.
 			texture_size_4096,						// 4096.
 		};
+
+		/**
+		 * 最大テクスチャサイズを数値で取得.
+		 */
+		int getTextureSize (const USD_DATA::EXPORT::MAX_TEXTURE_SIZE size);
 	}
 }
 

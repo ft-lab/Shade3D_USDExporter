@@ -54,6 +54,27 @@ namespace Shade3DUtil {
 	compointer<sxsdk::image_interface> createImageWithTransform (sxsdk::image_interface* image, const USD_DATA::TEXTURE_SOURE& textureSource, const CTextureTransform& textureTrans);
 
 	/**
+	 * テクスチャサイズを2の累乗でリサイズしたサイズを求める.
+	 * @param[in] size     元のサイズ.
+	 * @param[in] maxSize  最大サイズ。マイナスの場合は上限なし.
+	 */
+	sx::vec<int,2> calcImageSizePowerOf2 (const sx::vec<int,2>& size, const int maxSize = -1);
+
+	/**
+	 * 指定のマスターイメージがAlpha情報を持つかどうか.
+	 * @param[in] masterImage  マスターイメージ.
+	 * @return アルファ要素が1.0でないものがある場合はtrueを返す.
+	 */
+	bool hasImageAlpha (sxsdk::master_image_class* masterImage);
+
+	/**
+	 * 画像を指定のサイズにリサイズ。アルファも考慮（image->duplicate_imageはアルファを考慮しないため）.
+	 * @param[in] image  元の画像.
+	 * @param[in] size   変更するサイズ.
+	 */
+	compointer<sxsdk::image_interface> resizeImageWithAlpha (sxsdk::scene_interface* scene, sxsdk::image_interface* image, const sx::vec<int,2>& size);
+
+	/**
 	 * 指定のマッピングレイヤがOcclusion用のレイヤかどうか.
 	 */
 	bool isOcclusionMappingLayer (sxsdk::mapping_layer_class* mappingLayer);
