@@ -185,13 +185,14 @@ std::string CFindNames::m_convASCIIString (const std::string& str, const bool ch
 	str2 = StringUtil::replaceString(str2, "%", "_");
 	str2 = StringUtil::replaceString(str2, "&", "_");
 	str2 = StringUtil::replaceString(str2, "\\", "_");
+	str2 = StringUtil::replaceString(str2, ".", "_");
+	str2 = StringUtil::replaceString(str2, ";", "_");
+	str2 = StringUtil::replaceString(str2, ":", "_");
 
 	if (chkFilename) {
 		str2 = StringUtil::replaceString(str2, "/", "_");
 		str2 = StringUtil::replaceString(str2, "<", "_");
 		str2 = StringUtil::replaceString(str2, ">", "_");
-		str2 = StringUtil::replaceString(str2, ";", "_");
-		str2 = StringUtil::replaceString(str2, ":", "_");
 	}
 	
 	// 先頭の文字が英字でない場合は、"_"を入れる.
