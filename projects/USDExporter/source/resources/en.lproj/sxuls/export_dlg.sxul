@@ -10,7 +10,6 @@
 		<bool id="206" label="Subdivison" />
 		<bool id="203" label="ボーンとスキンを出力" />
 		<bool id="204" label="頂点カラーを出力" />
-		<bool id="205" label="アニメーションを出力" />
 	</group>
 
 	<group label="テクスチャ">
@@ -20,4 +19,8 @@
 		<bool id="304" label="複数テクスチャをベイク" />
 	</group>
 
+	<group label="アニメーション">
+		<selection id="401" label="出力:|なし|キーフレームのみ|ステップ指定" />
+		<int id="402" label="ステップ" />
+	</group>
 </dialog>

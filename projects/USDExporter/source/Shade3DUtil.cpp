@@ -315,7 +315,7 @@ sx::vec<int,2> Shade3DUtil::calcImageSizePowerOf2 (const sx::vec<int,2>& size, c
 			if (v < 0) break;
 			retSize[loop] = v;
 			if (srcV == v || v >= maxSize) break;
-			if (srcV + (srcV >> 2) < v) break;
+			if (srcV < v + (srcV >> 2)) break;
 		}
 	}
 

@@ -38,6 +38,15 @@ namespace USD_DATA {
 		};
 
 		/**
+		 * アニメーションのキーフレーム出力の種類.
+		 */
+		enum ANIM_KEYFRAME_MODE {
+			anim_keyframe_none = 0,					// なし.
+			anim_keyframe_only,						// キーフレームのみ.
+			anim_keyframe_step,						// ステップ指定.
+		};
+
+		/**
 		 * 最大テクスチャサイズを数値で取得.
 		 */
 		int getTextureSize (const USD_DATA::EXPORT::MAX_TEXTURE_SIZE size);
@@ -65,6 +74,10 @@ public:
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
 	bool texOptBakeMultiTextures;							// 複数テクスチャをベイク.
 
+	// アニメーションオプション.
+	USD_DATA::EXPORT::ANIM_KEYFRAME_MODE animKeyframeMode;	// キーフレームの出力の種類.
+	int animStep;											// ステップ.
+
 public:
 	CExportParam ();
 	~CExportParam ();
@@ -77,11 +90,13 @@ public:
 		this->optMaxTextureSize    = v.optMaxTextureSize;
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
 		this->optOutputVertexColor = v.optOutputVertexColor;
-		this->optOutputAnimation   = v.optOutputAnimation;
 		this->optSubdivision       = v.optSubdivision;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
+
+		this->animKeyframeMode = v.animKeyframeMode;
+		this->animStep = v.animStep;
 	}
 
     CExportParam& operator = (const CExportParam &v) {
@@ -92,11 +107,13 @@ public:
 		this->optMaxTextureSize    = v.optMaxTextureSize;
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
 		this->optOutputVertexColor = v.optOutputVertexColor;
-		this->optOutputAnimation   = v.optOutputAnimation;
 		this->optSubdivision       = v.optSubdivision;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
+
+		this->animKeyframeMode = v.animKeyframeMode;
+		this->animStep = v.animStep;
 
 		return (*this);
 	}

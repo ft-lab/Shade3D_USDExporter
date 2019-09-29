@@ -490,8 +490,8 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		}
 	}
 
-	// アニメーション情報を出力.
-	if (m_exportParam.optOutputAnimation) {
+	// アニメーション情報を出力 (ヘッダ部).
+	if (m_exportParam.animKeyframeMode != USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) {
 		const CAnimationData animD = m_getAnimationData(m_pScene);
 		usdExport.setAnimationData(animD.startFrame, animD.endFrame, animD.frameRate);
 	}

@@ -20,13 +20,15 @@ enum {
 
 	dlg_option_bone_skin = 203,				// ボーンとスキンを出力.
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
-	dlg_option_animation = 205,				// アニメーションを出力.
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
 
 	dlg_option_texture = 301,				// テクスチャ出力.
 	dlg_option_max_texture_size = 302,		// 最大テクスチャサイズ.
 	dlg_option_texture_grayscale = 303,		// R/G/B/A指定をグレイスケールに分けて出力.
 	dlg_option_texture_bake_multi = 304,	// 複数テクスチャをベイク.
+
+	dlg_option_anim_keyframe_mode = 401,	// アニメーションのキーフレーム出力モード.
+	dlg_option_anim_keyframe_step = 402,	// アニメーションのキーフレームのステップ数.
 };
 
 CUSDExporterInterface::CUSDExporterInterface (sxsdk::shade_interface& shade) : shade(shade)
@@ -325,8 +327,9 @@ void CUSDExporterInterface::begin (void *)
 	}
 
 	if (type == sxsdk::enums::line) {
-		// 開いた線形状の場合.
-		if (!m_pCurrentShape->get_line().get_closed()) {
+		// 開いた線形状で、回転体/掃引体でない場合.
+		sxsdk::line_class& lineC = m_pCurrentShape->get_line();
+		if (!lineC.get_closed() && !lineC.is_extruded() && !lineC.is_revolved()) {
 			m_skip = true;
 			return;
 		}
@@ -677,11 +680,6 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 	}
 	{
 		sxsdk::dialog_item_class* item;
-		item = &(d.get_dialog_item(dlg_option_animation));
-		item->set_bool(m_exportParam.optOutputAnimation);
-	}
-	{
-		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_subdivision));
 		item->set_bool(m_exportParam.optSubdivision);
 		item->set_enabled(!m_exportParam.exportAppleUSDZ);
@@ -695,6 +693,17 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_texture_bake_multi));
 		item->set_bool(m_exportParam.texOptBakeMultiTextures);
+	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_anim_keyframe_mode));
+		item->set_selection((int)m_exportParam.animKeyframeMode);
+	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_anim_keyframe_step));
+		item->set_int(m_exportParam.animStep);
+		item->set_enabled(m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_step);
 	}
 }
 
@@ -745,10 +754,6 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 		m_exportParam.optOutputVertexColor = item.get_bool();
 		return true;
 	}
-	if (id == dlg_option_animation) {
-		m_exportParam.optOutputAnimation = item.get_bool();
-		return true;
-	}
 	if (id == dlg_option_subdivision) {
 		m_exportParam.optSubdivision = item.get_bool();
 		return true;
@@ -758,6 +763,15 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	}
 	if (id == dlg_option_texture_bake_multi) {
 		m_exportParam.texOptBakeMultiTextures = item.get_bool();
+	}
+	if (id == dlg_option_anim_keyframe_mode) {
+		m_exportParam.animKeyframeMode = (USD_DATA::EXPORT::ANIM_KEYFRAME_MODE)item.get_selection();
+		load_dialog_data(dialog);		// UIのディム状態を更新.
+		return true;
+	}
+	if (id == dlg_option_anim_keyframe_step) {
+		m_exportParam.animStep = std::max(1, item.get_int());
+		return true;
 	}
 
 	return false;

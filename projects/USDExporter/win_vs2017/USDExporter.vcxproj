@@ -280,6 +280,7 @@
     <ClCompile Include="..\..\..\include\sxcore\debug.cpp" />
     <ClCompile Include="..\..\..\include\sxcore\vectors.cpp" />
     <ClCompile Include="..\source\AnimationData.cpp" />
+    <ClCompile Include="..\source\AnimKeyframeBake.cpp" />
     <ClCompile Include="..\source\ExportParam.cpp" />
     <ClCompile Include="..\source\FindNames.cpp" />
     <ClCompile Include="..\source\ImageData.cpp" />
@@ -305,6 +306,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AnimationData.h" />
+    <ClInclude Include="..\source\AnimKeyframeBake.h" />
     <ClInclude Include="..\source\ExportParam.h" />
     <ClInclude Include="..\source\FindNames.h" />
     <ClInclude Include="..\source\GlobalHeader.h" />

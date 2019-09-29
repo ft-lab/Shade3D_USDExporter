@@ -49,10 +49,6 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 		{
-			iDat = data.optOutputAnimation ? 1 : 0;
-			stream->write_int(iDat);
-		}
-		{
 			iDat = data.optSubdivision ? 1 : 0;
 			stream->write_int(iDat);
 		}
@@ -67,6 +63,13 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 		{
 			iDat = data.texOptBakeMultiTextures ? 1 : 0;
 			stream->write_int(iDat);
+		}
+		{
+			iDat = (int)data.animKeyframeMode;
+			stream->write_int(iDat);
+		}
+		{
+			stream->write_int(data.animStep);
 		}
 
 	} catch (...) { }
@@ -115,10 +118,6 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		}
 		{
 			stream->read_int(iDat);
-			data.optOutputAnimation = iDat ? true: false;
-		}
-		{
-			stream->read_int(iDat);
 			data.optSubdivision = iDat ? true: false;
 		}
 		{
@@ -132,6 +131,14 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		{
 			stream->read_int(iDat);
 			data.texOptBakeMultiTextures = iDat ? true: false;
+		}
+		{
+			stream->read_int(iDat);
+			data.animKeyframeMode = (USD_DATA::EXPORT::ANIM_KEYFRAME_MODE)iDat;
+		}
+		{
+			stream->read_int(iDat);
+			data.animStep = iDat;
 		}
 
 	} catch (...) { }

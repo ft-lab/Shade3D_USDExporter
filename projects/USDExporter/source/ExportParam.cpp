@@ -34,9 +34,11 @@ void CExportParam::clear ()
 	optMaxTextureSize = USD_DATA::EXPORT::MAX_TEXTURE_SIZE::texture_size_2048;
 	optOutputBoneSkin = true;
 	optOutputVertexColor = true;
-	optOutputAnimation = true;
 	optSubdivision = false;
 
 	texOptConvGrayscale     = false;
 	texOptBakeMultiTextures = false;
+
+	animKeyframeMode = USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only;
+	animStep = 1;
 }
