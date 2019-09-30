@@ -46,6 +46,10 @@ std::string CFindNames::appendName (const std::string& name, const USD_DATA::NOD
 			name2 += std::string("sphere");
 		} else if (nameOnly == u8"パート") {
 			name2 += std::string("part");
+		} else if (nameOnly == u8"自由曲面") {
+			name2 += std::string("curved_surface");
+		} else if (nameOnly == u8"円") {
+			name2 += std::string("disk");
 		} else {
 			switch (nodeType) {
 			case USD_DATA::NODE_TYPE::null_node:
@@ -176,23 +180,11 @@ std::string CFindNames::m_convASCIIString (const std::string& str, const bool ch
 	std::string str2 = str;
 	if (str2 == "") return str2;
 
-	str2 = StringUtil::replaceString(str2, " ", "_");
-	str2 = StringUtil::replaceString(str2, "!", "_");
-	str2 = StringUtil::replaceString(str2, "\"", "_");
-	str2 = StringUtil::replaceString(str2, "'", "_");
-	str2 = StringUtil::replaceString(str2, "#", "_");
-	str2 = StringUtil::replaceString(str2, "$", "_");
-	str2 = StringUtil::replaceString(str2, "%", "_");
-	str2 = StringUtil::replaceString(str2, "&", "_");
-	str2 = StringUtil::replaceString(str2, "\\", "_");
-	str2 = StringUtil::replaceString(str2, ".", "_");
-	str2 = StringUtil::replaceString(str2, ";", "_");
-	str2 = StringUtil::replaceString(str2, ":", "_");
+	// 0-1、a-z、A-Z、/ でない場合は、'_'に置き換え.
+	str2 = StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber(str2, "_", true);
 
 	if (chkFilename) {
 		str2 = StringUtil::replaceString(str2, "/", "_");
-		str2 = StringUtil::replaceString(str2, "<", "_");
-		str2 = StringUtil::replaceString(str2, ">", "_");
 	}
 	
 	// 先頭の文字が英字でない場合は、"_"を入れる.

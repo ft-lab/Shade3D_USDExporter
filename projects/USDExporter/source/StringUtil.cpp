@@ -119,6 +119,28 @@ std::string StringUtil::replaceString (const std::string& targetStr, const std::
 	 return str;
 }
 
+/**
+ * ASCII文字列で、0-9、a-Z、A-Z、以外は置き換え.
+ * @param[in] targetStr   対象の文字列.
+ * @param[in] dstChar     置き換え後の文字.
+ * @param[in] useSeparator  '/'をそのままにする場合はtrue.
+ * @return 変換された文字列.
+ */
+std::string StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator)
+{
+	std::string retStr = targetStr;
+
+	for (size_t i = 0; i < targetStr.length(); ++i) {
+		const char chD = targetStr[i];
+		if ((chD >= '0' && chD <= '9') || (chD >= 'a' && chD <= 'z') || (chD >= 'A' && chD <= 'Z')) continue;
+		if (useSeparator) {
+			if (chD == '/') continue;
+		}
+
+		retStr[i] = dstChar[0];
+	}
+	return retStr;
+}
 
 /**
  * テキストをHTML用に変換.

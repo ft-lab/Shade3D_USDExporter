@@ -61,6 +61,15 @@ namespace StringUtil
 	std::string replaceString (const std::string& targetStr, const std::string& srcStr, const std::string& dstStr);
 
 	/**
+	 * ASCII文字列で、0-9、a-Z、A-Z、以外は置き換え.
+	 * @param[in] targetStr   対象の文字列.
+	 * @param[in] dstChar     置き換え後の文字.
+	 * @param[in] useSeparator  '/'をそのままにする場合はtrue.
+	 * @return 変換された文字列.
+	 */
+	std::string replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator = true);
+
+	/**
 	 * テキストをHTML用に変換.
 	 *  & ==> &amp;  < ==> &lt; など.
 	 */

@@ -114,11 +114,21 @@ std::string CSceneData::getShapePath (sxsdk::shape_class* shape)
 	const std::string name = shape->get_name();
 	std::string name2 = name;
 
-	// 先頭の文字がアルファベットでない場合は"_"を入れる.
 	if (name2 != "") {
-		const char* pStr = name2.c_str();
-		if (!((pStr[0] >= 'a' && pStr[0] <= 'z') || (pStr[0] >= 'A' && pStr[0] <= 'Z'))) {
-			name2 = std::string("_") + name2;
+		// 先頭の文字がアルファベットでない場合は"_"を入れる.
+		{
+			const char* pStr = name2.c_str();
+			if (!((pStr[0] >= 'a' && pStr[0] <= 'z') || (pStr[0] >= 'A' && pStr[0] <= 'Z'))) {
+				name2 = std::string("_") + name2;
+			}
+		}
+
+		// "/"がある場合は、"_"に置き換え.
+		{
+			for (size_t i = 0; i < name2.length(); ++i) {
+				const char chD = name2[i];
+				if (chD == '/') name2[i] = '_';
+			}
 		}
 	}
 
