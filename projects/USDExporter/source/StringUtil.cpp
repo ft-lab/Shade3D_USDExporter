@@ -124,9 +124,11 @@ std::string StringUtil::replaceString (const std::string& targetStr, const std::
  * @param[in] targetStr   対象の文字列.
  * @param[in] dstChar     置き換え後の文字.
  * @param[in] useSeparator  '/'をそのままにする場合はtrue.
+ * @param[in] useDot        '.'をそのままにする場合はtrue.
+
  * @return 変換された文字列.
  */
-std::string StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator)
+std::string StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator, const bool useDot)
 {
 	std::string retStr = targetStr;
 
@@ -135,6 +137,9 @@ std::string StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber (const std:
 		if ((chD >= '0' && chD <= '9') || (chD >= 'a' && chD <= 'z') || (chD >= 'A' && chD <= 'Z')) continue;
 		if (useSeparator) {
 			if (chD == '/') continue;
+		}
+		if (useDot) {
+			if (chD == '.') continue;
 		}
 
 		retStr[i] = dstChar[0];

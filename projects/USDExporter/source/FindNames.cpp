@@ -181,7 +181,7 @@ std::string CFindNames::m_convASCIIString (const std::string& str, const bool ch
 	if (str2 == "") return str2;
 
 	// 0-1、a-z、A-Z、/ でない場合は、'_'に置き換え.
-	str2 = StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber(str2, "_", true);
+	str2 = StringUtil::replaceASCIIStringOtherThanAlphabetAndNumber(str2, "_", true, chkFilename);
 
 	if (chkFilename) {
 		str2 = StringUtil::replaceString(str2, "/", "_");

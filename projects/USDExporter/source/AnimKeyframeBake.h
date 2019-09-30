@@ -53,6 +53,9 @@ private:
 
 	std::vector<CAnimKeyframeData> m_keyframeData;	// キーフレームデータ.
 
+	float m_currentSequencePos;				// シーケンス位置の保持用.
+	bool m_sequenceMode;					// シーケンスモードの保持用.
+
 public:
 	CAnimKeyframeBake (sxsdk::scene_interface* scene, const CExportParam& exportParam);
 	~CAnimKeyframeBake ();
@@ -60,8 +63,26 @@ public:
 	void clear ();
 
 	/**
-	 * 指定の形状のキーフレームをベイク.
+	 * 処理の開始.
 	 */
+	void begin ();
+
+	/**
+	 * 処理の終了.
+	 */
+	void end ();
+
+	/**
+	 * 指定の形状のキーフレームをベイク.
+	 * m_exportParam.animKeyframeMode により、ステップ数で分割する処理なども行う.
+	 * @param[in] shape      対象形状.
+	 */
+	void storeKeyframes (sxsdk::shape_class* shape);
+
+	/**
+	 * ベイクしたキーフレーム情報を取得.
+	 */
+	const std::vector<CAnimKeyframeData>& getKeyframes () const;
 };
 
 #endif

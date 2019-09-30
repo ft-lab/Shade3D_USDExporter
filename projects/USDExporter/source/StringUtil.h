@@ -65,9 +65,10 @@ namespace StringUtil
 	 * @param[in] targetStr   対象の文字列.
 	 * @param[in] dstChar     置き換え後の文字.
 	 * @param[in] useSeparator  '/'をそのままにする場合はtrue.
+	 * @param[in] useDot        '.'をそのままにする場合はtrue.
 	 * @return 変換された文字列.
 	 */
-	std::string replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator = true);
+	std::string replaceASCIIStringOtherThanAlphabetAndNumber (const std::string& targetStr, char* dstChar, const bool useSeparator = true, const bool useDot = false);
 
 	/**
 	 * テキストをHTML用に変換.
