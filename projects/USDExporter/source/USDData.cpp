@@ -124,7 +124,13 @@ void USD_DATA::setMatrix4x4 (const float* pM, std::vector<float>& matrix)
 void USD_DATA::convColorLinear (float& vRed, float& vGreen, float& vBlue)
 {
 	const float gamma = 2.2f;
-	vRed   = std::powf(vRed, gamma);
-	vGreen = std::powf(vGreen, gamma);
-	vBlue  = std::powf(vBlue, gamma);
+	if (vRed < 1.0f) {
+		vRed   = std::powf(vRed, gamma);
+	}
+	if (vGreen < 1.0f) {
+		vGreen = std::powf(vGreen, gamma);
+	}
+	if (vBlue < 1.0f) {
+		vBlue  = std::powf(vBlue, gamma);
+	}
 }
