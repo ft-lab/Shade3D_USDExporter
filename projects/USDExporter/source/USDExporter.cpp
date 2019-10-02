@@ -408,7 +408,14 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	shader.CreateIdAttr().Set(TfToken("UsdPreviewSurface"));
 
 	if (materialData.diffuseTexture.textureParam.imageIndex < 0) {
-		shader.CreateInput(TfToken("diffuseColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(materialData.diffuseColor[0], materialData.diffuseColor[1], materialData.diffuseColor[2]));
+		// 色をリニアにする.
+		float vR, vG, vB;
+		vR = materialData.diffuseColor[0];
+		vG = materialData.diffuseColor[1];
+		vB = materialData.diffuseColor[2];
+		USD_DATA::convColorLinear(vR, vG, vB);
+
+		shader.CreateInput(TfToken("diffuseColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(vR, vG, vB));
 	}
 
 	if (materialData.roughnessTexture.textureParam.imageIndex < 0) {
@@ -432,7 +439,14 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 
 	if (materialData.emissiveTexture.textureParam.imageIndex < 0) {
 		if (!MathUtil::isZero(materialData.emissiveColor[0]) || !MathUtil::isZero(materialData.emissiveColor[1]) || !MathUtil::isZero(materialData.emissiveColor[2])) {
-			shader.CreateInput(TfToken("emissiveColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(materialData.emissiveColor[0], materialData.emissiveColor[1], materialData.emissiveColor[2]));
+			// 色をリニアにする.
+			float vR, vG, vB;
+			vR = materialData.emissiveColor[0];
+			vG = materialData.emissiveColor[1];
+			vB = materialData.emissiveColor[2];
+			USD_DATA::convColorLinear(vR, vG, vB);
+
+			shader.CreateInput(TfToken("emissiveColor"), SdfValueTypeNames->Color3f).Set(GfVec3f(vR, vG, vB));
 		}
 	}
 

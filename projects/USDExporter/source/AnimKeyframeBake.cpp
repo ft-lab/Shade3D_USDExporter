@@ -4,6 +4,8 @@
 #include "AnimKeyframeBake.h"
 #include "MathUtil.h"
 
+#include <algorithm>
+
 CAnimKeyframeData::CAnimKeyframeData ()
 {
 	clear();
@@ -57,9 +59,11 @@ void CAnimKeyframeBake::end ()
 /**
  * 指定の形状のキーフレームをベイク.
  * m_exportParam.animKeyframeMode により、ステップ数で分割する処理なども行う.
- * @param[in] shape      対象形状.
+ * @param[in] shape       対象形状.
+ * @param[in] startFrame  モーションの開始フレーム.
+ * @param[in] endFrame    モーションの終了フレーム.
  */
-void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape)
+void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float startFrame, const float endFrame)
 {
 	clear();
 	if (!shape) return;
@@ -72,30 +76,48 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape)
 		if (pointsCou == 0) return;
 
 		// 既存のキーフレーム情報を保持.
-		float oldSeqPos = -1.0f;
-		for (int loop = 0; loop < pointsCou; ++loop) {
-			compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
-			float seqPos = motionPoint->get_sequence();
+		if (m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only) {
+			float oldSeqPos = -1.0f;
+			for (int loop = 0; loop < pointsCou; ++loop) {
+				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
+				float seqPos = motionPoint->get_sequence();
 
-			// 同一のフレーム位置が格納済みの場合はスキップ.
-			if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
-			if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
-			oldSeqPos = seqPos;
+				// 同一のフレーム位置が格納済みの場合はスキップ.
+				if (oldSeqPos >= 0.0f) {
+					if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
+				}
+				if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
+				oldSeqPos = seqPos;
 
-			const sxsdk::vec3 offset        = motionPoint->get_offset();
-			const sxsdk::quaternion_class q = motionPoint->get_rotation();
+				const sxsdk::vec3 offset        = motionPoint->get_offset();
+				const sxsdk::quaternion_class q = motionPoint->get_rotation();
 
-			CAnimKeyframeData keyframeD;
-			keyframeD.framePos = seqPos;
-			keyframeD.offset   = offset;
-			keyframeD.quat     = q;
-			m_keyframeData.push_back(keyframeD);
+				CAnimKeyframeData keyframeD;
+				keyframeD.framePos = seqPos;
+				keyframeD.offset   = offset;
+				keyframeD.quat     = q;
+				m_keyframeData.push_back(keyframeD);
+			}
+			return;
 		}
-		if (m_keyframeData.size() <= 1) return;
-		if (m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only) return;
 
 		// 再分割する.
 		const float frameStep = (float)std::max(1, m_exportParam.animStep);
+		{
+			std::vector<float> framePosA;
+			float oldSeqPos = -1.0f;
+			for (int loop = 0; loop < pointsCou; ++loop) {
+				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
+				float seqPos = motionPoint->get_sequence();
+
+				// 同一のフレーム位置が格納済みの場合はスキップ.
+				if (oldSeqPos >= 0.0f) {
+					if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
+				}
+				oldSeqPos = seqPos;
+
+			}
+		}
 
 	} catch (...) { }
 }

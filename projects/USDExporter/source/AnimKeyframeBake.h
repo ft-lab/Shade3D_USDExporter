@@ -75,9 +75,11 @@ public:
 	/**
 	 * 指定の形状のキーフレームをベイク.
 	 * m_exportParam.animKeyframeMode により、ステップ数で分割する処理なども行う.
-	 * @param[in] shape      対象形状.
+	 * @param[in] shape       対象形状.
+	 * @param[in] startFrame  モーションの開始フレーム.
+	 * @param[in] endFrame    モーションの終了フレーム.
 	 */
-	void storeKeyframes (sxsdk::shape_class* shape);
+	void storeKeyframes (sxsdk::shape_class* shape, const float startFrame, const float endFrame);
 
 	/**
 	 * ベイクしたキーフレーム情報を取得.

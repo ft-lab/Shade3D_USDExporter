@@ -118,6 +118,13 @@ namespace USD_DATA {
 	 */
 	void setMatrix4x4 (const float* pM, std::vector<float>& matrix);
 
+	/**
+	 * 色情報を逆ガンマ2.2し、リニア化.
+	 * @param[in/out] vRed    Red値.
+	 * @param[in/out] vGreen  Green値.
+	 * @param[in/out] vBlue   Blue値.
+	 */
+	void convColorLinear (float& vRed, float& vGreen, float& vBlue);
 }
 
 #endif
