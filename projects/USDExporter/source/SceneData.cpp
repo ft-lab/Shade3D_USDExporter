@@ -9,6 +9,7 @@
 #include "MathUtil.h"
 #include "StreamCtrl.h"
 #include "SkeletonData.h"
+#include "AnimKeyframeBake.h"
 
 #define MATERIAL_ROOT_PATH  "/root/Materials"
 #define ROOT_PATH  "/root"
@@ -219,6 +220,12 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 		}
 	} catch (...) { }
 
+	// ジョイント値を取得。ステップ数での再分割も行う.
+	const CAnimationData animD = m_getAnimationData(m_pScene);
+	CAnimKeyframeBake keyframeBake(m_pScene, m_exportParam);
+	keyframeBake.storeKeyframes(shape, animD.startFrame, animD.endFrame);
+	const std::vector<CAnimKeyframeData>& keyframeData = keyframeBake.getKeyframes();
+
 	if (Shade3DUtil::isBone(*shape)) {				// ボーンの場合.
 		try {
 			const sxsdk::vec3 boneWCenter = Shade3DUtil::getJointCenter(*shape, NULL);
@@ -233,29 +240,22 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 			CJointMotionData& jointMotionD = nodeD.jointMotion;
 			CJointTranslationData transD;
 			CJointRotationData rotD;
-			float oldSeqPos = -1.0f;
-			for (int loop = 0; loop < pointsCou; ++loop) {
-				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
-				float seqPos = motionPoint->get_sequence();
+			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
+				const CAnimKeyframeData& animD = keyframeData[loop];
 
-				// 同一のフレーム位置が格納済みの場合はスキップ.
-				if (MathUtil::isZero(seqPos - oldSeqPos)) continue;
-				if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
-				oldSeqPos = seqPos;
-
-				const sxsdk::vec3 offset        = motionPoint->get_offset();
+				const sxsdk::vec3 offset        = animD.offset;
 				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + boneLCenter);		// cmに変換.
-				const sxsdk::quaternion_class q = motionPoint->get_rotation();
+				const sxsdk::quaternion_class q = animD.quat;
 
 				// 移動情報を格納.
-				transD.frame = seqPos;
+				transD.frame = animD.framePos;
 				transD.x = offset2.x;
 				transD.y = offset2.y;
 				transD.z = offset2.z;
 				jointMotionD.translations.push_back(transD);
 
 				// 回転情報を格納.
-				rotD.frame = seqPos;
+				rotD.frame = animD.framePos;
 				rotD.x = q.x;
 				rotD.y = q.y;
 				rotD.z = q.z;
@@ -279,30 +279,23 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 			CJointMotionData& jointMotionD = nodeD.jointMotion;
 			CJointTranslationData transD;
 			CJointRotationData rotD;
-			float oldSeqPos = -1.0f;
 			sxsdk::vec3 dirV;
-			for (int loop = 0; loop < pointsCou; ++loop) {
-				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
-				float seqPos = motionPoint->get_sequence();
+			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
+				const CAnimKeyframeData& animD = keyframeData[loop];
 
-				// 同一のフレーム位置が格納済みの場合はスキップ.
-				if (oldSeqPos >= 0.0f && MathUtil::isZero(seqPos - oldSeqPos)) continue;
-				if (oldSeqPos < 0.0f) oldSeqPos = seqPos;
-				oldSeqPos = seqPos;
-
-				const sxsdk::vec3 offset        = motionPoint->get_offset();
+				const sxsdk::vec3 offset        = animD.offset;
 				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + wCenter);		// cmに変換.
-				const sxsdk::quaternion_class q = motionPoint->get_rotation();
+				const sxsdk::quaternion_class q = animD.quat;
 
 				// 移動情報を格納.
-				transD.frame = seqPos;
+				transD.frame = animD.framePos;
 				transD.x = offset2.x;
 				transD.y = offset2.y;
 				transD.z = offset2.z;
 				jointMotionD.translations.push_back(transD);
 
 				// 回転情報を格納.
-				rotD.frame = seqPos;
+				rotD.frame = animD.framePos;
 				rotD.x = q.x;
 				rotD.y = q.y;
 				rotD.z = q.z;

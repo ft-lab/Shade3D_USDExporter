@@ -101,10 +101,12 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 			return;
 		}
 
-		// 再分割する.
 		const float frameStep = (float)std::max(1, m_exportParam.animStep);
 		{
+			// キーフレーム + 再分割した位置のフレーム位置のリストを作成.
 			std::vector<float> framePosA;
+			framePosA.push_back(startFrame);
+			framePosA.push_back(endFrame);
 			float oldSeqPos = -1.0f;
 			for (int loop = 0; loop < pointsCou; ++loop) {
 				compointer<sxsdk::motion_point_interface> motionPoint(motion->get_motion_point_interface(loop));
@@ -116,6 +118,33 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 				}
 				oldSeqPos = seqPos;
 
+				if (std::find(framePosA.begin(), framePosA.end(), seqPos) == framePosA.end()) {
+					framePosA.push_back(seqPos);
+				}
+			}
+
+			{
+				float seqPos = startFrame + frameStep;
+				while (seqPos < endFrame) {
+					if (std::find(framePosA.begin(), framePosA.end(), seqPos) == framePosA.end()) {
+						framePosA.push_back(seqPos);
+					}
+					seqPos += frameStep;
+				}
+			}
+			std::sort(framePosA.begin(), framePosA.end());
+
+			// framePosA[]に格納したフレーム位置でのジョイント値を保持.
+			for (size_t i = 0; i < framePosA.size(); ++i) {
+				const float seqPos = framePosA[i];
+				const sxsdk::vec3 offset        = motion->get_joint_offset(seqPos);
+				const sxsdk::quaternion_class q = motion->get_joint_rotation(seqPos);
+
+				CAnimKeyframeData keyframeD;
+				keyframeD.framePos = seqPos;
+				keyframeD.offset   = offset;
+				keyframeD.quat     = q;
+				m_keyframeData.push_back(keyframeD);
 			}
 		}
 
