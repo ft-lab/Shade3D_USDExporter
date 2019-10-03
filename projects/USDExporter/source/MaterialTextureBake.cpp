@@ -159,6 +159,46 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 		const int mappingLayersCou = surface->get_number_of_mapping_layers();
 		if (!(surface->get_has_mapping_layers()) || mappingLayersCou == 0) return true;
 
+		// 「アルファ透明」を使用し、かつ、「透明度」マッピングが存在しない場合は、.
+		// USD出力時にDiffuseテクスチャを強制的にpngで出力する.
+		bool useTransparentAlpha = false;
+		bool useTransparencyMap = false;
+		sxsdk::mapping_layer_class* diffuseMappingLayer = NULL;
+		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
+			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
+			const int mType = mappingLayer.get_type();
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+
+			if (mType == sxsdk::enums::diffuse_mapping) {
+				// アルファ透明を使用.
+				if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
+					try {
+						compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+						if (image->has_image()) {
+							sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+							if (masterImage) {
+								if (Shade3DUtil::hasImageAlpha(masterImage)) {
+									diffuseMappingLayer = &mappingLayer;
+									useTransparentAlpha = true;
+								}
+							}
+						}
+					} catch (...) { }
+				}
+			}
+
+			if (mType == sxsdk::enums::transparency_mapping) {
+				useTransparencyMap = true;
+			}
+		}
+		if (useTransparencyMap) {
+			useTransparentAlpha = false;
+			diffuseMappingLayer = NULL;
+		}
+		if (useTransparentAlpha) {
+			materialData.useDiffuseAlpha = true;
+		}
+
 		// テクスチャを取得.
 		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
 			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
@@ -177,14 +217,10 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
 
 			if (mType == sxsdk::enums::diffuse_mapping) {
-				// アルファ透明を使用.
-				if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
-					materialData.useDiffuseAlpha = true;
-				}
 				texTransform.multiR = materialData.diffuseColor[0];
 				texTransform.multiG = materialData.diffuseColor[1];
 				texTransform.multiB = materialData.diffuseColor[2];
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.diffuseTexture, materialData.useDiffuseAlpha);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.diffuseTexture, false, materialData.useDiffuseAlpha);
 			}
 
 			if (mType == sxsdk::enums::glow_mapping) {
@@ -211,7 +247,18 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 				texTransform.flipColor = !texTransform.flipColor;		// 透明度とOpacityは逆になる.
 				texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = materialData.opacity;
 				m_setTextureMappingData(mappingLayer, texTransform, materialData.opacityTexture);
+				useTransparencyMap = true;
 			}
+		}
+
+		// アルファ透明を使用し、透明度マップが存在しない場合.
+		if (diffuseMappingLayer && materialData.useDiffuseAlpha && !useTransparencyMap) {
+			materialData.opacity = 0.0f;
+			CTextureTransform texTransform;
+			texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f;
+			//texTransform.flipColor = true;		// 透明度とOpacityは逆になる.
+			texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = materialData.opacity;
+			m_setTextureMappingOpacityData(*diffuseMappingLayer, texTransform, materialData.opacityTexture);
 		}
 
 		return true;
@@ -226,8 +273,10 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
  * @param[in]  mappingLayer    マッピングレイヤ情報.
  * @param[in]  texTransform    マッピングの変換情報.
  * @param[out] texMappingData  マッピング情報の格納先.
+ * @param[in]  occlusionF           Occlusionのテクスチャか.
+ * @param[in]  useTransparentAlpha  アルファ透明を使用するか.
  */
-void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF)
+void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF, const bool useTransparentAlpha)
 {
 	if (texMappingData.textureParam.imageIndex >= 0) return;
 
@@ -274,14 +323,19 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				masterImageName = "texture";
 			}
 
-			// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
-			if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
-				// 拡張子がある場合はそれを採用し、ない場合はpngにする.
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
-
+			if (useTransparentAlpha) {
+				// 「アルファ透明」使用時は、強制的にpng出力.
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 			} else {
-				const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
+				// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
+				if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
+					// 拡張子がある場合はそれを採用し、ない場合はpngにする.
+					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
+
+				} else {
+					const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
+					masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
+				}
 			}
 
 			// ユニークファイル名として追加.
@@ -379,6 +433,79 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_r;
 				}
 			}
+
+			imageD.texTransform = texTransform;
+		}
+	} catch (...) { }
+}
+
+/**
+ * アルファ透明使用時の、テクスチャマッピング情報を追加.
+ * @param[in]  mappingLayer    マッピングレイヤ情報.
+ * @param[in]  texTransform    マッピングの変換情報.
+ * @param[out] texMappingData  マッピング情報の格納先.
+ */
+void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData)
+{
+	if (texMappingData.textureParam.imageIndex >= 0) return;
+
+	try {
+		compointer<sxsdk::image_interface> image(diffuseMappingLayer.get_image_interface());
+		if (!image) return;
+		if (!image->has_image()) return;
+
+		// imageからマスターイメージを取得.
+		sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+		if (!masterImage) return;
+
+		std::string masterImageName = "";
+
+		// 同一のマスターイメージが格納済みか.
+		int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, sxsdk::enums::mapping_grayscale_alpha_mode);
+		bool existImage = false;
+		if (imageIndex >= 0) {
+			const CImageData& imageD = m_imagesList[imageIndex];
+			if (StringUtil::getFileExtension(imageD.fileName) == "png") {
+				masterImageName = imageD.fileName;
+				existImage = true;
+			}
+		}
+
+		if (!existImage) {
+			// イメージ名をASCIIのファイル名にする.
+			masterImageName = masterImage->get_name();
+			if (!StringUtil::checkASCII(masterImageName)) {
+				masterImageName = "texture";
+			}
+
+			// ファイル名は強制的にpng.
+			masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+
+			// ユニークファイル名として追加.
+			// 同一名がある場合は、連番付きで返す.
+			masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
+
+			imageIndex = (int)m_imagesList.size();
+			m_imagesList.push_back(CImageData());
+		}
+
+		if (imageIndex >= 0) {
+			CImageData& imageD = m_imagesList[imageIndex];
+			imageD.pMasterImageHandle = masterImage->get_handle();
+			imageD.fileName = masterImageName;
+
+			texMappingData.textureParam.imageIndex = imageIndex;
+			texMappingData.textureParam.uvLayerIndex = diffuseMappingLayer.get_uv_mapping();
+			if (texMappingData.textureParam.uvLayerIndex < 0 || texMappingData.textureParam.uvLayerIndex > 1) {
+				texMappingData.textureParam.uvLayerIndex = 0;
+			}
+
+			texMappingData.textureParam.repeatU    = diffuseMappingLayer.get_repetition_x();
+			texMappingData.textureParam.repeatV    = diffuseMappingLayer.get_repetition_y();
+			texMappingData.textureParam.wrapRepeat = diffuseMappingLayer.get_repeat_image();
+
+			texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+			imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
 
 			imageD.texTransform = texTransform;
 		}

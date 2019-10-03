@@ -57,8 +57,18 @@ private:
 	 * @param[in]  mappingLayer    マッピングレイヤ情報.
 	 * @param[in]  texTransform    マッピングの変換情報.
 	 * @param[out] texMappingData  マッピング情報の格納先.
+	 * @param[in]  occlusionF           Occlusionのテクスチャか.
+	 * @param[in]  useTransparentAlpha  アルファ透明を使用するか.
 	 */
-	void m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF = false);
+	void m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF = false, const bool useTransparentAlpha = false);
+
+	/**
+	 * アルファ透明使用時の、テクスチャマッピング情報を追加.
+	 * @param[in]  mappingLayer    マッピングレイヤ情報.
+	 * @param[in]  texTransform    マッピングの変換情報.
+	 * @param[out] texMappingData  マッピング情報の格納先.
+	 */
+	void m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData);
 
 	/**
 	 * 同一のマスターイメージがすでにimagesListに格納済みか.
