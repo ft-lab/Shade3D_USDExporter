@@ -62,6 +62,7 @@ void CMaterialData::clear ()
 	opacity   = 1.0f;
 	useDiffuseAlpha = false;
 	doubleSided = false;
+	unlitMode = false;
 
 	diffuseTexture.clear();
 	normalTexture.clear();
@@ -91,6 +92,7 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 	if (!MathUtil::isZero(opacity - mDat.opacity)) return false;
 	if (useDiffuseAlpha != mDat.useDiffuseAlpha) return false;
 	if (doubleSided != mDat.doubleSided) return false;
+	if (unlitMode != mDat.unlitMode) return false;
 
 	if (!diffuseTexture.isSame(mDat.diffuseTexture)) return false;
 	if (!normalTexture.isSame(mDat.normalTexture)) return false;

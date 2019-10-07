@@ -55,20 +55,22 @@ private:
 	/**
 	 * テクスチャマッピング情報を追加.
 	 * @param[in]  mappingLayer    マッピングレイヤ情報.
-	 * @param[in]  texTransform    マッピングの変換情報.
+	 * @param[in/out]  texTransform    マッピングの変換情報.
 	 * @param[out] texMappingData  マッピング情報の格納先.
 	 * @param[in]  occlusionF           Occlusionのテクスチャか.
 	 * @param[in]  useTransparentAlpha  アルファ透明を使用するか.
+	 * @param[in]  useEmissiveTexture   発光テクスチャを使用するか.
 	 */
-	void m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF = false, const bool useTransparentAlpha = false);
+	void m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF = false, const bool useTransparentAlpha = false, const bool useEmissiveTexture = false);
 
 	/**
 	 * アルファ透明使用時の、テクスチャマッピング情報を追加.
 	 * @param[in]  mappingLayer    マッピングレイヤ情報.
 	 * @param[in]  texTransform    マッピングの変換情報.
 	 * @param[out] texMappingData  マッピング情報の格納先.
+	 * @param[in]  useEmissiveTexture   発光テクスチャを使用するか.
 	 */
-	void m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData);
+	void m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool useEmissiveTexture = false);
 
 	/**
 	 * 同一のマスターイメージがすでにimagesListに格納済みか.

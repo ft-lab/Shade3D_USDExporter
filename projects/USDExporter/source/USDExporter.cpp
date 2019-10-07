@@ -569,6 +569,10 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	if (mappingD.textureParam.imageIndex < 0 || mappingSource == "" || texName == "") return;
 	if (m_imagesList.size() <= mappingD.textureParam.imageIndex) return;
 
+	// グレイスケールに変換したテクスチャの場合、"r"を採用.
+	const bool convGrayscale = m_imagesList[mappingD.textureParam.imageIndex].texTransform.convGrayscale;
+	if (convGrayscale) mappingSource = "r";
+
 	// UVレイヤ番号 (0 or 1).
 	const int uvIndex = mappingD.textureParam.uvLayerIndex;
 

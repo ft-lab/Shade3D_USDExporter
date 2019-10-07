@@ -22,6 +22,8 @@ public:
 	float textureWeight;				// テクスチャマッピングでのウエイト値 (0.0に近づくほどテクスチャの影響が弱くなる).
 	float factor[4];					// RGBAの乗算値.
 
+	bool convGrayscale;					// R/G/B/A要素を参照するときに、グレイスケールに変換する場合.
+
 public:
 	CTextureTransform ();
 	~CTextureTransform ();
@@ -43,6 +45,7 @@ public:
 		this->factor[1] = v.factor[1];
 		this->factor[2] = v.factor[2];
 		this->factor[3] = v.factor[3];
+		this->convGrayscale = v.convGrayscale;
 	}
 
     CTextureTransform& operator = (const CTextureTransform &v) {
@@ -62,6 +65,8 @@ public:
 		this->factor[1] = v.factor[1];
 		this->factor[2] = v.factor[2];
 		this->factor[3] = v.factor[3];
+		this->convGrayscale = v.convGrayscale;
+
 		return (*this);
 	}
 

@@ -601,10 +601,16 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 				sxsdk::master_image_class& masterImage = m_pScene->get_shape_by_handle(imageD.pMasterImageHandle)->get_master_image();
 				compointer<sxsdk::image_interface> image(masterImage.get_image());
 				if (image) {
-					// テクスチャのピクセルを加工する場合.
-					if ((imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r ||
+					// グレイスケールに変換して保存する場合.
+					if (imageD.texTransform.convGrayscale) {
+						// テクスチャのピクセルを加工する場合.
+						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
+						m_saveTextureImage(fileName, image2);
+
+					} else if ((imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r ||
 						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g ||
 						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) && m_exportParam.texOptConvGrayscale) {
+						// テクスチャのピクセルを加工する場合.
 						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
 						m_saveTextureImage(fileName, image2);
 

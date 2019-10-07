@@ -209,86 +209,137 @@ compointer<sxsdk::image_interface> Shade3DUtil::createImageWithTransform (sxsdk:
 		std::vector<sxsdk::rgba_class> colLines;
 		colLines.resize(width);
 		float fV;
-		for (int y = 0; y < height; ++y) {
-			image->get_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
-			for (int x = 0; x < width; ++x) {
-				sxsdk::rgba_class& col = colLines[x];
 
-				if (textureTrans.textureNormal) {		// 法線マップ時.
-					col.red   = col.red   * weight + 0.5f * (1.0f - weight);
-					col.green = col.green * weight + 0.5f * (1.0f - weight);
-					col.blue  = col.blue  * weight + 1.0f * (1.0f - weight);
-					continue;
-				}
+		if (textureTrans.convGrayscale) {
+			// グレイスケール変換する場合.
+			for (int y = 0; y < height; ++y) {
+				image->get_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
+				for (int x = 0; x < width; ++x) {
+					sxsdk::rgba_class& col = colLines[x];
 
-				if (textureTrans.flipColor) {
-					col.red    = 1.0f - col.red;
-					col.green  = 1.0f - col.green;
-					col.blue   = 1.0f - col.blue;
-					col.alpha  = 1.0f - col.alpha;
-				}
-
-				if (textureTrans.occlusion) {
-					// Occlusionの場合、textureTrans.multiRが0.0に近いほど白にする.
-					fV = col.red;
-					switch (textureSource) {
-					case USD_DATA::TEXTURE_SOURE::texture_source_r:
-						fV = col.red;
-						break;
-					case USD_DATA::TEXTURE_SOURE::texture_source_g:
-						fV = col.green;
-						break;
-					case USD_DATA::TEXTURE_SOURE::texture_source_b:
-						fV = col.blue;
-						break;
-					case USD_DATA::TEXTURE_SOURE::texture_source_a:
-						fV = col.alpha;
-						break;
+					if (textureTrans.flipColor) {
+						col.red    = 1.0f - col.red;
+						col.green  = 1.0f - col.green;
+						col.blue   = 1.0f - col.blue;
+						col.alpha  = 1.0f - col.alpha;
 					}
-					fV = fV * weight + 1.0f * (1.0f - weight);
-					col.red = col.green = col.blue = fV;
-					col.alpha = 1.0f;
 
-				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
-					col.red   = col.red   * weight + textureTrans.factor[0] * (1.0f - weight);
-					col.green = col.green * weight + textureTrans.factor[1] * (1.0f - weight);
-					col.blue  = col.blue  * weight + textureTrans.factor[2] * (1.0f - weight);
+					if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r) {
+						fV = col.red;
+						fV = fV * weight + textureTrans.factor[0] * (1.0f - weight);
+						fV = fV * textureTrans.multiR + textureTrans.offsetR;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
 
-					col.red   = col.red   * textureTrans.multiR + textureTrans.offsetR;
-					col.green = col.green * textureTrans.multiG + textureTrans.offsetG;
-					col.blue  = col.blue  * textureTrans.multiB + textureTrans.offsetB;
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g) {
+						fV = col.green;
+						fV = fV * weight + textureTrans.factor[1] * (1.0f - weight);
+						fV = fV * textureTrans.multiG + textureTrans.offsetG;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
 
-				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r) {
-					fV = col.red;
-					fV = fV * weight + textureTrans.factor[0] * (1.0f - weight);
-					fV = fV * textureTrans.multiR + textureTrans.offsetR;
-					col.red = col.green = col.blue = fV;
-					col.alpha = 1.0f;
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
+						fV = col.blue;
+						fV = fV * weight + textureTrans.factor[2] * (1.0f - weight);
+						fV = fV * textureTrans.multiB + textureTrans.offsetB;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
 
-				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g) {
-					fV = col.green;
-					fV = fV * weight + textureTrans.factor[1] * (1.0f - weight);
-					fV = fV * textureTrans.multiG + textureTrans.offsetG;
-					col.red = col.green = col.blue = fV;
-					col.alpha = 1.0f;
-
-				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
-					fV = col.blue;
-					fV = fV * weight + textureTrans.factor[2] * (1.0f - weight);
-					fV = fV * textureTrans.multiB + textureTrans.offsetB;
-					col.red = col.green = col.blue = fV;
-					col.alpha = 1.0f;
-
-				} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
-					fV = col.alpha;
-					fV = fV * weight + textureTrans.factor[3] * (1.0f - weight);
-					fV = fV * textureTrans.multiR + textureTrans.offsetR;
-					col.red = col.green = col.blue = fV;
-					col.alpha = 1.0f;
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
+						fV = col.alpha;
+						fV = fV * weight + textureTrans.factor[3] * (1.0f - weight);
+						fV = fV * textureTrans.multiR + textureTrans.offsetR;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+					}
 				}
+				retImage->set_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
 			}
-			retImage->set_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
+
+		} else {
+			for (int y = 0; y < height; ++y) {
+				image->get_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
+				for (int x = 0; x < width; ++x) {
+					sxsdk::rgba_class& col = colLines[x];
+
+					if (textureTrans.textureNormal) {		// 法線マップ時.
+						col.red   = col.red   * weight + 0.5f * (1.0f - weight);
+						col.green = col.green * weight + 0.5f * (1.0f - weight);
+						col.blue  = col.blue  * weight + 1.0f * (1.0f - weight);
+						continue;
+					}
+
+					if (textureTrans.flipColor) {
+						col.red    = 1.0f - col.red;
+						col.green  = 1.0f - col.green;
+						col.blue   = 1.0f - col.blue;
+						col.alpha  = 1.0f - col.alpha;
+					}
+
+					if (textureTrans.occlusion) {
+						// Occlusionの場合、textureTrans.multiRが0.0に近いほど白にする.
+						fV = col.red;
+						switch (textureSource) {
+						case USD_DATA::TEXTURE_SOURE::texture_source_r:
+							fV = col.red;
+							break;
+						case USD_DATA::TEXTURE_SOURE::texture_source_g:
+							fV = col.green;
+							break;
+						case USD_DATA::TEXTURE_SOURE::texture_source_b:
+							fV = col.blue;
+							break;
+						case USD_DATA::TEXTURE_SOURE::texture_source_a:
+							fV = col.alpha;
+							break;
+						}
+						fV = fV * weight + 1.0f * (1.0f - weight);
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
+						col.red   = col.red   * weight + textureTrans.factor[0] * (1.0f - weight);
+						col.green = col.green * weight + textureTrans.factor[1] * (1.0f - weight);
+						col.blue  = col.blue  * weight + textureTrans.factor[2] * (1.0f - weight);
+
+						col.red   = col.red   * textureTrans.multiR + textureTrans.offsetR;
+						col.green = col.green * textureTrans.multiG + textureTrans.offsetG;
+						col.blue  = col.blue  * textureTrans.multiB + textureTrans.offsetB;
+
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r) {
+						fV = col.red;
+						fV = fV * weight + textureTrans.factor[0] * (1.0f - weight);
+						fV = fV * textureTrans.multiR + textureTrans.offsetR;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g) {
+						fV = col.green;
+						fV = fV * weight + textureTrans.factor[1] * (1.0f - weight);
+						fV = fV * textureTrans.multiG + textureTrans.offsetG;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b) {
+						fV = col.blue;
+						fV = fV * weight + textureTrans.factor[2] * (1.0f - weight);
+						fV = fV * textureTrans.multiB + textureTrans.offsetB;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+
+					} else if (textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
+						fV = col.alpha;
+						fV = fV * weight + textureTrans.factor[3] * (1.0f - weight);
+						fV = fV * textureTrans.multiR + textureTrans.offsetR;
+						col.red = col.green = col.blue = fV;
+						col.alpha = 1.0f;
+					}
+				}
+				retImage->set_pixels_rgba_float(0, y, width, 1, &(colLines[0]));
+			}
+
 		}
+
 		retImage->update();
 
 	} catch (...) { }

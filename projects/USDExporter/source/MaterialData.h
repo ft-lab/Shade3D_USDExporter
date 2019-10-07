@@ -63,6 +63,7 @@ public:
 
 	bool useDiffuseAlpha;				// Diffuseのアルファを使用する場合.
 	bool doubleSided;					// 両面表示する場合はtrue.
+	bool unlitMode;						// 「陰影付けしない」がOnの場合、Unlitとして出力.
 
 	CTextureMappingData diffuseTexture;		// Diffuseテクスチャ (RGB).
 	CTextureMappingData normalTexture;		// Normalテクスチャ (RGB).
@@ -94,7 +95,7 @@ public:
 		this->opacity       = v.opacity;
 		this->useDiffuseAlpha = v.useDiffuseAlpha;
 		this->doubleSided     = v.doubleSided;
-
+		this->unlitMode       = v.unlitMode;
 
 		this->diffuseTexture   = v.diffuseTexture;
 		this->normalTexture    = v.normalTexture;
@@ -124,6 +125,7 @@ public:
 		this->opacity       = v.opacity;
 		this->useDiffuseAlpha = v.useDiffuseAlpha;
 		this->doubleSided     = v.doubleSided;
+		this->unlitMode       = v.unlitMode;
 
 		this->diffuseTexture   = v.diffuseTexture;
 		this->normalTexture    = v.normalTexture;

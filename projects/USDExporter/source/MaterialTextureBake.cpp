@@ -106,6 +106,9 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		}
 		if (!surface) return false;
 
+		// 「陰影付けしない」.
+		materialData.unlitMode = surface->get_no_shading();
+
 		// 表面材質情報を取得.
 		if (surface->get_has_diffuse()) {
 			const sxsdk::rgb_class col = (surface->get_diffuse_color()) * (surface->get_diffuse());
@@ -136,11 +139,35 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		// マッピングレイヤ情報を取得.
 		//if (!m_exportParam.texOptBakeMultiTextures) {
 			// 単純なベイクを行う.
-			return m_getSimpleMaterialMappingFromSurface(surface, materialData);
+		const bool retF = m_getSimpleMaterialMappingFromSurface(surface, materialData);
 		//} else {
 			// 複数マッピングを合成.
 		//	return m_getMaterialMultiMappingFromSurface(surface, materialData);
 		//}
+
+		// 「陰影付けしない」を考慮して、Unlitになるように置き換え.
+		if (materialData.unlitMode) {
+			materialData.roughness = 1.0f;
+			materialData.metallic  = 0.0f;
+			materialData.ior       = 1.0f;
+			materialData.metallicTexture.clear();
+			materialData.roughnessTexture.clear();
+			materialData.normalTexture.clear();
+
+			materialData.emissiveColor[0] = materialData.diffuseColor[0];
+			materialData.emissiveColor[1] = materialData.diffuseColor[1];
+			materialData.emissiveColor[2] = materialData.diffuseColor[2];
+
+			materialData.diffuseColor[0] = 0.0f;
+			materialData.diffuseColor[1] = 0.0f;
+			materialData.diffuseColor[2] = 0.0f;
+			if (materialData.diffuseTexture.textureParam.imageIndex >= 0) {
+				materialData.emissiveTexture = materialData.diffuseTexture;
+			}
+			materialData.diffuseTexture.clear();
+		}
+
+		return retF;
 
 	} catch (...) { }
 
@@ -159,10 +186,39 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 		const int mappingLayersCou = surface->get_number_of_mapping_layers();
 		if (!(surface->get_has_mapping_layers()) || mappingLayersCou == 0) return true;
 
+		bool useTransparencyTexture = false;
+		bool useEmissiveTexture     = false;
+		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
+			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
+			const int mType = mappingLayer.get_type();
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+			if (mappingLayer.get_weight() < 0.0001f) continue;
+
+			if (mType == sxsdk::enums::transparency_mapping) {		// 透明度テクスチャを持つ.
+				compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+				if (image->has_image()) {
+					sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+					if (masterImage) {
+						useTransparencyTexture = true;
+					}
+				}
+			}
+
+			if (mType == sxsdk::enums::glow_mapping) {		// 発光テクスチャを持つ.
+				compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+				if (image->has_image()) {
+					sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+					if (masterImage) {
+						useEmissiveTexture = true;
+					}
+				}
+			}
+
+		}
+
 		// 「アルファ透明」を使用し、かつ、「透明度」マッピングが存在しない場合は、.
 		// USD出力時にDiffuseテクスチャを強制的にpngで出力する.
 		bool useTransparentAlpha = false;
-		bool useTransparencyMap = false;
 		sxsdk::mapping_layer_class* diffuseMappingLayer = NULL;
 		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
 			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
@@ -186,12 +242,8 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 					} catch (...) { }
 				}
 			}
-
-			if (mType == sxsdk::enums::transparency_mapping) {
-				useTransparencyMap = true;
-			}
 		}
-		if (useTransparencyMap) {
+		if (useTransparencyTexture) {
 			useTransparentAlpha = false;
 			diffuseMappingLayer = NULL;
 		}
@@ -211,7 +263,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 			// オクルージョンレイヤの場合.
 			if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) {
 				texTransform.occlusion = true;
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.occlusionTexture, true);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.occlusionTexture, true, false, useEmissiveTexture);
 			}
 
 			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
@@ -220,45 +272,44 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 				texTransform.multiR = materialData.diffuseColor[0];
 				texTransform.multiG = materialData.diffuseColor[1];
 				texTransform.multiB = materialData.diffuseColor[2];
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.diffuseTexture, false, materialData.useDiffuseAlpha);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.diffuseTexture, false, materialData.useDiffuseAlpha, useEmissiveTexture);
 			}
 
 			if (mType == sxsdk::enums::glow_mapping) {
 				texTransform.multiR = materialData.emissiveColor[0];
 				texTransform.multiG = materialData.emissiveColor[1];
 				texTransform.multiB = materialData.emissiveColor[2];
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.emissiveTexture);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.emissiveTexture, false, false, useEmissiveTexture);
 			}
 			if (mType == sxsdk::enums::normal_mapping) {
 				const float weight = mappingLayer.get_weight();
 				texTransform.textureNormal = true;
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.normalTexture);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.normalTexture, false, false, useEmissiveTexture);
 			}
 			if (mType == sxsdk::enums::roughness_mapping) {
 				texTransform.multiR = texTransform.multiG = texTransform.multiB = materialData.roughness;
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.roughnessTexture);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.roughnessTexture, false, false, useEmissiveTexture);
 			}
 			if (mType == sxsdk::enums::reflection_mapping) {
 				texTransform.multiR = texTransform.multiG = texTransform.multiB = materialData.metallic;
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.metallicTexture);
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.metallicTexture, false, false, useEmissiveTexture);
 			}
 			if (mType == sxsdk::enums::transparency_mapping) {
 				texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f;
 				texTransform.flipColor = !texTransform.flipColor;		// 透明度とOpacityは逆になる.
 				texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = materialData.opacity;
-				m_setTextureMappingData(mappingLayer, texTransform, materialData.opacityTexture);
-				useTransparencyMap = true;
+				m_setTextureMappingData(mappingLayer, texTransform, materialData.opacityTexture, false, false, useEmissiveTexture);
 			}
 		}
 
 		// アルファ透明を使用し、透明度マップが存在しない場合.
-		if (diffuseMappingLayer && materialData.useDiffuseAlpha && !useTransparencyMap) {
+		if (diffuseMappingLayer && materialData.useDiffuseAlpha && !useTransparencyTexture) {
 			materialData.opacity = 0.0f;
 			CTextureTransform texTransform;
 			texTransform.multiR = texTransform.multiG = texTransform.multiB = 1.0f;
 			//texTransform.flipColor = true;		// 透明度とOpacityは逆になる.
 			texTransform.factor[0] = texTransform.factor[1] = texTransform.factor[2] = texTransform.factor[3] = materialData.opacity;
-			m_setTextureMappingOpacityData(*diffuseMappingLayer, texTransform, materialData.opacityTexture);
+			m_setTextureMappingOpacityData(*diffuseMappingLayer, texTransform, materialData.opacityTexture, useEmissiveTexture);
 		}
 
 		return true;
@@ -271,12 +322,13 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 /**
  * テクスチャマッピング情報を追加.
  * @param[in]  mappingLayer    マッピングレイヤ情報.
- * @param[in]  texTransform    マッピングの変換情報.
+ * @param[in/out]  texTransform    マッピングの変換情報.
  * @param[out] texMappingData  マッピング情報の格納先.
  * @param[in]  occlusionF           Occlusionのテクスチャか.
  * @param[in]  useTransparentAlpha  アルファ透明を使用するか.
+ * @param[in]  useEmissiveTexture   発光テクスチャを使用するか.
  */
-void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF, const bool useTransparentAlpha)
+void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& mappingLayer, CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool occlusionF, const bool useTransparentAlpha, const bool useEmissiveTexture)
 {
 	if (texMappingData.textureParam.imageIndex >= 0) return;
 
@@ -311,6 +363,15 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			}
 		}
 
+		if (channelMix == sxsdk::enums::mapping_grayscale_red_mode || channelMix == sxsdk::enums::mapping_grayscale_green_mode ||
+			channelMix == sxsdk::enums::mapping_grayscale_blue_mode || channelMix == sxsdk::enums::mapping_grayscale_alpha_mode) {
+			// 発光がある場合は、強制的にAlpha要素をグレイスケールで出さないと、iOS13.1.2段階のusdz表示では正しくならない.
+			const int mType = mappingLayer.get_type();
+			if (m_exportParam.texOptConvGrayscale || (useEmissiveTexture && mType == sxsdk::enums::transparency_mapping)) {
+				texTransform.convGrayscale = true;
+			}
+		}
+
 		// 同一のマスターイメージが格納済みか.
 		int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, channelMix);
 		if (imageIndex >= 0) {
@@ -331,7 +392,6 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
 					// 拡張子がある場合はそれを採用し、ない場合はpngにする.
 					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
-
 				} else {
 					const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
 					masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
@@ -419,7 +479,7 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			}
 
 			// アルファ要素を持つ場合でファイル名がjpgの場合は、pngに置き換え.
-			if (useAlpha) {
+			if (useAlpha && !texTransform.convGrayscale) {
 				if (StringUtil::getFileExtension(masterImageName) == "jpg") {
 					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 					masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
@@ -444,8 +504,9 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
  * @param[in]  mappingLayer    マッピングレイヤ情報.
  * @param[in]  texTransform    マッピングの変換情報.
  * @param[out] texMappingData  マッピング情報の格納先.
+ * @param[in]  useEmissiveTexture   発光テクスチャを使用するか.
  */
-void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, const CTextureTransform& texTransform, CTextureMappingData& texMappingData)
+void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_class& diffuseMappingLayer, CTextureTransform& texTransform, CTextureMappingData& texMappingData, const bool useEmissiveTexture)
 {
 	if (texMappingData.textureParam.imageIndex >= 0) return;
 
@@ -460,14 +521,21 @@ void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_
 
 		std::string masterImageName = "";
 
+		// 発光がある場合は、強制的にAlpha要素をグレイスケールで出さないと、iOS13.1.2段階のusdz表示では正しくならない.
+		if (useEmissiveTexture || m_exportParam.texOptConvGrayscale) {
+			texTransform.convGrayscale = true;
+		}
+
 		// 同一のマスターイメージが格納済みか.
 		int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, sxsdk::enums::mapping_grayscale_alpha_mode);
 		bool existImage = false;
 		if (imageIndex >= 0) {
 			const CImageData& imageD = m_imagesList[imageIndex];
-			if (StringUtil::getFileExtension(imageD.fileName) == "png") {
-				masterImageName = imageD.fileName;
-				existImage = true;
+			if (!texTransform.convGrayscale) {
+				if (StringUtil::getFileExtension(imageD.fileName) == "png") {
+					masterImageName = imageD.fileName;
+					existImage = true;
+				}
 			}
 		}
 
@@ -478,8 +546,19 @@ void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_
 				masterImageName = "texture";
 			}
 
-			// ファイル名は強制的にpng.
-			masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+			if (!texTransform.convGrayscale) {
+				// 強制的にpng出力.
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+			} else {
+				// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
+				if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
+					// 拡張子がある場合はそれを採用し、ない場合はpngにする.
+					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
+				} else {
+					const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
+					masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
+				}
+			}
 
 			// ユニークファイル名として追加.
 			// 同一名がある場合は、連番付きで返す.

@@ -26,7 +26,7 @@ public:
 	float bias[4];
 	float scale[4];
 
-	USD_DATA::TEXTURE_SOURE textureSource;	// 使用するテクスチャの要素.
+	USD_DATA::TEXTURE_SOURE textureSource;	// 使用するテクスチャの要素 (RGB/RGBA/R/G/B/A).
 
 	CTextureTransform texTransform;			// テクスチャの変換要素.
 

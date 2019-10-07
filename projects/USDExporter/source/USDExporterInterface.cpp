@@ -693,6 +693,7 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_texture_bake_multi));
 		item->set_bool(m_exportParam.texOptBakeMultiTextures);
+		item->set_enabled(false);		// TODO : 初期バージョンでは未使用.
 	}
 	{
 		sxsdk::dialog_item_class* item;
