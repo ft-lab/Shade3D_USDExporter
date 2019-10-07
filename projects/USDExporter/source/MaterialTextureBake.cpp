@@ -384,8 +384,8 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				masterImageName = "texture";
 			}
 
-			if (useTransparentAlpha) {
-				// 「アルファ透明」使用時は、強制的にpng出力.
+			if (useTransparentAlpha && texTransform.isDefault()) {
+				// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.
 				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 			} else {
 				// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
@@ -479,7 +479,7 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			}
 
 			// アルファ要素を持つ場合でファイル名がjpgの場合は、pngに置き換え.
-			if (useAlpha && !texTransform.convGrayscale) {
+			if (useAlpha && !texTransform.convGrayscale && texTransform.isDefault()) {
 				if (StringUtil::getFileExtension(masterImageName) == "jpg") {
 					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 					masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
@@ -545,19 +545,15 @@ void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_
 			if (!StringUtil::checkASCII(masterImageName)) {
 				masterImageName = "texture";
 			}
+			texTransform.convGrayscale = true;
 
-			if (!texTransform.convGrayscale) {
-				// 強制的にpng出力.
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+			// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
+			if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
+				// 拡張子がある場合はそれを採用し、ない場合はpngにする.
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
 			} else {
-				// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
-				if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
-					// 拡張子がある場合はそれを採用し、ない場合はpngにする.
-					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
-				} else {
-					const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
-					masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
-				}
+				const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
 			}
 
 			// ユニークファイル名として追加.
@@ -582,9 +578,15 @@ void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_
 			texMappingData.textureParam.repeatU    = diffuseMappingLayer.get_repetition_x();
 			texMappingData.textureParam.repeatV    = diffuseMappingLayer.get_repetition_y();
 			texMappingData.textureParam.wrapRepeat = diffuseMappingLayer.get_repeat_image();
+			texMappingData.textureSource           = USD_DATA::TEXTURE_SOURE::texture_source_a;
 
-			texMappingData.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
-			imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+			if (existImage) {
+				if (imageD.textureSource != USD_DATA::TEXTURE_SOURE::texture_source_rgb) {
+					imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+				}
+			} else {
+				imageD.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
+			}
 
 			imageD.texTransform = texTransform;
 		}
