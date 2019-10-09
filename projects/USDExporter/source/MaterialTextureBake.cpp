@@ -27,10 +27,184 @@
 
 #define MATERIAL_ROOT_PATH  "/root/Materials"
 
+//------------------------------------------------------------------.
+CImageRefData::CImageRefData ()
+{
+}
+
+CImageRefData::~CImageRefData ()
+{
+	clear();
+}
+
+void CImageRefData::clear ()
+{
+	pMasterImageHandle = NULL;
+	useOrg = true;
+}
+
+//------------------------------------------------------------------.
+CCheckImageRef::CCheckImageRef ()
+{
+	clear();
+}
+
+void CCheckImageRef::clear ()
+{
+	m_imageRefData.clear();
+}
+
+/**
+ * シーンを走査し、マスターイメージの参照情報を取得.
+ */
+void CCheckImageRef::checkMasterImages (sxsdk::scene_interface* scene)
+{
+	clear();
+	m_pScene = scene;
+
+	sxsdk::shape_class* pRootShape = &(scene->get_shape());
+	m_checkMasterImages(pRootShape);
+}
+
+/**
+ * 形状を再帰的に走査し、マスターイメージの参照情報を取得.
+ */
+void CCheckImageRef::m_checkMasterImages (sxsdk::shape_class* shape)
+{
+	if (shape->has_surface()) {
+		sxsdk::surface_class* surface = shape->get_surface();
+		m_checkMappingInSurface(surface);
+	}
+
+	// 再帰的にたどる.
+	if (shape->has_son()) {
+		sxsdk::shape_class* pS = shape->get_son();
+		while (pS->has_bro()) {
+			pS = pS->get_bro();
+			if (!pS) break;
+			m_checkMasterImages(pS);
+		}
+	}
+}
+
+/**
+ * 指定の表面材質のマッピングレイヤにて、参照するマスターイメージをたどる.
+ */
+void CCheckImageRef::m_checkMappingInSurface (sxsdk::surface_class* surface)
+{
+	const int mappingLayerCou = surface->get_number_of_mapping_layers();
+	if (mappingLayerCou == 0) return;
+
+	for (int i = 0; i < mappingLayerCou; ++i) {
+		sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(i);
+		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+
+		const int mType = mappingLayer.get_type();
+		CTextureTransform texTransform;
+		texTransform.flipColor     = mappingLayer.get_flip_color();
+		texTransform.textureWeight = mappingLayer.get_weight();
+
+		// マテリアルの乗算値を取得.
+		if (mType == sxsdk::enums::diffuse_mapping) {
+			if (surface->get_has_diffuse()) {
+				const sxsdk::rgb_class col = (surface->get_diffuse_color()) * (surface->get_diffuse());
+				texTransform.multiR = col.red;
+				texTransform.multiG = col.green;
+				texTransform.multiB = col.blue;
+			}
+		}
+		if (mType == sxsdk::enums::glow_mapping) {
+			if (surface->get_has_glow()) {
+				const sxsdk::rgb_class col = (surface->get_glow_color()) * (surface->get_glow());
+				texTransform.multiR = col.red;
+				texTransform.multiG = col.green;
+				texTransform.multiB = col.blue;
+			}
+		}
+		if (mType == sxsdk::enums::reflection_mapping) {
+			if (surface->get_has_reflection()) {
+				texTransform.multiR = texTransform.multiG = texTransform.multiB =surface->get_reflection();
+			}
+		}
+		if (mType == sxsdk::enums::roughness_mapping) {
+			if (surface->get_has_roughness()) {
+				texTransform.multiR = texTransform.multiG = texTransform.multiB = surface->get_roughness();
+			}
+		}
+		if (mType == sxsdk::enums::transparency_mapping) {
+			if (surface->get_has_transparency()) {
+				texTransform.multiR = texTransform.multiG = texTransform.multiB = surface->get_transparency();
+			}
+			texTransform.flipColor = !texTransform.flipColor;
+		}
+
+		if (mType != sxsdk::enums::diffuse_mapping && mType != sxsdk::enums::glow_mapping &&
+			mType != sxsdk::enums::reflection_mapping && mType != sxsdk::enums::roughness_mapping &&
+			mType != sxsdk::enums::transparency_mapping && !Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+		try {
+			compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+			if (image->has_image()) {
+				sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+				if (masterImage) {
+					void* imgHandle = masterImage->get_handle();
+
+					int index = -1;
+					for (size_t j = 0; j < m_imageRefData.size(); ++j) {
+						if (m_imageRefData[j].pMasterImageHandle == imgHandle) {
+							index = (int)j;
+							break;
+						}
+					}
+					if (index < 0) {
+						index = (int)m_imageRefData.size();
+						CImageRefData dd;
+						dd.pMasterImageHandle = imgHandle;
+						dd.useOrg = true;
+						m_imageRefData.push_back(dd);
+					}
+					CImageRefData& imgD = m_imageRefData[index];
+					if (!imgD.useOrg) continue;
+
+					if (!texTransform.isDefault()) {
+						imgD.useOrg = false;
+						continue;
+					}
+				}
+			}
+		} catch (...) { }
+	}
+}
+
+/**
+ * 指定のマスターイメージがオリジナルのまま加工せずに使用できるか.
+ */
+bool CCheckImageRef::isNoProcessingImage (sxsdk::master_image_class* masterImage)
+{
+	if (!masterImage) return false;
+	if (m_imageRefData.empty()) return false;
+
+	void* imgHandle = masterImage->get_handle();
+
+	int index = -1;
+	for (size_t j = 0; j < m_imageRefData.size(); ++j) {
+		if (m_imageRefData[j].pMasterImageHandle == imgHandle) {
+			index = (int)j;
+			break;
+		}
+	}
+	if (index < 0) return false;
+
+	return m_imageRefData[index].useOrg;
+}
+
+//------------------------------------------------------------------.
 CMaterialTextureBake::CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam)
 {
 	m_pScene = scene;
 	m_exportParam = exportParam;
+	m_checkImageRef.checkMasterImages(m_pScene);
+
 	clear();
 }
 
@@ -145,10 +319,20 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		//	return m_getMaterialMultiMappingFromSurface(surface, materialData);
 		//}
 
+		// Opacityテクスチャが存在しrougnhessを1.0にしている場合、半透明を完全透明に近づけるにはmetallicを1.0にする (iOS13.1).
+		if (materialData.opacityTexture.textureParam.imageIndex >= 0) {
+			if (materialData.roughnessTexture.textureParam.imageIndex < 0 && USD_DATA::isZero(materialData.roughness - 1.0f)) {
+				if (materialData.metallicTexture.textureParam.imageIndex < 0) {
+					materialData.metallic = 1.0f;
+				}
+			}
+		}
+
 		// 「陰影付けしない」を考慮して、Unlitになるように置き換え.
+		// iOS 13.1では、roughness 1 / metallic 1 にすると、完全透明部分は透過になっている.
 		if (materialData.unlitMode) {
 			materialData.roughness = 1.0f;
-			materialData.metallic  = 0.0f;
+			materialData.metallic  = 1.0f;
 			materialData.ior       = 1.0f;
 			materialData.metallicTexture.clear();
 			materialData.roughnessTexture.clear();
@@ -213,7 +397,6 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 					}
 				}
 			}
-
 		}
 
 		// 「アルファ透明」を使用し、かつ、「透明度」マッピングが存在しない場合は、.
@@ -363,11 +546,18 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			}
 		}
 
+		// オリジナルの画像を加工なしでそのまま使えるかチェック.
+		const bool isNoProcessingF = m_checkImageRef.isNoProcessingImage(masterImage);
+
 		if (channelMix == sxsdk::enums::mapping_grayscale_red_mode || channelMix == sxsdk::enums::mapping_grayscale_green_mode ||
 			channelMix == sxsdk::enums::mapping_grayscale_blue_mode || channelMix == sxsdk::enums::mapping_grayscale_alpha_mode) {
 			// 発光がある場合は、強制的にAlpha要素をグレイスケールで出さないと、iOS13.1.2段階のusdz表示では正しくならない.
 			const int mType = mappingLayer.get_type();
 			if (m_exportParam.texOptConvGrayscale || (useEmissiveTexture && mType == sxsdk::enums::transparency_mapping)) {
+				texTransform.convGrayscale = true;
+			}
+
+			if (!isNoProcessingF) {
 				texTransform.convGrayscale = true;
 			}
 		}
@@ -384,7 +574,7 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 				masterImageName = "texture";
 			}
 
-			if (useTransparentAlpha && texTransform.isDefault()) {
+			if (useTransparentAlpha && isNoProcessingF) {
 				// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.
 				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 			} else {
@@ -479,7 +669,7 @@ void CMaterialTextureBake::m_setTextureMappingData (sxsdk::mapping_layer_class& 
 			}
 
 			// アルファ要素を持つ場合でファイル名がjpgの場合は、pngに置き換え.
-			if (useAlpha && !texTransform.convGrayscale && texTransform.isDefault()) {
+			if (useAlpha && !texTransform.convGrayscale && isNoProcessingF) {
 				if (StringUtil::getFileExtension(masterImageName) == "jpg") {
 					masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
 					masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
@@ -523,6 +713,12 @@ void CMaterialTextureBake::m_setTextureMappingOpacityData (sxsdk::mapping_layer_
 
 		// 発光がある場合は、強制的にAlpha要素をグレイスケールで出さないと、iOS13.1.2段階のusdz表示では正しくならない.
 		if (useEmissiveTexture || m_exportParam.texOptConvGrayscale) {
+			texTransform.convGrayscale = true;
+		}
+
+		// オリジナルの画像を加工なしでそのまま使えるかチェック.
+		const bool isNoProcessingF = m_checkImageRef.isNoProcessingImage(masterImage);
+		if (!isNoProcessingF) {
 			texTransform.convGrayscale = true;
 		}
 

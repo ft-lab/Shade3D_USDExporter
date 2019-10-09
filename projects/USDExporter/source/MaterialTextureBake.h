@@ -19,6 +19,71 @@
 
 //------------------------------------------------------------------.
 /**
+ * マスターイメージをそのまま出力可能か、R/G/B/Aを分ける必要があるか、の判定用.
+ */
+class CImageRefData
+{
+public:
+	void* pMasterImageHandle;			// マスターイメージとしてのハンドル.
+	bool useOrg;						// 画像をそのまま使用できる場合true.
+
+public:
+	CImageRefData ();
+	~CImageRefData ();
+
+	CImageRefData (const CImageRefData& v) {
+		this->pMasterImageHandle = v.pMasterImageHandle;
+		this->useOrg = v.useOrg;
+	}
+
+	CImageRefData& operator = (const CImageRefData &v) {
+		this->pMasterImageHandle = v.pMasterImageHandle;
+		this->useOrg = v.useOrg;
+		return (*this);
+	}
+
+	void clear ();
+};
+
+//------------------------------------------------------------------.
+/**
+ * マスターイメージがマテリアルから参照される場合の、イメージ情報を前処理取得.
+ */
+class CCheckImageRef
+{
+private:
+	std::vector<CImageRefData> m_imageRefData;		// 画像の参照情報.
+	sxsdk::scene_interface* m_pScene;
+
+private:
+	/**
+	 * 形状を再帰的に走査し、マスターイメージの参照情報を取得.
+	 */
+	void m_checkMasterImages (sxsdk::shape_class* shape);
+
+	/**
+	 * 指定の表面材質のマッピングレイヤにて、参照するマスターイメージをたどる.
+	 */
+	void m_checkMappingInSurface (sxsdk::surface_class* surface);
+
+public:
+	CCheckImageRef ();
+
+	void clear ();
+
+	/**
+	 * シーンを走査し、マスターイメージの参照情報を取得.
+	 */
+	void checkMasterImages (sxsdk::scene_interface* scene);
+
+	/**
+	 * 指定のマスターイメージがオリジナルのまま加工せずに使用できるか.
+	 */
+	bool isNoProcessingImage (sxsdk::master_image_class* masterImage);
+};
+
+//------------------------------------------------------------------.
+/**
  * テクスチャパラメータ.
  */
 class CMaterialTextureBake
@@ -28,6 +93,8 @@ private:
 	CExportParam m_exportParam;					// エクスポート時のパラメータ.
 	CFindNames m_findImageFileNames;			// 画像ファイル名が同じにならないようにするクラス.
 	std::vector<CImageData> m_imagesList;		// テクスチャイメージを格納.
+
+	CCheckImageRef m_checkImageRef;				// マスターイメージがそのまま加工無しに使用できるか調査するクラス.
 
 private:
 	/**
