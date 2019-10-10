@@ -64,11 +64,6 @@ private:
 	void m_outputTextureData (const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource);
 
 	/**
-	 * 指定のメッシュが、スケルトンのどのルートに属するか.
-	 */
-	int m_findSkeletonRootIndex (const USD_DATA::MeshData& meshData);
-
-	/**
 	 * 指定のメッシュがスキンを持つか.
 	 */
 	bool m_hasSkinMesh (const USD_DATA::MeshData& meshData);

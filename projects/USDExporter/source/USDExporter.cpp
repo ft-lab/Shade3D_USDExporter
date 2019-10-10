@@ -1097,8 +1097,8 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 		{
 			std::vector< std::vector<CJointTranslationData> > transList;
 			std::vector<GfVec3f> trans;
-			UsdAttribute attr = skelAnim.CreateTranslationsAttr();
 			if (skelData.getJointsTranslationData(keyframes, transList) >= 1) {		// キーフレーム情報を取得.
+				UsdAttribute attr = skelAnim.CreateTranslationsAttr();
 				const size_t keyframesCou = keyframes.size();
 				for (size_t i = 0; i < keyframesCou; ++i) {
 					trans.resize(jointsCou);
@@ -1108,11 +1108,6 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 					}
 					attr.Set(VtVec3fArray(trans.begin(), trans.end()), UsdTimeCode(keyframes[i]));
 				}
-			} else {
-				for (size_t j = 0; j < jointsCou; ++j) {
-					trans.push_back(GfVec3f(0, 0, 0));
-				}
-				attr.Set(VtVec3fArray(trans.begin(), trans.end()));
 			}
 		}
 
@@ -1120,8 +1115,8 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 		{
 			std::vector< std::vector<CJointRotationData> > rotList;
 			std::vector<GfQuatf> quats;
-			UsdAttribute attr = skelAnim.CreateRotationsAttr();
 			if (skelData.getJointsRotationData(keyframes, rotList) >= 1) {		// キーフレーム情報を取得.
+				UsdAttribute attr = skelAnim.CreateRotationsAttr();
 				const size_t keyframesCou = keyframes.size();
 				for (size_t i = 0; i < keyframesCou; ++i) {
 					quats.resize(jointsCou);
@@ -1131,11 +1126,6 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 					}
 					attr.Set(VtQuatfArray(quats.begin(), quats.end()), UsdTimeCode(keyframes[i]));
 				}
-			} else {
-				for (size_t j = 0; j < jointsCou; ++j) {
-					quats.push_back(GfQuatf(1, 0, 0, 0));
-				}
-				attr.Set(VtQuatfArray(quats.begin(), quats.end()));
 			}
 		}
 
@@ -1143,8 +1133,8 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 		{
 			std::vector< std::vector<CJointScaleData> > scalesList;
 			std::vector<GfVec3h> scales;
-			UsdAttribute attr = skelAnim.CreateScalesAttr();
 			if (skelData.getJointsScaleData(keyframes, scalesList) >= 1) {		// キーフレーム情報を取得.
+				UsdAttribute attr = skelAnim.CreateScalesAttr();
 				const size_t keyframesCou = keyframes.size();
 				for (size_t i = 0; i < keyframesCou; ++i) {
 					scales.resize(jointsCou);
@@ -1154,34 +1144,7 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 					}
 					attr.Set(VtVec3hArray(scales.begin(), scales.end()), UsdTimeCode(keyframes[i]));
 				}
-			} else {
-				for (size_t j = 0; j < jointsCou; ++j) {
-					scales.push_back(GfVec3h(1, 1, 1));
-				}
-				attr.Set(VtVec3hArray(scales.begin(), scales.end()));
 			}
 		}
-
 	}
 }
-
-#if false
-/**
- * 指定のメッシュが、スケルトンのどのルートに属するか.
- */
-int CUSDExporter::m_findSkeletonRootIndex (const USD_DATA::MeshData& meshData)
-{
-	if (m_skeletonsList.empty()) return -1;
-	if (meshData.skinJointsHandle.empty()) return -1;
-
-	int skeletonIndex = -1;
-
-	for (size_t loop = 0; loop < m_skeletonsList.size(); ++loop) {
-		const CSkeletonData& skelD = m_skeletonsList[loop];
-
-	}
-
-	return skeletonIndex;
-}
-
-#endif
