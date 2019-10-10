@@ -607,21 +607,12 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
 						m_saveTextureImage(fileName, image2);
 
-					} else if (imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_r ||
-						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_g ||
-						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_b ||
-						imageD.textureSource == USD_DATA::TEXTURE_SOURE::texture_source_a) {
-						// テクスチャのピクセルを加工する場合.
+					} else if (imageD.texTransform.isDefault()) {		// 変換要素がない場合.
+						m_saveTextureImage(fileName, image);
+
+					} else {					// 変換要素がある場合.
 						compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
 						m_saveTextureImage(fileName, image2);
-
-					} else {
-						if (!imageD.texTransform.isDefault()) {		// 変換要素がある場合.
-							compointer<sxsdk::image_interface> image2(Shade3DUtil::createImageWithTransform(image, imageD.textureSource, imageD.texTransform));
-							m_saveTextureImage(fileName, image2);
-						} else {
-							m_saveTextureImage(fileName, image);
-						}
 					}
 
 					// USDZ出力時のためのファイル名保持.
