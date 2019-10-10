@@ -367,6 +367,7 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		nodeD.name = namePath;
 		if (meshes.size() >= 2) {
 			nodeD.name += std::string("/mesh_") + std::to_string(meshLoop);
+			nodeD.faceGroupMesh = true;
 		} else {
 			nodeD.matrix = matrix;
 		}

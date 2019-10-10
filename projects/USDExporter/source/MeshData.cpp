@@ -202,6 +202,7 @@ CNodeMeshData::CNodeMeshData (const CNodeMeshData& v)
 	this->refMaterialName = v.refMaterialName;
 	this->masterSurfaceHangle = v.masterSurfaceHangle;
 	this->subdivision = v.subdivision;
+	this->faceGroupMesh = v.faceGroupMesh;
 }
 
 CNodeMeshData::~CNodeMeshData ()
@@ -229,6 +230,7 @@ void CNodeMeshData::clear ()
 	refMaterialName = "";
 	masterSurfaceHangle = NULL;
 	subdivision = false;
+	faceGroupMesh = false;
 }
 
 namespace {
@@ -547,7 +549,8 @@ bool CNodeMeshData::hasNeedVertexColorAlpha () const
 void CNodeMeshData::convertTo (USD_DATA::MeshData& usdMeshData)
 {
 	usdMeshData.clear();
-	usdMeshData.subdivision = this->subdivision;
+	usdMeshData.subdivision   = this->subdivision;
+	usdMeshData.faceGroupMesh = this->faceGroupMesh;
 
 	const size_t versCou = vertices.size();
 	const size_t facesCou = faceVertexCounts.size();

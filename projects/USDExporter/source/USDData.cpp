@@ -27,6 +27,7 @@ void USD_DATA::MeshData::clear ()
 	materialIndex = -1;
 	skinSkeletonIndex = -1;
 	subdivision = false;
+	faceGroupMesh = false;
 }
 
 //--------------------------------------------------.

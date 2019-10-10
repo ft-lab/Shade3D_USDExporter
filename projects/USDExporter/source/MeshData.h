@@ -103,6 +103,7 @@ public:
 
 	std::string refMaterialName;			// 参照するマテリアル名 (パス).
 	bool subdivision;							// Subdivision処理を行う.
+	bool faceGroupMesh;							// face groupのMeshの場合.
 
 public:
 	CNodeMeshData ();
@@ -129,6 +130,7 @@ public:
 		this->refMaterialName = v.refMaterialName;
 		this->masterSurfaceHangle = v.masterSurfaceHangle;
 		this->subdivision = v.subdivision;
+		this->faceGroupMesh = v.faceGroupMesh;
 
 		return (*this);
     }

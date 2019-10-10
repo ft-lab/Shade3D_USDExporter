@@ -669,7 +669,9 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 void CUSDExporter::appendNodeNull (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix, const CJointMotionData& jointMotion)
 {
 	if (!g_stage) return;
-	UsdPrim node = g_stage->DefinePrim(SdfPath(nodeName), TfToken("Xform"));
+
+	std::string nodePath = nodeName;
+	UsdPrim node = g_stage->DefinePrim(SdfPath(nodePath), TfToken("Xform"));
 
 	// 変換行列を指定.
 	if (!jointMotion.hasMotion()) {		// モーション情報を持たない場合.
@@ -770,7 +772,28 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 		std::string meshName = nodeName;
 		const int iPos = meshName.find_last_of("/");
 		if (iPos != std::string::npos) {
-			meshName = meshName.substr(iPos + 1);
+			if (meshData.faceGroupMesh) {		// face groupのメッシュの場合、その1つ親もパスに入れる.
+				std::string parentPath = "";
+				const std::string name2 = meshName.substr(iPos + 1);
+				meshName = meshName.substr(0, iPos);
+				const int iPos2 = meshName.find_last_of("/");
+				if (iPos2 != std::string::npos) {
+					const std::string parentName = meshName.substr(iPos2 + 1);
+					meshName = parentName + std::string("/") + name2;
+					parentPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/") + parentName;
+				}
+
+				// 親のノードがない場合は作成.
+				if (parentPath != "") {
+					UsdPrim parentPrim = g_stage->GetPrimAtPath(SdfPath(parentPath));
+					if (!parentPrim.IsValid()) {
+						g_stage->DefinePrim(SdfPath(parentPath), TfToken("Xform"));
+					}
+				}
+
+			} else {
+				meshName = meshName.substr(iPos + 1);
+			}
 		}
 		meshPath = std::string(SKELETONS_ROOT_PATH) + std::string("/") + skelD.rootName + std::string("/") + meshName;
 	}

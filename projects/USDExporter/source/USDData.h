@@ -71,6 +71,7 @@ namespace USD_DATA {
 		std::string refMaterialName;		// 参照するマテリアル名 (パス).
 		int materialIndex;					// マテリアル番号.
 		bool subdivision;					// Subdivision処理を行う.
+		bool faceGroupMesh;					// face groupのMeshの場合.
 
 	public:
 		MeshData ();
