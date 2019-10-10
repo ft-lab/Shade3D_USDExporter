@@ -1093,6 +1093,10 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 		const size_t jointsCou = skelData.joints.size();
 		std::vector<float> keyframes;
 
+		bool useTranslation = false;
+		bool useRotation    = false;
+		bool useScale       = false;
+
 		// 移動情報を格納.
 		{
 			std::vector< std::vector<CJointTranslationData> > transList;
@@ -1108,6 +1112,7 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 					}
 					attr.Set(VtVec3fArray(trans.begin(), trans.end()), UsdTimeCode(keyframes[i]));
 				}
+				useTranslation = true;
 			}
 		}
 
@@ -1126,6 +1131,18 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 					}
 					attr.Set(VtQuatfArray(quats.begin(), quats.end()), UsdTimeCode(keyframes[i]));
 				}
+				useRotation = true;
+
+			} else {
+				// translation情報のキーフレームがある場合、rotation/scaleも出力する必要がある.
+				if (useTranslation) {
+					UsdAttribute attr = skelAnim.CreateRotationsAttr();
+					for (size_t j = 0; j < jointsCou; ++j) {
+						quats.push_back(GfQuatf(1, 0, 0, 0));
+					}
+					attr.Set(VtQuatfArray(quats.begin(), quats.end()));
+					useRotation = true;
+				}
 			}
 		}
 
@@ -1143,6 +1160,18 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 						scales[j] = GfVec3h(sD.x, sD.y, sD.z);
 					}
 					attr.Set(VtVec3hArray(scales.begin(), scales.end()), UsdTimeCode(keyframes[i]));
+				}
+				useScale = true;
+
+			} else {
+				// translation情報のキーフレームがある場合、rotation/scaleも出力する必要がある.
+				if (useTranslation || useRotation) {
+					UsdAttribute attr = skelAnim.CreateScalesAttr();
+					for (size_t j = 0; j < jointsCou; ++j) {
+						scales.push_back(GfVec3h(1, 1, 1));
+					}
+					attr.Set(VtVec3hArray(scales.begin(), scales.end()));
+					useScale = true;
 				}
 			}
 		}

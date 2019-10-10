@@ -224,6 +224,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 	const CAnimationData animD = m_getAnimationData(m_pScene);
 	CAnimKeyframeBake keyframeBake(m_pScene, m_exportParam);
 	keyframeBake.storeKeyframes(shape, animD.startFrame, animD.endFrame);
+
 	const std::vector<CAnimKeyframeData>& keyframeData = keyframeBake.getKeyframes();
 
 	if (Shade3DUtil::isBone(*shape)) {				// ボーンの場合.
