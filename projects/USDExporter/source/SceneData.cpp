@@ -359,6 +359,7 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		CNodeNullData& nodeD = static_cast<CNodeNullData &>(*(nodesList.back()));
 		nodeD.name = namePath;
 		nodeD.matrix = matrix;
+		nodeD.hasFaceGroup = true;
 	}
 
 	// メッシュごとに格納.
@@ -485,6 +486,9 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 
 	// エクスポート開始.
 	usdExport.beginExport(filePath);
+
+	// スキンを持つ形状で、名前の重複がある場合は別名を付ける.
+	m_makeUniqueName();
 
 	// マテリアルを追加.
 	if (!materialsList.empty()) {
@@ -956,4 +960,109 @@ void CSceneData::m_setMeshSkeletonRef (const CNodeMeshData& nodeMeshData, USD_DA
 		 rotD.eulerZ = eulerList[i].z;
 	 }
  }
+
+/**
+ * スキンを持つ形状で、名前の重複がある場合は別名を付ける.
+ * スキンが割り当てられているMeshはSkeletonRootに格納されるため、パスが変わることになる.
+ */
+void CSceneData::m_makeUniqueName ()
+{
+	if (nodesList.empty()) return;
+
+	// 各ノードの名前だけを格納.
+	std::vector<std::string> nameList;
+	nameList.resize(nodesList.size());
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		nameList[i] = "";
+		const CNodeBaseData& nodeBaseD = *nodesList[i];
+		std::string name = nodeBaseD.name;
+		const int iPos = name.find_last_of("/");
+		if (iPos != std::string::npos) {
+			name = name.substr(iPos + 1);
+		}
+		nameList[i] = name;
+	}
+
+	// スキン情報を持つもののみ、名前を残す.
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		CNodeBaseData& nodeBaseD = *nodesList[i];
+		if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node) {
+			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
+			// face groupを持つノードの場合.
+			if (nodeD.hasFaceGroup) {
+				bool hasSkin = false;
+				size_t j = i + 1;
+				for (; j < nodesList.size(); ++j) {
+					nameList[j] = "";
+					CNodeBaseData& nodeBaseD2 = *nodesList[j];
+					if ((nodeBaseD2.nodeType) == USD_DATA::NODE_TYPE::mesh_node) {
+						CNodeMeshData& nodeD2 = static_cast<CNodeMeshData &>(nodeBaseD2);
+						if (!nodeD2.faceGroupMesh) {
+							j--;
+							break;
+						}
+						if (!nodeD2.skinJointsHandle.empty()){
+							hasSkin = true;
+						}
+					} else {
+						j--;
+						break;
+					}
+				}
+				if (!hasSkin) nameList[i] = "";
+				i = j;
+			} else {
+				nameList[i] = "";
+			}
+
+		} else if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::mesh_node) {
+			CNodeMeshData& nodeD = static_cast<CNodeMeshData &>(nodeBaseD);
+			if (nodeD.skinJointsHandle.empty()) {
+				nameList[i] = "";
+			}
+		} else {
+			nameList[i] = "";
+		}
+	}
+
+	// スキン情報を持つMeshまたはface groupの親のみ、名前が同一である場合にユニークにする.
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		const std::string name1 = nameList[i];
+		if (name1 == "") continue;
+
+		for (size_t j = i + 1; j < nodesList.size(); ++j) {
+			if (name1 == nameList[j]) {
+				int cou = 1;
+				while (1) {
+					const std::string newName = name1 + std::string("_") + std::to_string(cou);
+					bool existF = false;
+					for (size_t k = 0; k < nodesList.size(); ++k) {
+						if (nameList[k] == "") continue;
+						if (nameList[k] == newName) {
+							existF = true;
+							break;
+						}
+					}
+					if (existF) {
+						cou++;
+						continue;
+					}
+					nameList[j] = newName;
+					break;
+				}
+			}
+		}
+	}
+
+	// 名前を変更.
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		if (nameList[i] == "") continue;
+		CNodeBaseData& nodeBaseD = *nodesList[i];
+
+		const int iPos = nodeBaseD.name.find_last_of("/");
+		if (iPos != std::string::npos) {
+			nodeBaseD.name = nodeBaseD.name.substr(0, iPos + 1) + nameList[i];
+		}
+	}
+}
 

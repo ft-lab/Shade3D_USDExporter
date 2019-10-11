@@ -57,7 +57,7 @@ class CNodeNullData : public CNodeBaseData
 public:
 	void *shapeHandle;			// sxsdk::shape_classのハンドル.
 	CJointMotionData jointMotion;		// ジョイントとしてのモーション情報.
-
+	bool hasFaceGroup;					// 子としてFace groupのMeshを持つ場合.
 public:
 	CNodeNullData () {
 		clear();
@@ -71,6 +71,7 @@ public:
 		this->nodeType = v.nodeType;
 		this->shapeHandle = v.shapeHandle;
 		this->jointMotion = v.jointMotion;
+		this->hasFaceGroup = v.hasFaceGroup;
 	}
 
     CNodeNullData& operator = (const CNodeNullData &v) {
@@ -79,6 +80,7 @@ public:
 		this->nodeType = v.nodeType;
 		this->shapeHandle = v.shapeHandle;
 		this->jointMotion = v.jointMotion;
+		this->hasFaceGroup = v.hasFaceGroup;
 		return (*this);
 	}
 
@@ -88,6 +90,7 @@ public:
 		nodeType = USD_DATA::NODE_TYPE::null_node;
 		shapeHandle = NULL;
 		jointMotion.clear();
+		hasFaceGroup = false;
 	}
 };
 

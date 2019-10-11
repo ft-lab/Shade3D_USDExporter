@@ -132,6 +132,11 @@ private:
 	  */
 	 void m_saveTextureImage (const std::string fileName, sxsdk::image_interface* image);
 
+	 /**
+	  * スキンを持つ形状で、名前の重複がある場合は別名を付ける.
+	  */
+	 void m_makeUniqueName ();
+
 public:
 	CSceneData ();
 	~CSceneData ();
