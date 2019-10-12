@@ -16,7 +16,7 @@ https://github.com/PixarAnimationStudios/USD
 
 以下の機能があります。    
 
-* Shade3Dから、PixarのUSD形式/圧縮されたUSDZ形式でエクスポート。
+* Shade3Dから、PixarのUSD形式/1つにまとめたUSDZ形式でエクスポート。
 
 ## 動作環境
 
@@ -107,7 +107,7 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 |usda|USDのシーンファイル (ASCII形式)|    
 |usdc|USDのシーンファイル (バイナリ形式)|    
 |jpg/png|参照しているテクスチャイメージ|    
-|usdz|usda(usdc)とテクスチャイメージを1つのファイルにまとめてzipにしたもの|    
+|usdz|usda(usdc)とテクスチャイメージを1つのファイルにまとめてzipにしたもの。zip圧縮はされません。|    
 
 
 ## サンプルファイル
@@ -115,7 +115,7 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 ## 対応している機能
 
 * USDのバイナリ(拡張子 usdc)またはテキスト(拡張子 usda)とテクスチャの出力
-* zip圧縮したusdz形式の出力
+* zipにまとめたusdz形式の出力
 * iOS12/iOS13のAR表示への対応 (iOS13を推奨)
 * ポリゴンメッシュとして形状出力
 * マテリアルはPBR (diffuse/roughness/metallic/normal/emissive/occlusion/opacity) として出力
