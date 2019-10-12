@@ -28,10 +28,15 @@ https://github.com/PixarAnimationStudios/USD
 
 ## プラグインの配置、Shade3Dの起動方法
 
-### プラグインダウンロード
+### プラグインと関連ファイルをダウンロード (Win)
+
+関連ファイルは以下からダウンロードできます。    
+https://github.com/ft-lab/Shade3D_USDExporter/releases    
 
 USDを作成するために参照するDLLと関連ファイルと、Shade3Dプラグインの両方が必要になります。    
 
+https://github.com/ft-lab/Shade3D_USDExporter/releases/download/usd_dlls/usd_dlls_1907.zip    
+より、「usd_dlls_1907.zip」をダウンロードします。    
 usd_dlls_1907.zipを解凍し、任意の場所に配置します。    
 解凍すると、「usd_dlls」フォルダに「bin」と「lib」のフォルダが入っています。     
 また、環境変数のPATHを通してShade3Dを起動するためのバッチファイル「run_shade3d_v17.bat」を同梱しています。    
@@ -39,13 +44,17 @@ usd_dlls_1907.zipを解凍し、任意の場所に配置します。
 
 次に、Shade3Dプラグインをダウンロードします。    
 
+https://github.com/ft-lab/Shade3D_USDExporter/releases    
+より、最新の「USD Exporter ver.xxxx」のzipファイルをダウンロードして解凍します。    
+
+
 ### プラグインを配置し、Shade3Dを起動
 
 Windowsの場合は、USDExporter64.dll をShade3Dのpluginsディレクトリに格納します。     
 
 Shade3D実行時に「usd_dlls/bin」「usd_dlls/lib」フォルダへのPATH指定が必要です。    
 
-以下のように、バッチファイル（*.bat）を作ってShade3Dを起動します。    
+以下のように、バッチファイル（*.bat）をテキストエディタで作ってShade3Dを起動します。    
 > set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls    
 > set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%    
 > cd C:\Program Files\Shade3D\Shade3D ver.17\bin    
@@ -58,7 +67,8 @@ set PATHで環境設定のパスを指定しています。
 
 「usd_dlls_1907.zip」を解凍すると、「run_shade3d_v17.bat」のファイルが同梱されています。    
 上記と同じバッチファイルになります。    
-「USD_DLLS_PATH」の指定を環境に合わせて書き換え、「C:\Program Files\Shade3D\Shade3D ver.17\bin」をShade3Dのバージョンに合わせて書き換えるようにしてください。    
+「USD_DLLS_PATH」の指定を環境に合わせて書き換え、「C:\Program Files\Shade3D\Shade3D ver.17\bin」「c:」のドライブ指定を    
+Shade3Dのバージョンに合わせて書き換えるようにしてください。    
 
 メインメニューの「ファイル」-「エクスポート」-「USD」が表示されるのを確認します。     
 
@@ -120,7 +130,7 @@ USDの仕様によるものもあるため、それらは後述します。
 このときシーンのツリー構造からボーン構造を配列に変換して格納する必要があり、オリジナルのツリー構造は保持されなくなります。    
 * テクスチャイメージは、pngまたはjpgを指定できます。アニメーションするイメージには対応していません。    
 
-### 未調査
+## 未調査
 
 まだUSDの仕様として未調査の箇所です。
 
