@@ -330,6 +330,10 @@ USDの仕様によるものもあるため、それらは後述します。
 
 This software is released under the MIT License, see [LICENSE](./LICENSE).  
 
+USDについては、Modified Apache 2.0 License になっています。    
+https://github.com/PixarAnimationStudios/USD/blob/master/LICENSE.txt    
+USDについては、この内容に従います。     
+
 ## 更新履歴
 
 [2019/10/12] ver.0.0.1.0   
