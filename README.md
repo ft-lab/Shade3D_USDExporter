@@ -34,25 +34,31 @@ USDを作成するために参照するDLLと関連ファイルと、Shade3Dプ�
 
 usd_dlls_1907.zipを解凍し、任意の場所に配置します。    
 解凍すると、「usd_dlls」フォルダに「bin」と「lib」のフォルダが入っています。     
+また、環境変数のPATHを通してShade3Dを起動するためのバッチファイル「run_shade3d_v17.bat」を同梱しています。    
+これについては後述します。    
 
-また、Shade3Dプラグインをダウンロードします。    
+次に、Shade3Dプラグインをダウンロードします。    
 
 ### プラグインを配置し、Shade3Dを起動
 
-Windowsの場合は、ビルドされた USDExporter64.dll をShade3Dのpluginsディレクトリに格納します。     
+Windowsの場合は、USDExporter64.dll をShade3Dのpluginsディレクトリに格納します。     
 
 Shade3D実行時に「usd_dlls/bin」「usd_dlls/lib」フォルダへのPATH指定が必要です。    
 
 以下のように、バッチファイル（*.bat）を作ってShade3Dを起動します。    
-> set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls
-> set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%
-> cd C:\Program Files\Shade3D\Shade3D ver.17\bin
-> c:
-> shade.exe
+> set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls    
+> set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%    
+> cd C:\Program Files\Shade3D\Shade3D ver.17\bin    
+> c:    
+> shade.exe    
 
 USD_DLLS_PATHは「usd_dlls」フォルダを展開したパスを指定します。    
 set PATHで環境設定のパスを指定しています。    
 この場合は、Shade3D ver.17を起動しています。    
+
+「usd_dlls_1907.zip」を解凍すると、「run_shade3d_v17.bat」のファイルが同梱されています。    
+上記と同じバッチファイルになります。    
+「USD_DLLS_PATH」の指定を環境に合わせて書き換え、「C:\Program Files\Shade3D\Shade3D ver.17\bin」をShade3Dのバージョンに合わせて書き換えるようにしてください。    
 
 メインメニューの「ファイル」-「エクスポート」-「USD」が表示されるのを確認します。     
 
@@ -75,7 +81,7 @@ set PATHで環境設定のパスを指定しています。
 doubleSidedとは、リアルタイムでMeshを表示する場合に裏面を表示するかしないか、の指定です。    
 USDでは、形状(Mesh)に対してdoubleSidedの指定が存在します。    
 USD Exporter for Shade3Dでは、    
-マスターサーフェス名として「xxxx_doublesided」のように、「doublesided」が含まれる場合にdoubleSidedが指定されたと判断します。    
+マスターサーフェス名として「xxxx_doublesided」のように、「doublesided」が含まれる場合（大文字の場合でも小文字として判断）にdoubleSidedが指定されたと判断します。    
 なお、iOS12/iOS13ではdoubleSidedの指定は無効化され、常に「裏面は表示しない (doubleSided=false)」となるようです。    
 
 ## 制限事項
@@ -93,7 +99,7 @@ USDの仕様によるものもあるため、それらは後述します。
 アニメーション情報を持つ場合は、サブディビジョンを使用したポリゴンメッシュは正しく動作しません。    
 * ポリゴンメッシュのUV層は最大2層まで出力されます。    
 ただし、iOS12/iOS13ではUV層は1層しか認識されません。    
-* 出力USD名が全角の場合、「output_日時」の名前に変換されます。
+* 出力USD名が全角の場合、「output_日付_時間」の名前に変換されます。
 
 ## 制限事項 (USDの仕様)
 
@@ -106,6 +112,7 @@ USDの仕様によるものもあるため、それらは後述します。
 * USDの構造上、形状名やマテリアル名はパス形式で保持されます。    
 区切り文字は「/」を使います。    
 このとき、同一パス名を持つことはできません。    
+* 出力するUSDファイル名は、全角文字を使用できません。
 * MeshのUV層は最大2層まで持つことができます。    
 * Meshの面は多角形を保持できますが、USDを表示するビュワー環境によっては凹面は正しく表現できない場合があるようです。    
 複雑な面の場合は、三角形または四角形に分割したほうがいいかもしれません。    
