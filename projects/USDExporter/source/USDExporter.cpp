@@ -341,8 +341,8 @@ void CUSDExporter::beginExport (const std::string& fileName)
 {
 	g_stage = UsdStage::CreateNew(fileName);
 
-	// rootノードを出力.
 	if (g_stage) {
+		// rootノードを出力.
 		UsdPrim prim = g_stage->DefinePrim(SdfPath(ROOT_PATH), TfToken("Xform"));
 
 		// 外部参照される場合のデフォルトPrimの指定.

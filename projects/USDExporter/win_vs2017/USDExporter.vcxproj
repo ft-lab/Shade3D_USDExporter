@@ -198,7 +198,7 @@
       <Culture>0x0411</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>pcp.lib;sdf.lib;tf.lib;vt.lib;gf.lib;usd.lib;usdGeom.lib;usdShade.lib;usdSkel.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcp.lib;sdf.lib;vt.lib;gf.lib;tf.lib;usd.lib;usdGeom.lib;usdShade.lib;usdSkel.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>C:\WinApp\USD\builds_no_python\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
