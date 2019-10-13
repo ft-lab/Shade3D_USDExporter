@@ -263,7 +263,12 @@ roughness/metallic/occlusion/opacity指定時に1枚のグレイスケール画�
 
 ## サンプルファイル
 
-まだ準備中、、、、。    
+以下のページに、Shade3Dのshdファイルと    
+エクスポートした usda + テクスチャファイルをzipにしたもの、    
+usdzファイル、を置いています。     
+
+https://ft-lab.github.io/usd.html
+
 
 ## 対応している機能
 
