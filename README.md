@@ -108,6 +108,19 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 |jpg/png|参照しているテクスチャイメージ|    
 |usdz|usda(usdc)とテクスチャイメージを1つのファイルにまとめてzipにしたもの。zip圧縮はされません。|    
 
+## 対応している機能
+
+* USDのバイナリ(拡張子 usdc)またはテキスト(拡張子 usda)とテクスチャの出力
+* zipにまとめたusdz形式の出力
+* iOS12/iOS13のAR表示への対応 (iOS13を推奨)
+* ポリゴンメッシュとして形状出力
+* ポリゴンメッシュのフェイスグループを考慮
+* マテリアルはPBR (diffuse/roughness/metallic/normal/emissive/occlusion/opacity) として出力
+* 表面材質の「陰影付けしない」をOnにすることで、Unlit風表現を行う
+* ポリゴンメッシュのUS層は最大2つまで対応 (ただし、iOS12/13では1UVしか認識しない)
+* ボーン＋スキンを使用したアニメーション出力対応
+* ボールジョイント内に形状を入れた場合、位置と回転をアニメーションのキーフレームとして出力
+
 ## シーン階層と形状
 
 シーンの階層構造は極力そのままUSDの構造に出力するようにしています。    
@@ -188,6 +201,14 @@ iOS12とiOS13(iPadOS13)で実装が異なるため、表現も差異がありま
 * iOS12では、Shade3Dでの「チャンネル合成」での「グレイスケール (R)」は反映されますが、G/B/Aの指定は反映されません（常にRだけ見ています）。    
 * iOS12/iOS13共に、opacityを0にして完全透明にしても、わずかに色が付いています。    
 また、opacity 1.0以外の指定がある場合は半透明面ごとのZソートが行われますがcutoutは行われないため、正常には表現できない箇所があります。    
+
+## doubleSided対応について
+
+doubleSidedとは、リアルタイムでMeshを表示する場合に裏面を表示するかしないか、の指定です。    
+USDでは、形状(Mesh)に対してdoubleSidedの指定が存在します。    
+USD Exporter for Shade3Dでは、    
+マスターサーフェス名として「xxxx_doublesided」のように、「doublesided」が含まれる場合（大文字の場合でも小文字として判断）にdoubleSidedが指定されたと判断します。    
+なお、iOS12/iOS13ではdoubleSidedの指定は無効化され、常に「裏面は表示しない (doubleSided=false)」となるようです。    
 
 ## アニメーション
 
@@ -282,25 +303,6 @@ roughness/metallic/occlusion/opacity指定時に1枚のグレイスケール画�
 usdzファイル、を置いています。     
 
 https://ft-lab.github.io/usd.html
-
-
-## 対応している機能
-
-* USDのバイナリ(拡張子 usdc)またはテキスト(拡張子 usda)とテクスチャの出力
-* zipにまとめたusdz形式の出力
-* iOS12/iOS13のAR表示への対応 (iOS13を推奨)
-* ポリゴンメッシュとして形状出力
-* マテリアルはPBR (diffuse/roughness/metallic/normal/emissive/occlusion/opacity) として出力
-* ボーン＋スキンを使用したアニメーション出力対応
-* ボールジョイント内に形状を入れた場合、位置と回転をアニメーションのキーフレームとして出力
-
-## doubleSided対応について
-
-doubleSidedとは、リアルタイムでMeshを表示する場合に裏面を表示するかしないか、の指定です。    
-USDでは、形状(Mesh)に対してdoubleSidedの指定が存在します。    
-USD Exporter for Shade3Dでは、    
-マスターサーフェス名として「xxxx_doublesided」のように、「doublesided」が含まれる場合（大文字の場合でも小文字として判断）にdoubleSidedが指定されたと判断します。    
-なお、iOS12/iOS13ではdoubleSidedの指定は無効化され、常に「裏面は表示しない (doubleSided=false)」となるようです。    
 
 ## 制限事項
 
