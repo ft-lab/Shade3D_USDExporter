@@ -91,17 +91,7 @@ USDでは、テキスト形式の「usda」、バイナリ形式の「usdc」の
 USD Exporterプラグインでは、エクスポートオプションでどちらを出力するか選択できます。     
 また、どちらの場合でもテクスチャイメージはjpgまたはpng形式で外部参照の形で別途出力されます。    
 
-「usdzを出力」オプションがOnの場合は、「usda(もしくはusdc)」ファイルとテクスチャイメージがzipにまとめられて「usdz」の拡張子で出力されます。    
-このusdzファイルをiOS/iPadOSのスマートフォンまたはタブレットに、iCloudやdropbox、メールなどを通して渡し、    
-「AR Quick Look」（標準ビュワー）で開くことで、ARとして3Dモデルを見ることができます。    
-iOS/iPadOSでARする場合は、usdzのファイルのみが必要になります。    
-その他のファイル(usda/usdc/テクスチャファイル)は不要です。     
-usdzとして出力する場合は、ファイルサイズを小さくするためにusdcとして出力し、テクスチャは極力jpegファイルで出力することを推奨します。     
-
-以下は、Shade3Dでの3Dモデルの表示です。     
-<img src="./docs/images/usd_export_shade3d_01.png" />    
-以下は、iOS13のAR Quick LookでのAR表示です。    
-<img src="./docs/images/usd_export_shade3d_02.jpg" />    
+エクスポートオプションで「usdzを出力」がOnの場合は、「usda(もしくはusdc)」ファイルとテクスチャイメージがzipにまとめられて「usdz」の拡張子で出力されます。    
 
 エクスポートされるファイルの説明です。    
 
@@ -111,6 +101,21 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 |usdc|USDのシーンファイル (バイナリ形式)|    
 |jpg/png|参照しているテクスチャイメージ|    
 |usdz|usda(usdc)とテクスチャイメージを1つのファイルにまとめてzipにしたもの。zip圧縮はされません。|    
+
+### iOS/iPadOSのスマートフォン/タブレットでARする場合
+
+このusdzファイルをiOS/iPadOSのスマートフォンまたはタブレットに、iCloudやdropbox、メールなどを通して渡し、    
+「AR Quick Look」（標準ビュワー）で開くことで、ARとして3Dモデルを見ることができます。    
+なお、iOS12以降で動作し、iOS13/iPadOS13以降を推奨しています。    
+
+iOS/iPadOSでARする場合は、usdzのファイルのみが必要になります。    
+その他のファイル(usda/usdc/テクスチャファイル)は不要です。     
+usdzとして出力する場合は、ファイルサイズを小さくするためにusdcとして出力し、テクスチャは極力jpegファイルで出力することを推奨します。     
+
+以下は、Shade3Dでの3Dモデルの表示です。     
+<img src="./docs/images/usd_export_shade3d_01.png" />    
+以下は、iOS13のAR Quick LookでのAR表示です。    
+<img src="./docs/images/usd_export_shade3d_02.jpg" />    
 
 ## 対応している機能
 
