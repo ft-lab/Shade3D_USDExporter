@@ -17,6 +17,7 @@ enum {
 	dlg_file_export_type = 101,				// 出力形式.
 	dlg_file_usdz = 102,					// usdzを出力.
 	dlg_file_export_apple_usdz = 103,		// Appleのusdz互換.
+	dlg_file_export_output_temp_files = 104,	// usdz出力時に作業ファイルを出力.
 
 	dlg_option_bone_skin = 203,				// ボーンとスキンを出力.
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
@@ -234,9 +235,11 @@ void CUSDExporterInterface::clean_up (void *)
 			const std::string srcPathName = filesList[i];
 			const std::string srcName = StringUtil::getFileName(srcPathName);
 			const std::string dstPathName = dstDir + StringUtil::getFileSeparator() + srcName;
-			try {
-				shade.copy_file(srcPathName.c_str(), dstPathName.c_str());
-			} catch (...) { }
+			if (StringUtil::getFileExtension(srcName) == "usdz" || (usdzFilePath == "" || m_exportParam.exportOutputTempFiles)) {
+				try {
+					shade.copy_file(srcPathName.c_str(), dstPathName.c_str());
+				} catch (...) { }
+			}
 		}
 
 		filePath2 = dstDir + StringUtil::getFileSeparator() + sFileName;
@@ -255,7 +258,14 @@ void CUSDExporterInterface::clean_up (void *)
 		} catch (...) { }
 	}
 
-	shade.message(std::string("Export : ") + filePath2);
+	if (usdzFilePath == "" || m_exportParam.exportOutputTempFiles) {
+		shade.message(std::string("Export : ") + filePath2);
+	} else {
+		// ファイルサイズが0の出力を削除.
+		try {
+			shade.delete_file(m_orgFilePath.c_str());
+		} catch (...) { }
+	}
 
 	if (usdzFilePath != "") {
 		shade.message(std::string("Export : ") + usdzFilePath);
@@ -657,6 +667,12 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		item = &(d.get_dialog_item(dlg_file_export_apple_usdz));
 		item->set_bool(m_exportParam.exportAppleUSDZ);
 	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_file_export_output_temp_files));
+		item->set_bool(m_exportParam.exportOutputTempFiles);
+		item->set_enabled(m_exportParam.exportAppleUSDZ || m_exportParam.exportUSDZ);
+	}
 
 	{
 		sxsdk::dialog_item_class* item;
@@ -730,12 +746,19 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 		load_dialog_data(dialog);		// UIのディム状態を更新.
 		return true;
 	}
+
+	if (id == dlg_file_export_output_temp_files) {
+		m_exportParam.exportOutputTempFiles = item.get_bool();
+		return true;
+	}
+
 	if (id == dlg_file_export_type) {
 		m_exportParam.exportFileType = (USD_DATA::EXPORT::FILE_TYPE)item.get_selection();
 		return true;
 	}
 	if (id == dlg_file_usdz) {
 		m_exportParam.exportUSDZ = item.get_bool();
+		load_dialog_data(dialog);		// UIのディム状態を更新.
 		return true;
 	}
 	if (id == dlg_option_texture) {

@@ -4,6 +4,7 @@
 		<bool id="103" label="Appleのusdz互換" />
 		<selection id="101" label="出力形式:|usda (ASCII)|usdc (バイナリ)" />
 		<bool id="102" label="usdzを出力" />
+		<bool id="104" label="usdz出力時に作業ファイルを出力" />
 	</group>
 
 	<group label="出力オプション">

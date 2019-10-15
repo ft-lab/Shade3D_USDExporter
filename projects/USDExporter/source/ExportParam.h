@@ -62,6 +62,7 @@ public:
 	bool exportAppleUSDZ;									// Appleのusdz互換.
 	USD_DATA::EXPORT::FILE_TYPE exportFileType;				// 出力形式.
 	bool exportUSDZ;										// usdzを出力.
+	bool exportOutputTempFiles;								// usdz出力時に作業ファイルを出力 (ver.0.0.1.1 - ).
 
 	USD_DATA::EXPORT::TEXTURE_TYPE optTextureType;			// テクスチャ出力.
 	USD_DATA::EXPORT::MAX_TEXTURE_SIZE optMaxTextureSize;	// 最大テクスチャサイズ.
@@ -86,6 +87,7 @@ public:
 		this->exportAppleUSDZ      = v.exportAppleUSDZ;
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
+		this->exportOutputTempFiles = v.exportOutputTempFiles;
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
@@ -103,6 +105,8 @@ public:
 		this->exportAppleUSDZ      = v.exportAppleUSDZ;
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
+		this->exportOutputTempFiles = v.exportOutputTempFiles;
+
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;

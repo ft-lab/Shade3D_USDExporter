@@ -18,7 +18,9 @@
  * streamに保存する際のバージョン.
  */
 #define OCCLUSION_PARAM_DLG_STREAM_VERSION 0x100		// Occlusion ShaderのStreamバージョン.
-#define USD_EXPORTER_DLG_STREAM_VERSION 0x100			// エクスポートダイアログボックスのStreamバージョン.
 
+#define USD_EXPORTER_DLG_STREAM_VERSION 0x101			// エクスポートダイアログボックスのStreamバージョン.
+#define USD_EXPORTER_DLG_STREAM_VERSION_100 0x100
+#define USD_EXPORTER_DLG_STREAM_VERSION_101 0x101
 
 #endif

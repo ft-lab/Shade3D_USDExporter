@@ -72,6 +72,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(data.animStep);
 		}
 
+		// ver.101 - 
+		{
+			iDat = data.exportOutputTempFiles ? 1 : 0;
+			stream->write_int(iDat);
+		}
+
 	} catch (...) { }
 }
 
@@ -139,6 +145,12 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		{
 			stream->read_int(iDat);
 			data.animStep = iDat;
+		}
+
+		// ver.101 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_101) {
+			stream->read_int(iDat);
+			data.exportOutputTempFiles = iDat ? true : false;
 		}
 
 	} catch (...) { }

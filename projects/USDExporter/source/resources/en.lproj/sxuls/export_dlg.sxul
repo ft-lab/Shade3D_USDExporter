@@ -4,6 +4,7 @@
 		<bool id="103" label="Apple usdz compatible" />
 		<selection id="101" label="Format:|usda (ASCII)|usdc (binary)" />
 		<bool id="102" label="output usdz" />
+		<bool id="104" label="Output work files when outputting to usdz" />
 	</group>
 
 	<group label="Output options">
