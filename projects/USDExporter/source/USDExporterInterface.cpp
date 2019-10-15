@@ -138,7 +138,7 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
  */
 bool CUSDExporterInterface::must_round_polymesh (void *)
 {
-	return !m_exportParam.optSubdivision || m_exportParam.exportAppleUSDZ;
+	return !m_exportParam.optSubdivision;
 }
 
 /**
@@ -682,7 +682,6 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_subdivision));
 		item->set_bool(m_exportParam.optSubdivision);
-		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
 	{
 		sxsdk::dialog_item_class* item;
