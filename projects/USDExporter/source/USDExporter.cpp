@@ -696,7 +696,7 @@ void CUSDExporter::m_setTransformAnimation (const std::string& nodeName, const C
 	// 移動アニメーションを指定.
 	if (!jointMotion.translations.empty()) {
 		UsdGeomXformOp transOp = UsdGeomXform(node).AddTranslateOp(UsdGeomXformOp::PrecisionFloat);
-		for (size_t i = 0; i < jointMotion.rotations.size(); ++i) {
+		for (size_t i = 0; i < jointMotion.translations.size(); ++i) {
 			const CJointTranslationData& transD = jointMotion.translations[i];
 			transOp.Set(GfVec3f(transD.x, transD.y, transD.z), transD.frame);
 		}

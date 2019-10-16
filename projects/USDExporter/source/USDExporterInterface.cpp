@@ -349,7 +349,8 @@ void CUSDExporterInterface::begin (void *)
 		// 形状がメッシュに変換できない場合は、NULLノードとする.
 		if (!m_sceneData.checkConvertMesh(m_pCurrentShape)) {
 			// Shade3Dでのmm単位をcmに変換.
-			const sxsdk::mat4 m = Shade3DUtil::convUnit_mm_to_cm(m_pCurrentShape->get_transformation());
+			sxsdk::mat4 m = m_pCurrentShape->get_transformation();
+			m = Shade3DUtil::convUnit_mm_to_cm(m);
 
 			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
 		}
@@ -423,6 +424,18 @@ void CUSDExporterInterface::begin_polymesh (void *)
 			m_curShapeHasSubdivision = true;
 		}
 	}
+
+	// 親がボールジョイントの場合、位置を保持.
+	m_parentBallPos   = sxsdk::vec3(0, 0, 0);
+	m_parentBallJoint = false;
+	if (m_pCurrentShape->has_dad()) {
+		sxsdk::shape_class* pParent = m_pCurrentShape->get_dad();
+		if (Shade3DUtil::isBallJoint(*pParent)) {
+			// ワールド座標での中心を取得.
+			m_parentBallPos   = Shade3DUtil::getJointCenter(*pParent, NULL);
+			m_parentBallJoint = true;
+		}
+	}
 }
 
 /**
@@ -454,13 +467,13 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 			pos = sxsdk::vec3(v4.x, v4.y, v4.z);
 		}
 	}
+
 	// 親パートがボールジョイントの場合、ボールジョイントの中心にposが来るように調整.
+	// キーフレーム出力しない場合は何もしない.
 	sxsdk::vec3 centerPos(0, 0, 0);
-	if (m_pCurrentShape->has_dad()) {
-		sxsdk::shape_class* pParent = m_pCurrentShape->get_dad();
-		if (Shade3DUtil::isBallJoint(*pParent)) {
-			centerPos = Shade3DUtil::getJointCenter(*pParent, NULL);
-		}
+	if (m_parentBallJoint && m_exportParam.animKeyframeMode != USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) {
+		pos = pos * m_LWMat;
+		centerPos = m_parentBallPos;
 	}
 
 	// 頂点の座標変換 (Shade3Dはmm、USDはcm).

@@ -192,7 +192,10 @@ void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& n
 			nodeD.matrix = Shade3DUtil::clearMatrixRotate(nodeD.matrix);
 		}
 	}
-	if (Shade3DUtil::isBallJoint(*shape)) nodeD.nodeType = USD_DATA::NODE_TYPE::ball_joint_node;
+
+	if (Shade3DUtil::isBallJoint(*shape)) {
+		nodeD.nodeType = USD_DATA::NODE_TYPE::ball_joint_node;
+	}
 
 	nodeD.shapeHandle = shape->get_handle();
 
@@ -206,6 +209,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 {
 	nodeD.jointMotion.clear();
 	if (!shape->has_motion()) return;
+	if (m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) return;
 
 	// ルートボーンの場合、変換行列を計算.
 	sxsdk::mat4 boneRootMat = sxsdk::mat4::identity;
@@ -271,6 +275,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 		try {
 			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
 			const sxsdk::vec3 wCenter = Shade3DUtil::getJointCenter(*shape, NULL);
+			const sxsdk::vec3 ballLCenter = (wCenter * inv(lwMat));
 
 			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
 			const int pointsCou = motion->get_number_of_motion_points();
@@ -285,7 +290,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 				const CAnimKeyframeData& animD = keyframeData[loop];
 
 				const sxsdk::vec3 offset        = animD.offset;
-				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + wCenter);		// cmに変換.
+				const sxsdk::vec3 offset2       = Shade3DUtil::convUnit_mm_to_cm(offset + ballLCenter);		// cmに変換.
 				const sxsdk::quaternion_class q = animD.quat;
 
 				// 移動情報を格納.
@@ -304,6 +309,9 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 
 				jointMotionD.rotations.push_back(rotD);
 			}
+
+			// ジョイント値で位置と回転を保持するため、ボールジョイント自身の変換行列は使用しない.
+			nodeD.matrix = sxsdk::mat4::identity;
 
 		} catch (...) { }
 	}
