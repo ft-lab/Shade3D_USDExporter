@@ -396,6 +396,10 @@ Zソートはされますが、ピクセル透過の「マスク」(Cutout)は�
 * Meshの頂点ごとに頂点カラーを持てるか。
 * MorphTarget(BlendShapes)を表現できるか。
 
+## プラグインのビルド方法（ 開発向け ）
+
+* [USD Exporter for Shade3D : 開発情報](./docs/build.md)    
+
 ## ライセンス  
 
 This software is released under the MIT License, see [LICENSE](./LICENSE).  
