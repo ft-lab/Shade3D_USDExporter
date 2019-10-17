@@ -116,7 +116,7 @@ USD Exporter for Shade3Dのソースをダウンロードし、
 
 ### ヘッダを書き換え
 
-pxr/usd/pcp/types.h の    
+include/pxr/usd/pcp/types.h の    
 
 > constexpr size_t PCP_INVALID_INDEX = std::numeric_limits<size_t>::max();    
 
