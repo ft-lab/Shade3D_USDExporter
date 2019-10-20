@@ -413,7 +413,11 @@ int CNodeMeshData::convert (const CTempMeshData& tempMeshData, std::vector<CNode
 	int noneFaceGroupFacesCount = 0;
 	if (faceGroupsCount > 0) {
 		for (size_t i = 0; i < facesCou; ++i) {
-			const int faceGroupIndex = srcMeshD.faceFaceGroupIndex[i];
+			int faceGroupIndex = srcMeshD.faceFaceGroupIndex[i];
+			if (faceGroupIndex >= 0) {
+				sxsdk::master_surface_class* masterSurface = srcMeshD.faceGroupMasterSurfaces[faceGroupIndex];
+				if (!masterSurface) faceGroupIndex = -1;
+			}
 			if (faceGroupIndex < 0) {
 				noneFaceGroupFacesCount++;
 			}
@@ -444,7 +448,10 @@ int CNodeMeshData::convert (const CTempMeshData& tempMeshData, std::vector<CNode
 
 		for (size_t loop = 0; loop < facesCou; ++loop) {
 			const int faceGroupIndex = srcMeshD.faceFaceGroupIndex[loop];
-			if (faceGroupIndex >= 0) continue;
+			if (faceGroupIndex >= 0) {
+				sxsdk::master_surface_class* masterSurface = srcMeshD.faceGroupMasterSurfaces[faceGroupIndex];
+				if (masterSurface) continue;
+			}
 
 			const int fOffset = faceVOffset[loop];
 			const int faceVCou = srcMeshD.faceVertexCounts[loop];	// 面の頂点数.
