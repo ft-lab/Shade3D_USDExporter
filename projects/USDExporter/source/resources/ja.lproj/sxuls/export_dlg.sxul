@@ -11,6 +11,7 @@
 		<bool id="206" label="Subdivison" />
 		<bool id="203" label="ボーンとスキンを出力" />
 		<bool id="204" label="頂点カラーを出力" />
+		<bool id="207" label="多角形を三角形/四角形に分割" />
 	</group>
 
 	<group label="テクスチャ">

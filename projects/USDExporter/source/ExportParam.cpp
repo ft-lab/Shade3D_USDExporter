@@ -37,6 +37,7 @@ void CExportParam::clear ()
 	optOutputBoneSkin = true;
 	optOutputVertexColor = true;
 	optSubdivision = false;
+	optDividePolyTriQuad = true;
 
 	texOptConvGrayscale     = false;
 	texOptBakeMultiTextures = false;

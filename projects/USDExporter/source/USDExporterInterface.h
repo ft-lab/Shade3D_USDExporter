@@ -118,20 +118,20 @@ private:
 	}
 
 	/**
-	 * 受け付けることのできるポリゴンメッシュ面の頂点の最大数.
-	 */
-	virtual int get_max_vertices_per_face (void *) { return 4; }
-
-	/**
 	 * メッシュを受け付けるかどうか.
 	 */
 	virtual bool can_accept_meshes (void *aux=0) { return false; }
 
 	/**
+	 * 受け付けることのできるポリゴンメッシュ面の頂点の最大数.
+	 */
+	virtual int get_max_vertices_per_face (void *);
+
+	/**
 	 * ポリゴンメッシュの面を分割するか.
 	 * ここをfalseにしget_max_vertices_per_faceが4の場合は、極力4角形は保つ。5角形以上は4角形と3角形に分割される.
 	 */
-	virtual bool must_divide_polymesh (void *aux=0) { return false; }
+	virtual bool must_divide_polymesh (void *aux=0);
 
 	/**
 	 * 頂点カラー情報の受け取り許可.

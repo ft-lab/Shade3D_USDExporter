@@ -22,6 +22,7 @@ enum {
 	dlg_option_bone_skin = 203,				// ボーンとスキンを出力.
 	dlg_option_vertex_color = 204,			// 頂点カラーを出力.
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
+	dlg_option_divide_poly_tri_quad = 207,	// 多角形を三角形/四角形に分割.
 
 	dlg_option_texture = 301,				// テクスチャ出力.
 	dlg_option_max_texture_size = 302,		// 最大テクスチャサイズ.
@@ -57,6 +58,22 @@ const char *CUSDExporterInterface::get_file_extension (void *)
 const char *CUSDExporterInterface::get_file_description (void *)
 {
 	return "USD (Universal Scene Description)";
+}
+
+/**
+ * 受け付けることのできるポリゴンメッシュ面の頂点の最大数.
+ */
+int CUSDExporterInterface::get_max_vertices_per_face (void *) {
+	if (m_exportParam.optDividePolyTriQuad) return 4;
+	return 65535;
+}
+
+/**
+ * ポリゴンメッシュの面を分割するか.
+ * ここをfalseにしget_max_vertices_per_faceが4の場合は、極力4角形は保つ。5角形以上は4角形と3角形に分割される.
+ */
+bool CUSDExporterInterface::must_divide_polymesh (void *) {
+	return false;
 }
 
 /**
@@ -714,6 +731,12 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 	}
 	{
 		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_divide_poly_tri_quad));
+		item->set_bool(m_exportParam.optDividePolyTriQuad);
+	}
+
+	{
+		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_texture_grayscale));
 		item->set_bool(m_exportParam.texOptConvGrayscale);
 	}
@@ -792,6 +815,10 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	}
 	if (id == dlg_option_subdivision) {
 		m_exportParam.optSubdivision = item.get_bool();
+		return true;
+	}
+	if (id == dlg_option_divide_poly_tri_quad) {
+		m_exportParam.optDividePolyTriQuad = item.get_bool();
 		return true;
 	}
 	if (id == dlg_option_texture_grayscale) {

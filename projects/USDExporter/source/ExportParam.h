@@ -70,6 +70,7 @@ public:
 	bool optOutputVertexColor;								// 頂点カラーを出力.
 	bool optOutputAnimation;								// アニメーションを出力.
 	bool optSubdivision;									// Subdivisionを有効にする場合はtrue.
+	bool optDividePolyTriQuad;								// 多角形を三角形/四角形に分割.
 
 	// テクスチャオプション.
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
@@ -93,6 +94,7 @@ public:
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
 		this->optOutputVertexColor = v.optOutputVertexColor;
 		this->optSubdivision       = v.optSubdivision;
+		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
@@ -112,6 +114,7 @@ public:
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
 		this->optOutputVertexColor = v.optOutputVertexColor;
 		this->optSubdivision       = v.optSubdivision;
+		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
