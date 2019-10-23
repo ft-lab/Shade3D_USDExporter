@@ -15,6 +15,14 @@
 #define OCCLUSION_SHADER_INTERFACE_ID sx::uuid_class("2A52E63A-B8BB-4A49-95E7-A8AAD8971FDE")
 
 /**
+ * プラグインのバージョン.
+ */
+#define USD_SHADE3D_PLUGIN_MAJOR_VERSION 0
+#define USD_SHADE3D_PLUGIN_MINOR_VERSION 0
+#define USD_SHADE3D_PLUGIN_MICRO_VERSION 1
+#define USD_SHADE3D_PLUGIN_BUILD_NUMBER  2
+
+/**
  * streamに保存する際のバージョン.
  */
 #define OCCLUSION_PARAM_DLG_STREAM_VERSION 0x100		// Occlusion ShaderのStreamバージョン.

@@ -495,6 +495,16 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 	// エクスポート開始.
 	usdExport.beginExport(filePath);
 
+	// プラグインバージョンを取得して渡す.
+	{
+		std::string verStr = "";
+		verStr += std::to_string(USD_SHADE3D_PLUGIN_MAJOR_VERSION) + std::string(".");
+		verStr += std::to_string(USD_SHADE3D_PLUGIN_MINOR_VERSION) + std::string(".");
+		verStr += std::to_string(USD_SHADE3D_PLUGIN_MICRO_VERSION) + std::string(".");
+		verStr += std::to_string(USD_SHADE3D_PLUGIN_BUILD_NUMBER);
+		usdExport.setVersionString(verStr);
+	}
+
 	// スキンを持つ形状で、名前の重複がある場合は別名を付ける.
 	m_makeUniqueName();
 

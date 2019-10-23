@@ -89,10 +89,10 @@ extern "C" SXSDKEXPORT sx::uuid_class STDCALL get_uuid (const IID &iid, int i, v
 extern "C" SXSDKEXPORT void STDCALL get_info (sxsdk::shade_plugin_info &info, sxsdk::shade_interface *shade, void *) {
 	info.sdk_version = SHADE_BUILD_NUMBER;
 	info.recommended_shade_version = 410000;
-	info.major_version = 0;
-	info.minor_version = 0;
-	info.micro_version = 1;
-	info.build_number =  2;
+	info.major_version = USD_SHADE3D_PLUGIN_MAJOR_VERSION;
+	info.minor_version = USD_SHADE3D_PLUGIN_MINOR_VERSION;
+	info.micro_version = USD_SHADE3D_PLUGIN_MICRO_VERSION;
+	info.build_number =  USD_SHADE3D_PLUGIN_BUILD_NUMBER;
 }
 
 /**

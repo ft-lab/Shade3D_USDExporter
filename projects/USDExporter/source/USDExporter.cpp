@@ -74,6 +74,7 @@ CUSDExporter::CUSDExporter ()
 {
 	clear();
 	g_stage = NULL;
+	m_versionString = "";
 }
 
 /**
@@ -335,6 +336,18 @@ void CUSDExporter::clear ()
 }
 
 /**
+ * バージョン文字列を渡す.
+ * @param[in] verStr  バージョン文字列。 "0.0.1.2" など.
+ */
+void CUSDExporter::setVersionString (const std::string& verStr)
+{
+	m_versionString = verStr;
+
+	// ヘッダ情報を出力.
+	m_outputHeaders();
+}
+
+/**
  * Export開始.
  */
 void CUSDExporter::beginExport (const std::string& fileName)
@@ -347,6 +360,25 @@ void CUSDExporter::beginExport (const std::string& fileName)
 
 		// 外部参照される場合のデフォルトPrimの指定.
 		g_stage->SetDefaultPrim(prim);
+
+		// ヘッダ情報を出力.
+		m_outputHeaders();
+	}
+}
+
+/**
+ * ヘッダ情報を出力.
+ */
+void CUSDExporter::m_outputHeaders ()
+{
+	if (!g_stage) return;
+	if (g_stage->GetRootLayer()) {
+		std::string dStr = std::string("USD Exporter for Shade3D");
+		if (m_versionString != "") {
+			dStr += std::string(" (") + m_versionString + std::string(")");
+		}
+
+		g_stage->GetRootLayer()->SetDocumentation(dStr);
 	}
 }
 

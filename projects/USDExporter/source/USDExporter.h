@@ -20,6 +20,8 @@ private:
 	std::vector<CSkeletonData> m_skeletonsList;		// アニメーション時のスケルトン情報.
 	std::vector<CImageData> m_imagesList;			// 出力するイメージ情報のリスト.
 
+	std::string m_versionString;					// プラグインバージョンの文字列.
+
 public:
 	CUSDExporter ();
 
@@ -56,6 +58,11 @@ public:
 
 private:
 	/**
+	 * ヘッダ情報を出力.
+	 */
+	void m_outputHeaders ();
+
+	/**
 	 * テクスチャ情報を出力.
 	 * @param[in] materialData  マテリアル情報クラス.
 	 * @param[in] patternType   テクスチャの種類.
@@ -86,6 +93,12 @@ public:
 	 * Export終了.
 	 */
 	void endExport ();
+
+	/**
+	 * バージョン文字列を渡す.
+	 * @param[in] verStr  バージョン文字列。 "0.0.1.2" など.
+	 */
+	void setVersionString (const std::string& verStr);
 
 	/**
 	 * スケルトン情報を渡す.
