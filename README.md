@@ -411,6 +411,10 @@ Zソートはされますが、ピクセル透過の「マスク」(Cutout)は�
 
 * [USD Exporter for Shade3D : 開発情報](./docs/build.md)    
 
+## USDの技術情報まとめ（ 開発向け ）
+
+* https://github.com/ft-lab/Documents_USD
+
 ## ライセンス  
 
 This software is released under the MIT License, see [LICENSE](./LICENSE).  
