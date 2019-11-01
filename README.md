@@ -267,6 +267,11 @@ Shade3Dのキーフレームを指定のステップ数で分割して出力し�
 <img src="./docs/images/usd_export_dlg_02.png" />    
 キーフレーム間隔を細かくすることで、Shade3Dでのアニメーションの動きに忠実になります。    
 
+## エクスポート時にファイルに出力しない形状
+
+ブラウザでレンダリングをOffにした場合、その形状はエクスポートされません。    
+<img src="./docs/images/usd_export_rendering_off.png" />    
+
 ## エクスポートオプション
 
 USD Export時のオプションの説明です。    
