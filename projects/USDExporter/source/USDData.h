@@ -1,4 +1,4 @@
-﻿/**
+/**
  * USD格納時に使用する情報.
  * これは、Shade3DやUSDに依存しない情報.
  */
@@ -92,6 +92,30 @@ namespace USD_DATA {
 		NodeMatrixData ();
 		~NodeMatrixData ();
 
+		NodeMatrixData (const NodeMatrixData& v) {
+			this->translate[0] = v.translate[0];
+			this->translate[1] = v.translate[1];
+			this->translate[2] = v.translate[2];
+			this->rotate[0] = v.rotate[0];
+			this->rotate[1] = v.rotate[1];
+			this->rotate[2] = v.rotate[2];
+			this->scale[0] = v.scale[0];
+			this->scale[1] = v.scale[1];
+			this->scale[2] = v.scale[2];
+		}
+		NodeMatrixData& operator = (const NodeMatrixData &v) {
+			this->translate[0] = v.translate[0];
+			this->translate[1] = v.translate[1];
+			this->translate[2] = v.translate[2];
+			this->rotate[0] = v.rotate[0];
+			this->rotate[1] = v.rotate[1];
+			this->rotate[2] = v.rotate[2];
+			this->scale[0] = v.scale[0];
+			this->scale[1] = v.scale[1];
+			this->scale[2] = v.scale[2];
+			return (*this);
+		}
+		
 		void clear();
 	};
 

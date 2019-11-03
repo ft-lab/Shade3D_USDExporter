@@ -377,7 +377,6 @@ void CUSDExporter::m_outputHeaders ()
 		if (m_versionString != "") {
 			dStr += std::string(" (") + m_versionString + std::string(")");
 		}
-
 		g_stage->GetRootLayer()->SetDocumentation(dStr);
 	}
 }

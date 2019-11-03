@@ -1,7 +1,8 @@
-﻿/**
+/**
  * USD格納時に使用する情報.
  */
 #include "USDData.h"
+#include <math.h>
 
 //--------------------------------------------------.
 USD_DATA::MeshData::MeshData ()
@@ -126,12 +127,12 @@ void USD_DATA::convColorLinear (float& vRed, float& vGreen, float& vBlue)
 {
 	const float gamma = 2.2f;
 	if (vRed < 1.0f) {
-		vRed   = std::powf(vRed, gamma);
+		vRed   = powf(vRed, gamma);
 	}
 	if (vGreen < 1.0f) {
-		vGreen = std::powf(vGreen, gamma);
+		vGreen = powf(vGreen, gamma);
 	}
 	if (vBlue < 1.0f) {
-		vBlue  = std::powf(vBlue, gamma);
+		vBlue  = powf(vBlue, gamma);
 	}
 }
