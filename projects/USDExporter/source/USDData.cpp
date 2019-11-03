@@ -1,4 +1,4 @@
-/**
+﻿/**
  * USD格納時に使用する情報.
  */
 #include "USDData.h"
