@@ -364,6 +364,7 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 
 	// 複数のフェイスグループで構成される場合は、namePathのノードを作り、その中に「mesh_x」名のメッシュを格納する.
 	if (meshes.size() >= 2) {
+		nodesList.push_back(std::make_shared<CNodeNullData>());
 		CNodeNullData& nodeD = static_cast<CNodeNullData &>(*(nodesList.back()));
 		nodeD.name = namePath;
 		nodeD.matrix = matrix;
