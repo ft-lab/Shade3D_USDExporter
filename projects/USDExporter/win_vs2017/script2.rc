@@ -14,7 +14,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// ì˙ñ{åÍ resources
+// ÔøΩÔøΩÔøΩ{ÔøΩÔøΩ resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -39,8 +39,8 @@ OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\ja.lproj
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,3
- PRODUCTVERSION 0,0,1,3
+ FILEVERSION 0,0,1,4
+ PRODUCTVERSION 0,0,1,4
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -57,11 +57,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "ft-lab."
             VALUE "FileDescription", "USD Exporter"
-            VALUE "FileVersion", "0, 0, 1, 3"
+            VALUE "FileVersion", "0, 0, 1, 4"
             VALUE "InternalName", "USD Exporter"
             VALUE "LegalCopyright", "Copyright (C) 2019 ft-lab."
             VALUE "ProductName", "USD Exporter"
-            VALUE "ProductVersion", "0, 0, 1, 3"
+            VALUE "ProductVersion", "0, 0, 1, 4"
         END
     END
     BLOCK "VarFileInfo"
@@ -96,12 +96,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // ì˙ñ{åÍ resources
+#endif    // ÔøΩÔøΩÔøΩ{ÔøΩÔøΩ resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// íÜçëåÍ (P.R.C.) resources
+// ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ (P.R.C.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 #ifdef _WIN32
@@ -119,12 +119,12 @@ STRINGS                 SXUL                    "..\\source\\resources\\zh_CN.lp
 EXPORT_DLG              SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\export_dlg.sxul"
 OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\occlusion_mapping_dlg.sxul"
 
-#endif    // íÜçëåÍ (P.R.C.) resources
+#endif    // ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ (P.R.C.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// âpåÍ (ïƒçë) resources
+// ÔøΩpÔøΩÔøΩ (ÔøΩƒçÔøΩ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -141,7 +141,7 @@ TEXT                    SXUL                    "..\\source\\resources\\en.lproj
 EXPORT_DLG              SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\export_dlg.sxul"
 OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\occlusion_mapping_dlg.sxul"
 
-#endif    // âpåÍ (ïƒçë) resources
+#endif    // ÔøΩpÔøΩÔøΩ (ÔøΩƒçÔøΩ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
