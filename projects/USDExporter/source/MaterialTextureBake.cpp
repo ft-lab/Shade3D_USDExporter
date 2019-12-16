@@ -144,7 +144,7 @@ void CCheckImageRef::m_checkMappingInSurface (sxsdk::surface_class* surface)
 
 		try {
 			compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-			if (image->has_image()) {
+			if (image && image->has_image()) {
 				sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
 				if (masterImage) {
 					void* imgHandle = masterImage->get_handle();
@@ -380,7 +380,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 
 			if (mType == sxsdk::enums::transparency_mapping) {		// 透明度テクスチャを持つ.
 				compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-				if (image->has_image()) {
+				if (image && image->has_image()) {
 					sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
 					if (masterImage) {
 						useTransparencyTexture = true;
@@ -390,7 +390,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 
 			if (mType == sxsdk::enums::glow_mapping) {		// 発光テクスチャを持つ.
 				compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-				if (image->has_image()) {
+				if (image && image->has_image()) {
 					sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
 					if (masterImage) {
 						useEmissiveTexture = true;
@@ -413,7 +413,7 @@ bool CMaterialTextureBake::m_getSimpleMaterialMappingFromSurface (sxsdk::surface
 				if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
 					try {
 						compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-						if (image->has_image()) {
+						if (image && image->has_image()) {
 							sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
 							if (masterImage) {
 								if (Shade3DUtil::hasImageAlpha(masterImage)) {
