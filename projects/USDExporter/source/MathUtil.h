@@ -32,6 +32,27 @@ namespace MathUtil {
 	 * バウンディングボックスの最小最大を計算.
 	 */
 	void calcBoundingBox (const std::vector<sxsdk::vec3>& vers, sxsdk::vec3& bbMin, sxsdk::vec3& bbMax);
+
+	/**
+	 * RGBをHSVに変換.
+	 */
+	sxsdk::vec3 rgb_to_hsv (const sxsdk::rgb_class& col);
+
+	/**
+	 * HSVをRGBに変換.
+	 */
+	sxsdk::rgb_class hsv_to_rgb (const sxsdk::vec3& hsv);
+
+	/**
+	 * 法線マップのRGB( (0.5f, 0.5f, 1.0f)が中立 )を+Z向きの法線に変換.
+	 */
+	sxsdk::vec3 convRGBToNormal (const sxsdk::rgb_class& col);
+
+	/**
+	 * +Z向きの法線を法線マップのRGBに変換.
+	 */
+	sxsdk::rgb_class convNormalToRGB (const sxsdk::vec3& n, const bool normalizeF = true);
+
 }
 
 #endif

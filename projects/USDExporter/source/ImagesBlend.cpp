@@ -508,8 +508,9 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	std::vector<unsigned char> alphaBuff;
 
 	// 法線の中立値.
-	sxsdk::rgba_class normalDefault(0.5f, 0.5f, 1.0f, 1.0f);
-	if (mappingType == sxsdk::enums::normal_mapping) whiteCol = normalDefault;
+	const sxsdk::rgb_class normalDefaultCol(0.5f, 0.5f, 1.0f);
+	const sxsdk::vec3 normalDefault = MathUtil::convRGBToNormal(normalDefaultCol);
+	if (mappingType == sxsdk::enums::normal_mapping) whiteCol = sxsdk::rgba_class(normalDefaultCol.red, normalDefaultCol.green, normalDefaultCol.blue, 1.0f);
 
 	// 合成するテクスチャサイズ.
 	const sx::vec<int,2> dstTexSize = m_getMaxMappingImageSize(mappingType);
@@ -695,75 +696,81 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 				} else {
 					newImage->get_pixels_rgba_float(0, y, newWidth, 1, &(rgbaLine0[0]));
 
-					if (blendMode == sxsdk::enums::mapping_blend_mode) {		// 「通常」合成.
-						if (weightWidth > 0) {		// 「マット」を考慮.
+					if (mappingType == sxsdk::enums::normal_mapping) {
+						sxsdk::vec3 n, n2;
+						sxsdk::rgb_class col;
+
+						for (int x = 0; x < newWidth; ++x) {
+							const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+							const float w2 = 1.0f - w;
+							n  = MathUtil::convRGBToNormal(sxsdk::rgb_class(rgbaLine[x].red, rgbaLine[x].green, rgbaLine[x].blue));
+							n2 = MathUtil::convRGBToNormal(sxsdk::rgb_class(rgbaLine0[x].red, rgbaLine0[x].green, rgbaLine0[x].blue));
+
+							n = n * w + n2 * w2;
+							col = MathUtil::convNormalToRGB(n);
+							rgbaLine[x] = sxsdk::rgba_class(col.red, col.green, col.blue, 1.0f);
+						}
+
+					} else {
+						if (blendMode == sxsdk::enums::mapping_blend_mode) {		// 「通常」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = rgbaWeightLine[x].red * weight;
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
 								const float w2 = 1.0f - w;
 								rgbaLine[x] = rgbaLine[x] * w + rgbaLine0[x] * w2;
 							}
 
-						} else {
+						} else if (blendMode == sxsdk::enums::mapping_mul_mode) {	// 「乗算 (レガシー)」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								rgbaLine[x] = rgbaLine[x] * weight + rgbaLine0[x] * weight2;
-							}
-						}
-
-					} else if (blendMode == sxsdk::enums::mapping_mul_mode) {	// 「乗算 (レガシー)」合成.
-						for (int x = 0; x < newWidth; ++x) {
-							rgbaLine[x] = rgbaLine[x] * rgbaLine0[x] * weight;
-						}
-					} else if (blendMode == 7) {							// 「乗算」合成.
-						if (weightWidth > 0) {		// 「マット」を考慮.
-							for (int x = 0; x < newWidth; ++x) {
-								const float w  = rgbaWeightLine[x].red * weight;
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
 								const float w2 = 1.0f - w;
+								rgbaLine[x] = rgbaLine[x] * rgbaLine0[x] * w;
+							}
+						} else if (blendMode == 7) {							// 「乗算」合成.
+							for (int x = 0; x < newWidth; ++x) {
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w2 = 1.0f - w;
+
 								rgbaLine[x] = (whiteCol * w2 + rgbaLine[x] * w) * rgbaLine0[x];
 							}
 
-						} else {
-							// TODO : 法線マップ時は正しくない.
+						} else if (blendMode == sxsdk::enums::mapping_add_mode) {		// 「加算」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								rgbaLine[x] = (whiteCol * weight2 + rgbaLine[x] * weight) * rgbaLine0[x];
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								rgbaLine[x] = rgbaLine0[x] + (rgbaLine[x] * w);
+								rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
+								rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
+								rgbaLine[x].blue  = std::min(std::max(0.0f, rgbaLine[x].blue), 1.0f);
+								rgbaLine[x].alpha = std::min(std::max(0.0f, rgbaLine[x].alpha), 1.0f);
 							}
-						}
-
-					} else if (blendMode == sxsdk::enums::mapping_add_mode) {		// 「加算」合成.
-						for (int x = 0; x < newWidth; ++x) {
-							rgbaLine[x] = rgbaLine0[x] + (rgbaLine[x] * weight);
-							rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
-							rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
-							rgbaLine[x].blue  = std::min(std::max(0.0f, rgbaLine[x].blue), 1.0f);
-							rgbaLine[x].alpha = std::min(std::max(0.0f, rgbaLine[x].alpha), 1.0f);
-						}
-					} else if (blendMode == sxsdk::enums::mapping_sub_mode) {		// 「減算」合成.
-						for (int x = 0; x < newWidth; ++x) {
-							rgbaLine[x] = rgbaLine0[x] - (rgbaLine[x] * weight);
-							rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
-							rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
-							rgbaLine[x].blue  = std::min(std::max(0.0f, rgbaLine[x].blue), 1.0f);
-							rgbaLine[x].alpha = std::min(std::max(0.0f, rgbaLine[x].alpha), 1.0f);
-						}
-					} else if (blendMode == sxsdk::enums::mapping_min_mode) {		// 「比較(暗)」合成.
-						for (int x = 0; x < newWidth; ++x) {
-							rgbaLine[x].red   = std::min(rgbaLine0[x].red,   rgbaLine[x].red   * weight);
-							rgbaLine[x].green = std::min(rgbaLine0[x].green, rgbaLine[x].green * weight);
-							rgbaLine[x].blue  = std::min(rgbaLine0[x].blue,  rgbaLine[x].blue  * weight);
-						}
-					} else if (blendMode == sxsdk::enums::mapping_max_mode) {		// 「比較(明)」合成.
-						for (int x = 0; x < newWidth; ++x) {
-							rgbaLine[x].red   = std::max(rgbaLine0[x].red,   rgbaLine[x].red   * weight);
-							rgbaLine[x].green = std::max(rgbaLine0[x].green, rgbaLine[x].green * weight);
-							rgbaLine[x].blue  = std::max(rgbaLine0[x].blue,  rgbaLine[x].blue  * weight);
+						} else if (blendMode == sxsdk::enums::mapping_sub_mode) {		// 「減算」合成.
+							for (int x = 0; x < newWidth; ++x) {
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								rgbaLine[x] = rgbaLine0[x] - (rgbaLine[x] * w);
+								rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
+								rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
+								rgbaLine[x].blue  = std::min(std::max(0.0f, rgbaLine[x].blue), 1.0f);
+								rgbaLine[x].alpha = std::min(std::max(0.0f, rgbaLine[x].alpha), 1.0f);
+							}
+						} else if (blendMode == sxsdk::enums::mapping_min_mode) {		// 「比較(暗)」合成.
+							for (int x = 0; x < newWidth; ++x) {
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								rgbaLine[x].red   = std::min(rgbaLine0[x].red,   rgbaLine[x].red   * w);
+								rgbaLine[x].green = std::min(rgbaLine0[x].green, rgbaLine[x].green * w);
+								rgbaLine[x].blue  = std::min(rgbaLine0[x].blue,  rgbaLine[x].blue  * w);
+							}
+						} else if (blendMode == sxsdk::enums::mapping_max_mode) {		// 「比較(明)」合成.
+							for (int x = 0; x < newWidth; ++x) {
+								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								rgbaLine[x].red   = std::max(rgbaLine0[x].red,   rgbaLine[x].red   * w);
+								rgbaLine[x].green = std::max(rgbaLine0[x].green, rgbaLine[x].green * w);
+								rgbaLine[x].blue  = std::max(rgbaLine0[x].blue,  rgbaLine[x].blue  * w);
+							}
 						}
 					}
 				}
 				newImage->set_pixels_rgba_float(0, y, newWidth, 1, &(rgbaLine[0]));
 			}
 			counter++;
-
-			// 法線マップは1枚のみを採用.
-			//if (mappingType == sxsdk::enums::normal_mapping) break;
 
 		} catch (...) { }
 	}
@@ -814,78 +821,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	return true;
 }
 
-namespace {
-	sxsdk::vec3 rgb_to_hsv (const sxsdk::rgb_class& col) {
-		float h_val, s_val, v_val;
-		float min_val;
-		sxsdk::vec3 rgb;
-
-		rgb = sxsdk::vec3(col.red, col.green, col.blue);
-		if (rgb.x < rgb.y) {
-			if (rgb.y < rgb.z) v_val = rgb.z;
-			else v_val = rgb.y;
-		} else {
-			if (rgb.x < rgb.z) v_val = rgb.z;
-			else v_val = rgb.x;
-		}
-		if (rgb.x < rgb.y) {
-			if (rgb.x < rgb.z) min_val = rgb.x;
-			else min_val = rgb.z;
-		} else {
-			if (rgb.y < rgb.z) min_val = rgb.y;
-			else min_val = rgb.z;
-		}
-		if (sx::zero(v_val)) s_val = 0.0f;
-		else s_val = (v_val - min_val) / v_val;
-
-		if (sx::zero(v_val - min_val)) {
-			rgb = sxsdk::vec3(0.0f, 0.0f, 0.0f);
-		} else {
-			rgb.x = (v_val - col.red)   / (v_val - min_val);
-			rgb.y = (v_val - col.green) / (v_val - min_val);
-			rgb.z = (v_val - col.blue)  / (v_val - min_val);
-		}
-		if (sx::zero(v_val - col.red)) h_val = 60.0f * (rgb.z - rgb.y);
-		else if (sx::zero(v_val - col.green)) h_val = 60.0f * (2.0f + rgb.x - rgb.z);
-		else h_val = 60.0f * (4.0f + rgb.y - rgb.x);
-		if (h_val < 0.0f) h_val = h_val + 360.0f;
-
-		return sxsdk::vec3(h_val, s_val, v_val);
-	}
-
-	sxsdk::rgb_class hsv_to_rgb (const sxsdk::vec3& hsv) {
-		const int i_val = (int)floor(hsv.x / 60.0f);
-		float fl = (hsv.x / 60.0f) - (float)i_val;
-		if(!(i_val & 1)) fl = 1.0 - fl;
-
-		const float m = hsv.z * (1.0f - hsv.y);
-		const float n = hsv.z * (1.0f - hsv.y * fl);
-
-		sxsdk::rgb_class col;
-		switch (i_val) {
-		case 0:
-			col = sxsdk::rgb_class(hsv.z, n, m);
-			break;
-		case 1:
-			col = sxsdk::rgb_class(n, hsv.z, m);
-			break;
-		case 2:
-			col = sxsdk::rgb_class(m, hsv.z, n);
-			break;
-		case 3:
-			col = sxsdk::rgb_class(m, (float)n, hsv.z);
-			break;
-		case 4:
-			col = sxsdk::rgb_class(n, (float)m, hsv.z);
-			break;
-		case 5:
-			col = sxsdk::rgb_class(hsv.z, m, n);
-			break;
-		}
-		return col;
-	}
-}
-
 /**
  * diffuse/roughness/metallicのテクスチャを、Shade3Dの状態からPBRマテリアルに変換.
  */
@@ -928,7 +863,7 @@ col.blue  = std::min(col0.blue, col.blue);
 				for (int x = 0; x < width; ++x) {
 					// Diffuse色を取得し、HSVに変換.
 					col = lineCols[x];
-					hsv = ::rgb_to_hsv(sxsdk::rgb_class(col.red, col.green, col.blue));
+					hsv = MathUtil::rgb_to_hsv(sxsdk::rgb_class(col.red, col.green, col.blue));
 
 					reflectionV  = lineCols2[x].red;		// Metallic値.
 					reflectionV2 = std::min(1.0f, reflectionV * 2.0f);
@@ -940,7 +875,7 @@ col.blue  = std::min(col0.blue, col.blue);
 					hsv.y = hsv.y * (1.0f - reflectionV * 0.8f);	//std::min(hsv.y, (1.0f - reflectionV * 0.8f));
 
 					// HSVからRGBに変換して格納.
-					c0 = ::hsv_to_rgb(hsv);
+					c0 = MathUtil::hsv_to_rgb(hsv);
 					col.red   = c0.red;
 					col.green = c0.green;
 					col.blue  = c0.blue;
