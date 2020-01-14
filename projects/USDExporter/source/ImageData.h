@@ -32,6 +32,10 @@ public:
 
 	bool occlusionF;						// オクルージョンとして使用する場合 (scaleが0に近いほど白くする).
 
+	// 以下、ベイクしたテクスチャ情報格納用.
+	int imageWidth, imageHeight;			// イメージの幅と高さ.
+	std::vector<unsigned char> rgbaBuff;	// RGBAの格納.
+
 public:
 	CImageData ();
 	~CImageData ();
@@ -51,6 +55,10 @@ public:
 		this->textureSource = v.textureSource;
 		this->texTransform  = v.texTransform;
 		this->occlusionF = v.occlusionF;
+
+		this->imageWidth  = v.imageWidth;
+		this->imageHeight = v.imageHeight;
+		this->rgbaBuff    = v.rgbaBuff;
 	}
 
 	CImageData& operator = (const CImageData &v) {
@@ -68,6 +76,10 @@ public:
 		this->textureSource = v.textureSource;
 		this->texTransform  = v.texTransform;
 		this->occlusionF = v.occlusionF;
+
+		this->imageWidth  = v.imageWidth;
+		this->imageHeight = v.imageHeight;
+		this->rgbaBuff    = v.rgbaBuff;
 
 		return (*this);
 	}

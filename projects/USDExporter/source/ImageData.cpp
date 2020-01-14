@@ -23,5 +23,8 @@ void CImageData::clear ()
 	textureSource = USD_DATA::TEXTURE_SOURE::texture_source_rgb;
 	texTransform.clear();
 	occlusionF = false;
+
+	imageWidth = imageHeight = 0;
+	rgbaBuff.clear();
 }
 

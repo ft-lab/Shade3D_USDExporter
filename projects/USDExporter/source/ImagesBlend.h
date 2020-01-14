@@ -19,8 +19,11 @@ private:
 	compointer<sxsdk::image_interface> m_glowImage;				// Glowの画像.
 	compointer<sxsdk::image_interface> m_occlusionImage;		// Occlusionの画像.
 
-	compointer<sxsdk::image_interface> m_gltfBaseColorImage;			// glTFとしてエクスポートするBaseColorの画像.
-	compointer<sxsdk::image_interface> m_gltfMetallicRoughnessImage;	// glTFとしてエクスポートするMetallic/Roughnessの画像.
+	// USDでのエクスポートするテクスチャ.
+	compointer<sxsdk::image_interface> m_exportDiffuseImage;	// Diffuseのイメージ.
+	compointer<sxsdk::image_interface> m_exportMetallicImage;	// Metallicのイメージ.
+	compointer<sxsdk::image_interface> m_exportRoughnessImage;	// Roughnessのイメージ.
+	compointer<sxsdk::image_interface> m_exportOpacityImage;	// Opacity(不透明度)のイメージ.
 
 	bool m_hasDiffuseImage;										// diffuseのイメージを持つか.
 	bool m_hasReflectionImage;									// reflectionのイメージを持つか.
@@ -59,8 +62,9 @@ private:
 	/**
 	 * 指定のテクスチャの合成処理.
 	 * @param[in] mappingType  マッピングの種類.
+	 * @param[in] repeatTex    繰り返し回数.
 	 */
-	bool m_blendImages (const sxsdk::enums::mapping_type mappingType);
+	bool m_blendImages (const sxsdk::enums::mapping_type mappingType, const sx::vec<int,2>& repeatTex);
 
 	/**
 	 * Diffuseのアルファ透明を使用しているかチェック.
@@ -99,6 +103,39 @@ private:
 	 */
 	float m_getNormalWeight ();
 
+	/**
+	 * 指定のマッピングの種類でのテクスチャサイズの最大を取得.
+	 * 異なるサイズのテクスチャが混在する場合、一番大きいサイズのテクスチャに合わせる.
+	 * @param[in]  mappingType   マッピングの種類.
+	 */
+	sx::vec<int,2> m_getMaxMappingImageSize (const sxsdk::enums::mapping_type mappingType);
+
+	/**
+	 * マッピングレイヤで「マット」を持つか.
+	 * @param[in]  mappingType   マッピングの種類.
+	 */
+	 bool m_hasWeightTexture (const sxsdk::enums::mapping_type mappingType);
+
+	 /**
+	  * テクスチャを複製する場合に、反転や繰り返し回数を考慮.
+	  * @param[in] image       イメージクラス.
+	  * @param[in] dstSize     複製後のサイズ.
+	  * @param[in] flipColor   色反転.
+	  * @param[in] flipH       左右反転.
+	  * @param[in] flipV       上下反転.
+	  * @param[in] rotate90    90度反転.
+	  * @param[in] repeatU     繰り返し回数U.
+	  * @param[in] repeatV     繰り返し回数V.
+	  */
+	 compointer<sxsdk::image_interface> m_duplicateImage (sxsdk::image_interface* image, const sx::vec<int,2>& dstSize,
+		 const bool flipColor = false, const bool flipH = false, const bool flipV = false, const bool rotate90 = false,
+		 const int repeatU = 1, const int repeatV = 1);
+
+	/**
+	 * diffuse/roughness/metallicのテクスチャを、Shade3Dの状態からPBRマテリアルに変換.
+	 */
+	void m_convShade3DToPBRMaterial ();
+
 public:
 	CImagesBlend (sxsdk::scene_interface* scene, sxsdk::surface_class* surface);
 
@@ -108,9 +145,9 @@ public:
 	void blendImages ();
 
 	/**
-	 * 各種イメージより、glTFにエクスポートするBaseColor/Roughness/Metallicを復元.
+	 * 各種イメージより、エクスポートするテクスチャを作成.
 	 */
-	bool calcGLTFImages ();
+	bool calcExportImages ();
 
 	/**
 	 * 各種イメージを持つか (単一または複数).
@@ -163,10 +200,12 @@ public:
 	int getOcclusionTexCoord () { return m_occlusionTexCoord; }
 
 	/**
-	 * glTFとしてのイメージを取得.
+	 * エクスポートするイメージを取得.
 	 */
-	compointer<sxsdk::image_interface> getGLTFBaseColorImage () { return m_gltfBaseColorImage; }
-	compointer<sxsdk::image_interface> getGLTFMetallicRoughnessImage () { return m_gltfMetallicRoughnessImage; }
+	compointer<sxsdk::image_interface> getExportDiffuseImage () { return m_exportDiffuseImage; }
+	compointer<sxsdk::image_interface> getExportMetallicImage () { return m_exportMetallicImage; }
+	compointer<sxsdk::image_interface> getExportRoughnessImage () { return m_exportRoughnessImage; }
+	compointer<sxsdk::image_interface> getExportOpacityImage () { return m_exportOpacityImage; }
 };
 
 #endif

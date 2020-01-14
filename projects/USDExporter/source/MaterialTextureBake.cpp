@@ -6,6 +6,8 @@
 #include "Shade3DUtil.h"
 #include "StringUtil.h"
 #include "StreamCtrl.h"
+#include "MathUtil.h"
+#include "ImagesBlend.h"
 #include "OcclusionShaderData.h"
 
 /*
@@ -311,13 +313,14 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		materialData.ior = surface->get_refraction();
 
 		// マッピングレイヤ情報を取得.
-		//if (!m_exportParam.texOptBakeMultiTextures) {
+		bool retF = false;
+		if (!m_exportParam.texOptBakeMultiTextures) {
 			// 単純なベイクを行う.
-		const bool retF = m_getSimpleMaterialMappingFromSurface(surface, materialData);
-		//} else {
+			retF = m_getSimpleMaterialMappingFromSurface(surface, materialData);
+		} else {
 			// 複数マッピングを合成.
-		//	return m_getMaterialMultiMappingFromSurface(surface, materialData);
-		//}
+			retF = m_getMaterialMultiMappingFromSurface(surface, materialData);
+		}
 
 		// Opacityテクスチャが存在しrougnhessを1.0にしている場合、半透明を完全透明に近づけるにはmetallicを1.0にする (iOS13.1).
 		if (materialData.opacityTexture.textureParam.imageIndex >= 0) {
@@ -856,6 +859,99 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
  */
 bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData)
 {
+	// 複数テクスチャの合成クラス.
+	CImagesBlend imagesBlend(m_pScene, surface);
+	imagesBlend.blendImages();
+
+	CTextureTransform texTransform;
+	std::string masterImageName = "";
+	int imageIndex = -1;
+
+	{
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::diffuse_mapping;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor = (surface->get_diffuse_color()) * (surface->get_diffuse());
+			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
+			if (masterImage) {		// 単一テクスチャの場合.
+				imageIndex = m_storeMasterImage(masterImage, materialData.diffuseTexture, masterImageName);
+			} else {				// 合成したテクスチャの場合.
+				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName);
+			}
+
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.diffuseTexture.textureParam.repeatU = repeatV.x;
+			materialData.diffuseTexture.textureParam.repeatV = repeatV.y;
+		}
+	}
+
+	{
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::reflection_mapping;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1)) * (surface->get_reflection());
+			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
+			if (masterImage) {		// 単一テクスチャの場合.
+				imageIndex = m_storeMasterImage(masterImage, materialData.metallicTexture, masterImageName);
+			} else {				// 合成したテクスチャの場合.
+				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.metallicTexture, masterImageName);
+			}
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.metallicTexture.textureParam.repeatU = repeatV.x;
+			materialData.metallicTexture.textureParam.repeatV = repeatV.y;
+		}
+		materialData.metallic = surface->get_reflection();
+	}
+
+	{
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::glow_mapping;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor = (surface->get_glow_color()) * (surface->get_glow());
+			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
+			if (masterImage) {		// 単一テクスチャの場合.
+				imageIndex = m_storeMasterImage(masterImage, materialData.emissiveTexture, masterImageName);
+			} else {				// 合成したテクスチャの場合.
+				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
+			}
+
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.emissiveTexture.textureParam.repeatU = repeatV.x;
+			materialData.emissiveTexture.textureParam.repeatV = repeatV.y;
+		}
+	}
+
+	{
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::roughness_mapping;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1)) * (surface->get_roughness());
+			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
+			if (masterImage) {		// 単一テクスチャの場合.
+				imageIndex = m_storeMasterImage(masterImage, materialData.roughnessTexture, masterImageName);
+			} else {				// 合成したテクスチャの場合.
+				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.roughnessTexture, masterImageName);
+			}
+
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.roughnessTexture.textureParam.repeatU = repeatV.x;
+			materialData.roughnessTexture.textureParam.repeatV = repeatV.y;
+		}
+		materialData.roughness = surface->get_roughness();
+	}
+
+	{
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::normal_mapping;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1));
+			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
+			if (masterImage) {		// 単一テクスチャの場合.
+				imageIndex = m_storeMasterImage(masterImage, materialData.normalTexture, masterImageName);
+			} else {				// 合成したテクスチャの場合.
+				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.normalTexture, masterImageName);
+			}
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.normalTexture.textureParam.repeatU = repeatV.x;
+			materialData.normalTexture.textureParam.repeatV = repeatV.y;
+		}
+	}
+/*
 	try {
 		// マッピングレイヤ情報を取得.
 		const int mappingLayersCou = surface->get_number_of_mapping_layers();
@@ -871,7 +967,132 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		}
 
 	} catch (...) { }
-
+*/
 	return true;
+}
+
+/**
+ * 指定のマスターイメージをエクスポート用に格納.
+ * @param[in]  masterImage      マスターイメージクラス.
+ * @param[out] texMappingData   マッピング情報の格納先.
+ * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+ * @return イメージ番号.
+ */
+int CMaterialTextureBake::m_storeMasterImage (sxsdk::master_image_class* masterImage, CTextureMappingData& texMappingData, std::string& masterImageName)
+{
+	CTextureTransform texTransform;
+	int channelMix = 0;
+
+	int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, channelMix);
+	masterImageName = "";
+
+	if (imageIndex >= 0) {
+		const CImageData& imageD = m_imagesList[imageIndex];
+		masterImageName = imageD.fileName;
+	} else {
+		// イメージ名をASCIIのファイル名にする.
+		masterImageName = masterImage->get_name();
+		if (!StringUtil::checkASCII(masterImageName)) {
+			masterImageName = "texture";
+		}
+
+		//if (useTransparentAlpha && isNoProcessingF) {
+			// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.
+		//	masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
+		//} else {
+			// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
+			if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
+				// 拡張子がある場合はそれを採用し、ない場合はpngにする.
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
+			} else {
+				const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
+				masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
+			}
+		//}
+
+		// ユニークファイル名として追加.
+		// 同一名がある場合は、連番付きで返す.
+		masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
+
+		imageIndex = (int)m_imagesList.size();
+		m_imagesList.push_back(CImageData());
+	}
+
+	if (imageIndex >= 0) {
+		CImageData& imageD = m_imagesList[imageIndex];
+		imageD.pMasterImageHandle = masterImage->get_handle();
+		imageD.fileName = masterImageName;
+		imageD.occlusionF = false;
+
+		texMappingData.textureParam.imageIndex = imageIndex;
+
+		imageD.texTransform = texTransform;
+	}
+
+	return imageIndex;
+}
+
+/**
+ * 指定のカスタムイメージをエクスポート用に格納.
+ * @param[in]  image            マスターイメージクラス.
+ * @param[in]  factor           乗算値.
+ * @param[out] texMappingData   マッピング情報の格納先.
+ * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+ * @return イメージ番号.
+ */
+int CMaterialTextureBake::m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName)
+{
+	int imageIndex = -1;
+	if (image == NULL) return -1;
+
+	// ユニークなテクスチャファイル名を取得.
+	std::string imageName = "bake_texture";
+
+	if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
+		// 拡張子がある場合はそれを採用し、ない場合はpngにする.
+		imageName = StringUtil::SetFileImageExtension(imageName, "png");
+	} else {
+		const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
+		imageName = StringUtil::SetFileImageExtension(imageName, usePng ? "png" : "jpg", true);
+	}
+
+	// ユニークファイル名として追加.
+	// 同一名がある場合は、連番付きで返す.
+	imageName = m_findImageFileNames.appendName(imageName, USD_DATA::NODE_TYPE::texture_node, true);
+
+	imageIndex = (int)m_imagesList.size();
+	m_imagesList.push_back(CImageData());
+
+	CImageData& imageD = m_imagesList[imageIndex];
+	imageD.fileName = imageName;
+
+	// テクスチャのRGBAを保持.
+	try {
+		const int width  = image->get_size().x;
+		const int height = image->get_size().y;
+		imageD.imageWidth  = width;
+		imageD.imageHeight = height;
+
+		imageD.rgbaBuff.resize(width * height * 4);
+
+		std::vector<sx::rgba8_class> lineBuff;
+		lineBuff.resize(width);
+
+		int iPos = 0;
+		for (int y = 0; y < height; ++y) {
+			image->get_pixels_rgba(0, y, width, 1, &(lineBuff[0]));
+			for (int x = 0; x < width; ++x) {
+				imageD.rgbaBuff[iPos + 0] = (unsigned char)((float)lineBuff[x].red * factor.red);
+				imageD.rgbaBuff[iPos + 1] = (unsigned char)((float)lineBuff[x].green * factor.green);
+				imageD.rgbaBuff[iPos + 2] = (unsigned char)((float)lineBuff[x].blue * factor.blue);
+				imageD.rgbaBuff[iPos + 3] = lineBuff[x].alpha;
+				iPos += 4;
+			}
+		}
+	} catch (...) { }
+
+	texMappingData.textureParam.imageIndex = imageIndex;
+
+	return imageIndex;
 }
 

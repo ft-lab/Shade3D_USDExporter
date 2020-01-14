@@ -1,5 +1,7 @@
 ﻿/**
  * テクスチャマッピング情報 (USD/Shade3Dで共用).
+ * テクスチャの繰り返しについては、UsdTransform2dのscaleを使用.
+ * 色反転や水平/垂直反転、90度反転はベイクする (本来はUSDの仕様内でできるのだが、iOS/iPadOS 13では対応していないため).
  */
 
 #ifndef _TEXTUREPARAMDATA_H

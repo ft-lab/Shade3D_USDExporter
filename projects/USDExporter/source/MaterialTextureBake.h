@@ -147,6 +147,25 @@ private:
 	 */
 	int m_findMasterImageInImagesList (sxsdk::master_image_class* masterImage, const CTextureTransform& texTransform, const int channelMix);
 
+	/**
+	 * 指定のマスターイメージをエクスポート用に格納.
+	 * @param[in]  masterImage      マスターイメージクラス.
+	 * @param[out] texMappingData   マッピング情報の格納先.
+	 * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+	 * @return イメージ番号.
+	 */
+	int m_storeMasterImage (sxsdk::master_image_class* masterImage, CTextureMappingData& texMappingData, std::string& masterImageName);
+
+	/**
+	 * 指定のカスタムイメージをエクスポート用に格納.
+	 * @param[in]  image            マスターイメージクラス.
+	 * @param[in]  factor           乗算値.
+	 * @param[out] texMappingData   マッピング情報の格納先.
+	 * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+	 * @return イメージ番号.
+	 */
+	int m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName);
+
 public:
 	CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam);
 	~CMaterialTextureBake ();

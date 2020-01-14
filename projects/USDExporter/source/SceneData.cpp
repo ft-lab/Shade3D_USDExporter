@@ -620,9 +620,11 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 	const std::vector<CImageData>& imagesList = m_materialTextureBake->getImagesList();
 	for (size_t i = 0; i < imagesList.size(); ++i) {
 		const CImageData& imageD = imagesList[i];
-		if (imageD.fileName != "" && imageD.pMasterImageHandle) {
+		if (imageD.fileName == "") continue;
+
+		const std::string fileName = fileDir + StringUtil::getFileSeparator() + imageD.fileName;
+		if (imageD.pMasterImageHandle) {
 			try {
-				const std::string fileName = fileDir + StringUtil::getFileSeparator() + imageD.fileName;
 				sxsdk::master_image_class& masterImage = m_pScene->get_shape_by_handle(imageD.pMasterImageHandle)->get_master_image();
 				compointer<sxsdk::image_interface> image(masterImage.get_image());
 				if (image) {
@@ -644,6 +646,34 @@ void CSceneData::m_exportTextures (const std::string& filePath)
 					m_exportFilesList.push_back(fileName);
 				}
 			} catch (...) { }
+
+		} else if (!imageD.rgbaBuff.empty()) {
+			// ベイクされたカスタムイメージを保存する場合.
+			const int width  = imageD.imageWidth;
+			const int height = imageD.imageHeight;
+
+			// イメージを作成.
+			compointer<sxsdk::image_interface> image(m_pScene->create_image_interface(sx::vec<int,2>(width, height)));
+			if (image) {
+				std::vector<sx::rgba8_class> lineBuff;
+				lineBuff.resize(width);
+				int iPos = 0;
+				for (int y = 0; y < height; ++y) {
+					for (int x = 0; x < width; ++x) {
+						lineBuff[x].red   = imageD.rgbaBuff[iPos + 0];
+						lineBuff[x].green = imageD.rgbaBuff[iPos + 1];
+						lineBuff[x].blue  = imageD.rgbaBuff[iPos + 2];
+						lineBuff[x].alpha = imageD.rgbaBuff[iPos + 3];
+						iPos += 4;
+					}
+					image->set_pixels_rgba(0, y, width, 1, &(lineBuff[0]));
+				}
+
+				m_saveTextureImage(fileName, image);
+
+				// USDZ出力時のためのファイル名保持.
+				m_exportFilesList.push_back(fileName);
+			}
 		}
 	}
 }
