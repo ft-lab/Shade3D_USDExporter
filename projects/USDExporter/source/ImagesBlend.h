@@ -18,12 +18,7 @@ private:
 	compointer<sxsdk::image_interface> m_roughnessImage;		// Roughnessの画像.
 	compointer<sxsdk::image_interface> m_glowImage;				// Glowの画像.
 	compointer<sxsdk::image_interface> m_occlusionImage;		// Occlusionの画像.
-
-	// USDでのエクスポートするテクスチャ.
-	compointer<sxsdk::image_interface> m_exportDiffuseImage;	// Diffuseのイメージ.
-	compointer<sxsdk::image_interface> m_exportMetallicImage;	// Metallicのイメージ.
-	compointer<sxsdk::image_interface> m_exportRoughnessImage;	// Roughnessのイメージ.
-	compointer<sxsdk::image_interface> m_exportOpacityImage;	// Opacity(不透明度)のイメージ.
+	compointer<sxsdk::image_interface> m_opacityImage;			// Opacit(不透明マスク相当)の画像.
 
 	bool m_hasDiffuseImage;										// diffuseのイメージを持つか.
 	bool m_hasReflectionImage;									// reflectionのイメージを持つか.
@@ -31,6 +26,7 @@ private:
 	bool m_hasNormalImage;										// normalのイメージを持つか.
 	bool m_hasGlowImage;										// glowのイメージを持つか.
 	bool m_hasOcclusionImage;									// Occlusionのイメージを持つか.
+	bool m_hasOpacityImage;										// Opacityのイメージを持つか.
 
 	// 以下、マッピングレイヤで1枚のみの加工不要のテクスチャである場合のマスターサーフェスクラスの参照.
 	sxsdk::master_image_class* m_diffuseMasterImage;			// Diffuseのマスターイメージクラス.
@@ -39,6 +35,7 @@ private:
 	sxsdk::master_image_class* m_normalMasterImage;				// Normalのマスターイメージクラス.
 	sxsdk::master_image_class* m_glowMasterImage;				// Glowのマスターイメージクラス.
 	sxsdk::master_image_class* m_occlusionMasterImage;			// Occlusionのマスターイメージクラス.
+	sxsdk::master_image_class* m_opacityMasterImage;			// Opacityのマスターイメージクラス.
 
 	sx::vec<int,2> m_diffuseRepeat;								// Diffuseの反復回数.
 	sx::vec<int,2> m_normalRepeat;								// Normalの反復回数.
@@ -46,6 +43,7 @@ private:
 	sx::vec<int,2> m_roughnessRepeat;							// Roughnessの反復回数.
 	sx::vec<int,2> m_glowRepeat;								// Glowの反復回数.
 	sx::vec<int,2> m_occlusionRepeat;							// Occlusionの反復回数.
+	sx::vec<int,2> m_opacityRepeat;								// Opacityの反復回数.
 
 	int m_diffuseTexCoord;										// DiffuseのUVレイヤ番号.
 	int m_normalTexCoord;										// NormalのUVレイヤ番号.
@@ -53,10 +51,16 @@ private:
 	int m_roughnessTexCoord;									// RoughnessのUVレイヤ番号.
 	int m_glowTexCoord;											// GlowのUVレイヤ番号.
 	int m_occlusionTexCoord;									// OcclusionのUVレイヤ番号.
+	int m_opacityTexCoord;										// OpacityのUVレイヤ番号.
 
 	bool m_diffuseAlphaTrans;									// Diffuseのアルファ透明を使用しているか.
-	float m_normalWeight;										// Normalのウエイト値.
 	float m_occlusionWeight;									// Occlusionのウエイト値.
+
+	// テクスチャを使用しない場合のパラメータ.
+	sxsdk::rgb_class m_diffuseColor;							// Diffuse色.
+	sxsdk::rgb_class m_emissiveColor;							// Emmisive色.
+	float m_metallic;											// Metallic値.
+	float m_roughness;											// Roughness値.
 
 private:
 	/**
@@ -145,11 +149,6 @@ public:
 	void blendImages ();
 
 	/**
-	 * 各種イメージより、エクスポートするテクスチャを作成.
-	 */
-	bool calcExportImages ();
-
-	/**
 	 * 各種イメージを持つか (単一または複数).
 	 */
 	bool hasImage (const sxsdk::enums::mapping_type mappingType) const;
@@ -180,11 +179,6 @@ public:
 	bool getDiffuseAlphaTrans () { return m_diffuseAlphaTrans; }
 
 	/**
-	 * Normalのウエイト値を取得.
-	 */
-	float getNormalWeight () { return m_normalWeight; }
-
-	/**
 	 * Occlusionのウエイト値を取得.
 	 */
 	float getOcclusionWeight () { return m_occlusionWeight; }
@@ -200,12 +194,25 @@ public:
 	int getOcclusionTexCoord () { return m_occlusionTexCoord; }
 
 	/**
-	 * エクスポートするイメージを取得.
+	 * Diffuse色を取得.
 	 */
-	compointer<sxsdk::image_interface> getExportDiffuseImage () { return m_exportDiffuseImage; }
-	compointer<sxsdk::image_interface> getExportMetallicImage () { return m_exportMetallicImage; }
-	compointer<sxsdk::image_interface> getExportRoughnessImage () { return m_exportRoughnessImage; }
-	compointer<sxsdk::image_interface> getExportOpacityImage () { return m_exportOpacityImage; }
+	sxsdk::rgb_class getDiffuseColor () const { return m_diffuseColor; }
+
+	/**
+	 * Emissive色を取得.
+	 */
+	sxsdk::rgb_class getEmissiveColor () const { return m_emissiveColor; }
+
+	/**
+	 * Metallic値を取得.
+	 */
+	float getMetallic () const { return m_metallic; }
+
+	/**
+	 * Roughness値を取得.
+	 */
+	float getRoughness () const { return m_roughness; }
+
 };
 
 #endif

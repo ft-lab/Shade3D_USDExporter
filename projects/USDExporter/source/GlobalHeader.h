@@ -32,4 +32,6 @@
 #define USD_EXPORTER_DLG_STREAM_VERSION_101 0x101
 #define USD_EXPORTER_DLG_STREAM_VERSION_102 0x102
 
+#define MAPPING_TYPE_OPACITY  ((sxsdk::enums::mapping_type)24)		// sxsdk::enums::mapping_typeでの「不透明マスク」.
+
 #endif

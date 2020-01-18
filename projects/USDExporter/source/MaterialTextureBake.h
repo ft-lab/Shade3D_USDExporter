@@ -152,9 +152,10 @@ private:
 	 * @param[in]  masterImage      マスターイメージクラス.
 	 * @param[out] texMappingData   マッピング情報の格納先.
 	 * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+	 * @param[in]  diffuseAlpha     DiffuseのALphaを使用する場合.
 	 * @return イメージ番号.
 	 */
-	int m_storeMasterImage (sxsdk::master_image_class* masterImage, CTextureMappingData& texMappingData, std::string& masterImageName);
+	int m_storeMasterImage (sxsdk::master_image_class* masterImage, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha = false);
 
 	/**
 	 * 指定のカスタムイメージをエクスポート用に格納.
@@ -162,9 +163,10 @@ private:
 	 * @param[in]  factor           乗算値.
 	 * @param[out] texMappingData   マッピング情報の格納先.
 	 * @param[out] masterImageName  USDでのマスターイメージ名が返る.
+	 * @param[in]  diffuseAlpha     DiffuseのALphaを使用する場合.
 	 * @return イメージ番号.
 	 */
-	int m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName);
+	int m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha = false);
 
 public:
 	CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam);
