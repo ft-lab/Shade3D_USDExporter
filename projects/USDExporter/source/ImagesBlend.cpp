@@ -60,7 +60,7 @@ void CImagesBlend::blendImages ()
 
 	// マッピングレイヤのOcclusion情報を取得.
 	m_occlusionWeight = 1.0f;
-	m_checkOcclusionSingleImage(&m_occlusionMasterImage, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
+	//m_checkOcclusionSingleImage(&m_occlusionMasterImage, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
 
 	// Diffuseのアルファ透明を使用しているかチェック.
 	m_diffuseAlphaTrans = m_checkDiffuseAlphaTrans();
@@ -108,6 +108,7 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
 		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -309,6 +310,7 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
 		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -360,6 +362,7 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
 		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -417,18 +420,23 @@ compointer<sxsdk::image_interface> CImagesBlend::m_duplicateImage (sxsdk::image_
 	if (repeatU > 1 || repeatV > 1) {
 		dstImage = m_pScene->create_image_interface(dstSize);
 
-		compointer<sxsdk::graphic_context_interface> gc(dstImage->get_graphic_context_interface());
-		const float dx = (float)width / (float)repeatU;
-		const float dy = (float)height / (float)repeatV;
+		try {
+			compointer<sxsdk::graphic_context_interface> gc(dstImage->get_graphic_context_interface());
+			gc->set_color(sxsdk::rgb_class(1, 1, 1));
+			const float dx = (float)width / (float)repeatU;
+			const float dy = (float)height / (float)repeatV;
 
-		sx::rectangle_class rect;
-		for (float y = 0.0f; y < (float)(height - 1); y += dy) {
-			for (float x = 0.0f; x < (float)(width - 1); x += dx) {
-				rect.min = sx::vec<int,2>((int)x, (int)y);
-				rect.max = sx::vec<int,2>((int)(x + dx), (int)(y + dy));
-				gc->draw_image(image, rect);
+			sx::rectangle_class rect;
+			for (float y = 0.0f; y < (float)(height - 1); y += dy) {
+				for (float x = 0.0f; x < (float)(width - 1); x += dx) {
+					rect.min = sx::vec<int,2>((int)x, (int)y);
+					rect.max = sx::vec<int,2>((int)(x + dx), (int)(y + dy));
+					gc->draw_image(image, rect);
+				}
 			}
-		}
+			gc->restore_color();
+		} catch (...) { }
+
 	} else {
 		dstImage = image->duplicate_image(&dstSize);
 	}
@@ -437,9 +445,9 @@ compointer<sxsdk::image_interface> CImagesBlend::m_duplicateImage (sxsdk::image_
 		for (int y = 0; y < height; ++y) {
 			dstImage->get_pixels_rgba(0, y, width, 1, &(lineCols[0]));
 			for (int x = 0; x < width; ++x) {
-				lineCols[x].red   = 1.0f - lineCols[x].red;
-				lineCols[x].green = 1.0f - lineCols[x].green;
-				lineCols[x].blue  = 1.0f - lineCols[x].blue;
+				lineCols[x].red   = 255 - lineCols[x].red;
+				lineCols[x].green = 255 - lineCols[x].green;
+				lineCols[x].blue  = 255 - lineCols[x].blue;
 			}
 			dstImage->set_pixels_rgba(0, y, width, 1, &(lineCols[0]));
 		}
@@ -502,24 +510,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	bool singleSimpleMapping = true;				// 1枚のテクスチャのみの参照で、色反転や左右反転/上下反転などがない場合は.
 													// そのときのマスターイメージを採用 (ベイクする必要なしの場合、true).
 
-	// Diffuse時にアルファ透明を使用する場合はそのレイヤ番号を取得.
-	int diffuseAlphaLayerIndex = -1;
-	if (mappingType == sxsdk::enums::diffuse_mapping) {
-		for (int i = 0; i < layersCou; ++i) {
-			sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
-			if (mappingLayer.get_type() != sxsdk::enums::diffuse_mapping) continue;
-			if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-
-			if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
-				diffuseAlphaLayerIndex = i;
-				m_diffuseAlphaTrans = true;
-				break;
-			}
-		}
-	}
-	//std::vector<unsigned char> alphaBuff;
-
 	// 法線の中立値.
 	const sxsdk::rgb_class normalDefaultCol(0.5f, 0.5f, 1.0f);
 	const sxsdk::vec3 normalDefault = MathUtil::convRGBToNormal(normalDefaultCol);
@@ -536,6 +526,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
 		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight  = std::min(std::max(mappingLayer.get_weight(), 0.0f), 1.0f);
 		const float weight2 = 1.0f - weight;
@@ -679,11 +670,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 				weightImage2 = m_duplicateImage(weightImage, newImgSize, weightFlipColor, weightFlipH, weightFlipV, weightRotate90, weightRepeatU, weightRepeatV);
 			}
 
-			// アルファ値を保持するバッファを作成.
-			if (i == diffuseAlphaLayerIndex) {
-			//	alphaBuff.resize(newWidth * newHeight, 255);
-			}
-
 			for (int y = 0; y < newHeight; ++y) {
 				image2->get_pixels_rgba_float(0, y, newWidth, 1, &(rgbaLine[0]));
 
@@ -728,14 +714,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 						rgbaLine[x].red   = 1.0f - rgbaLine[x].red;
 						rgbaLine[x].green = 1.0f - rgbaLine[x].green;
 						rgbaLine[x].blue  = 1.0f - rgbaLine[x].blue;
-					}
-				}
-
-				// アルファ値を保持.
-				if (i == diffuseAlphaLayerIndex) {
-					const int iPos = y * newWidth;
-					for (int x = 0; x < newWidth; ++x) {
-					//	alphaBuff[x + iPos] = (unsigned char)std::min((int)(rgbaLine[x].alpha * 255.0f), 255);
 					}
 				}
 
@@ -975,16 +953,15 @@ col.blue  = std::min(col0.blue, col.blue);
 					col.red   = c0.red;
 					col.green = c0.green;
 					col.blue  = c0.blue;
-
 /*
-					reflectionV  = lineCols2[x].red;
-					reflectionV2 = 1.0f - reflectionV;
+					//reflectionV  = lineCols2[x].red;
+					//reflectionV2 = 1.0f - reflectionV;
 					scaleV = reflectionV + 1.0f;
 
 					col.red   = std::min(col.red * scaleV, 1.0f);
 					col.green = std::min(col.green * scaleV, 1.0f);
 					col.blue  = std::min(col.blue * scaleV, 1.0f);
-*/
+					*/
 					lineCols[x] = col;
 				}
 				m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
