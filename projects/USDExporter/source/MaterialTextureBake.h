@@ -163,10 +163,17 @@ private:
 	 * @param[in]  factor           乗算値.
 	 * @param[out] texMappingData   マッピング情報の格納先.
 	 * @param[out] masterImageName  USDでのマスターイメージ名が返る.
-	 * @param[in]  diffuseAlpha     DiffuseのALphaを使用する場合.
+	 * @param[in]  diffuseAlpha     DiffuseのAlphaを使用する場合.
 	 * @return イメージ番号.
 	 */
 	int m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha = false);
+
+	/**
+	 * 指定のimageと同じものがm_imagesList内に存在するか.
+	 * @param[in]  image            マスターイメージクラス.
+	 * @param[in]  factor           乗算値.
+	 */
+	int m_existImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor);
 
 public:
 	CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam);

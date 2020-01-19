@@ -1069,18 +1069,69 @@ int CMaterialTextureBake::m_storeMasterImage (sxsdk::master_image_class* masterI
 }
 
 /**
+ * 指定のimageと同じものがm_imagesList内に存在するか.
+ * @param[in]  image            マスターイメージクラス.
+ * @param[in]  factor           乗算値.
+ */
+int CMaterialTextureBake::m_existImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor)
+{
+	const int width  = image->get_size().x;
+	const int height = image->get_size().y;
+
+	int index = -1;
+	const size_t cou = m_imagesList.size();
+	for (size_t i = 0; i < cou; ++i) {
+		CImageData& imgD = m_imagesList[i];
+		if (imgD.rgbaBuff.empty()) continue;
+		if (imgD.imageWidth != width || imgD.imageHeight != height) continue;
+
+		std::vector<sx::rgba8_class> lineBuff;
+		lineBuff.resize(width);
+		int iPos = 0;
+		bool sameF = true;
+		for (int y = 0; y < height; ++y) {
+			image->get_pixels_rgba(0, y, width, 1, &(lineBuff[0]));
+			for (int x = 0; x < width; ++x) {
+				const unsigned char rV = (unsigned char)((float)lineBuff[x].red * factor.red);
+				const unsigned char gV = (unsigned char)((float)lineBuff[x].green * factor.green);
+				const unsigned char bV = (unsigned char)((float)lineBuff[x].blue * factor.blue);
+				const unsigned char aV = lineBuff[x].alpha;
+				if (imgD.rgbaBuff[iPos + 0] != rV || imgD.rgbaBuff[iPos + 1] != gV || imgD.rgbaBuff[iPos + 2] != bV || imgD.rgbaBuff[iPos + 3] != aV) {
+					sameF = false;
+					break;
+				}
+				iPos += 4;
+			}
+			if (!sameF) break;
+		}
+		if (sameF) {
+			index = (int)i;
+			break;
+		}
+	}
+	return index;
+}
+
+/**
  * 指定のカスタムイメージをエクスポート用に格納.
  * @param[in]  image            マスターイメージクラス.
  * @param[in]  factor           乗算値.
  * @param[out] texMappingData   マッピング情報の格納先.
  * @param[out] masterImageName  USDでのマスターイメージ名が返る.
- * @param[in]  diffuseAlpha     DiffuseのALphaを使用する場合.
+ * @param[in]  diffuseAlpha     DiffuseのAlphaを使用する場合.
  * @return イメージ番号.
  */
 int CMaterialTextureBake::m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
 {
 	int imageIndex = -1;
 	if (image == NULL) return -1;
+
+	// 同一の画像が存在するかチェック.
+	imageIndex = m_existImage(image, factor);
+	if (imageIndex >= 0) {
+		texMappingData.textureParam.imageIndex = imageIndex;
+		return imageIndex;
+	}
 
 	// ユニークなテクスチャファイル名を取得.
 	std::string imageName = "bake_texture";
