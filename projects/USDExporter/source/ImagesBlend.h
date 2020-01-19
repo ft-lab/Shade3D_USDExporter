@@ -56,6 +56,9 @@ private:
 	bool m_diffuseAlphaTrans;									// Diffuseのアルファ透明を使用しているか.
 	float m_occlusionWeight;									// Occlusionのウエイト値.
 
+	int m_diffuseTexturesCount;									// Diffuseテクスチャ数.
+	bool m_useDiffuseAlpha;										// Diffuseの「アルファ透明」を使用しているか.
+
 	// テクスチャを使用しない場合のパラメータ.
 	sxsdk::rgb_class m_diffuseColor;							// Diffuse色.
 	sxsdk::rgb_class m_emissiveColor;							// Emmisive色.

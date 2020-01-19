@@ -115,8 +115,22 @@ std::string CFindNames::appendName (const std::string& name, const USD_DATA::NOD
  */
 bool CFindNames::existName (const std::string& name)
 {
-	if (std::find(m_namesList.begin(), m_namesList.end(), name) != m_namesList.end()) return true;
-	return false;
+	// 拡張子がある場合はそれを除去.
+	std::string name2 = StringUtil::getFileName(name, false);
+	std::transform(name2.begin(), name2.end(), name2.begin(), ::tolower);
+
+	bool existF = false;
+	const size_t cou = m_namesList.size();
+	for (size_t i = 0; i < cou; ++i) {
+		std::string name3 = StringUtil::getFileName(m_namesList[i], false);
+		std::transform(name3.begin(), name3.end(), name3.begin(), ::tolower);
+		if (name2 == name3) {
+			existF = true;
+			break;
+		}
+	}
+
+	return existF;
 }
 
 /**

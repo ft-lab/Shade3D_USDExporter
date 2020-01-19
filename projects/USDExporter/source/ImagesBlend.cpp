@@ -50,6 +50,9 @@ void CImagesBlend::blendImages ()
 	m_metallic  = 0.0f;
 	m_roughness = 0.0f;
 
+	m_diffuseTexturesCount = 0;
+	m_useDiffuseAlpha = false;
+
 	// Shade3Dでの表面材質のマッピングレイヤで、加工無しの画像が参照されているかチェック.
 	m_checkSingleImage(sxsdk::enums::diffuse_mapping, &m_diffuseMasterImage, m_diffuseTexCoord, m_diffuseRepeat, m_hasDiffuseImage);
 	m_checkSingleImage(sxsdk::enums::normal_mapping, &m_normalMasterImage, m_normalTexCoord, m_normalRepeat, m_hasNormalImage);
@@ -63,7 +66,7 @@ void CImagesBlend::blendImages ()
 	//m_checkOcclusionSingleImage(&m_occlusionMasterImage, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
 
 	// Diffuseのアルファ透明を使用しているかチェック.
-	m_diffuseAlphaTrans = m_checkDiffuseAlphaTrans();
+	//m_diffuseAlphaTrans = m_checkDiffuseAlphaTrans();
 
 	// Shade3Dでの表面材質のマッピングレイヤごとに、各種イメージを合成.
 	if (!m_diffuseMasterImage && m_hasDiffuseImage) m_blendImages(sxsdk::enums::diffuse_mapping, m_diffuseRepeat);
@@ -103,6 +106,11 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 	if (mappingType == sxsdk::enums::glow_mapping) baseV = m_surface->get_glow();
 
 	bool texRepeatSingle = true;
+
+	if (mappingType == sxsdk::enums::diffuse_mapping) {
+		m_diffuseTexturesCount = 0;
+		m_useDiffuseAlpha = false;
+	}
 
 	for (int i = 0; i < layersCou; ++i) {
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
@@ -175,11 +183,25 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 			if (texRepeat[0] != repeatX || texRepeat[1] != repeatY) texRepeatSingle = false;
 		}
 
+		if (mappingType == sxsdk::enums::diffuse_mapping) {
+			if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
+				m_useDiffuseAlpha = true;
+			}
+			m_diffuseTexturesCount++;
+		}
+
 		counter++;
 	}
 
 	// 「不透明マスク」の場合は強制的にベイクとする.
 	if (mappingType == MAPPING_TYPE_OPACITY) singleImage = false;
+
+	// 「アルファ透明」を持つ単一のdiffuseテクスチャの場合は、強制的にベイクとする.
+	//if (mappingType == sxsdk::enums::diffuse_mapping) {
+	//	if (m_useDiffuseAlpha && m_diffuseTexturesCount == 1) {
+	//		singleImage = false;
+	//	}
+	//}
 
 	if (!texRepeatSingle) texRepeat = sx::vec<int,2>(1, 1);
 	if (counter >= 1) hasImage = true;
@@ -884,37 +906,45 @@ col.blue  = std::min(col0.blue, col.blue);
 
 	}
 
-	// DiffuseとOpacityの両方が存在する場合、DiffuseのA要素としてOpacityを格納.
-	if (m_diffuseImage && m_opacityImage) {
-		if (m_diffuseTexCoord == m_opacityTexCoord && m_diffuseRepeat == m_opacityRepeat) {
-			const int width  = m_diffuseImage->get_size().x;
-			const int height = m_diffuseImage->get_size().y;
-			compointer<sxsdk::image_interface> optImage(m_opacityImage->duplicate_image(&(sx::vec<int,2>(width, height))));
-			
-			std::vector<sxsdk::rgba_class> col1A;
-			std::vector<sxsdk::rgba_class> col2A;
-			col1A.resize(width);
-			col2A.resize(height);
-			for (int y = 0; y < height; ++y) {
-				m_diffuseImage->get_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
-				optImage->get_pixels_rgba_float(0, y, width, 1, &(col2A[0]));
-				for (int x = 0; x < width; ++x) {
-					col1A[x].alpha = col2A[x].red;
-				}
-				m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
-			}
-			m_diffuseAlphaTrans = true;
+	const float diffuseVal = m_surface->get_diffuse();
+	const sxsdk::rgb_class diffuseCol = m_surface->get_diffuse_color();
+	const float reflectionVal = m_surface->get_reflection();
+	const sxsdk::rgb_class reflectionCol = m_surface->get_reflection_color();
 
+	// DiffuseとOpacityの両方が存在する場合、かつ、1つの「アルファ透明」を使用したテクスチャをベイクする場合、DiffuseのA要素としてOpacityを格納.
+	if (m_useDiffuseAlpha && m_diffuseTexturesCount == 1) {
+		if (m_diffuseImage && m_opacityImage) {
+			if (m_diffuseTexCoord == m_opacityTexCoord && m_diffuseRepeat == m_opacityRepeat) {
+				const int width  = m_diffuseImage->get_size().x;
+				const int height = m_diffuseImage->get_size().y;
+				compointer<sxsdk::image_interface> optImage(m_opacityImage->duplicate_image(&(sx::vec<int,2>(width, height))));
+			
+				std::vector<sxsdk::rgba_class> col1A;
+				std::vector<sxsdk::rgba_class> col2A;
+				col1A.resize(width);
+				col2A.resize(height);
+				for (int y = 0; y < height; ++y) {
+					m_diffuseImage->get_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
+					optImage->get_pixels_rgba_float(0, y, width, 1, &(col2A[0]));
+					for (int x = 0; x < width; ++x) {
+						col1A[x].alpha = col2A[x].red;
+					}
+					m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
+				}
+				m_diffuseAlphaTrans = true;
+
+				m_hasOpacityImage = false;
+				m_opacityImage->Release();
+			}
+		} else if ((!m_diffuseImage && m_diffuseMasterImage) && m_opacityImage) {
+			// マスターイメージとしてdiffuse Textureを持ち、Opacity Textureを持つ場合はopacityは不要 (pngとしてRGBAで保持するため).
+			m_diffuseAlphaTrans = true;
 			m_hasOpacityImage = false;
 			m_opacityImage->Release();
 		}
 	}
 
 	if (m_diffuseImage && m_reflectionImage) {
-		const float diffuseV = m_surface->get_diffuse();
-		sxsdk::rgb_class reflectionCol = m_surface->get_reflection_color();
-		const float reflectionV = m_surface->get_reflection();
-
 		const int width  = m_diffuseImage->get_size().x;
 		const int height = m_diffuseImage->get_size().y;
 		const int widthM  = m_reflectionImage->get_size().x;
@@ -966,7 +996,7 @@ col.blue  = std::min(col0.blue, col.blue);
 				}
 				m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
 			}
-
+  
 		}
 	}
 }
