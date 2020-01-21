@@ -870,7 +870,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::diffuse_mapping;
 		if (imagesBlend.hasImage(iType)) {
-			const sxsdk::rgb_class factor = (surface->get_diffuse_color()) * (surface->get_diffuse());
+			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
 			materialData.useDiffuseAlpha = imagesBlend.getDiffuseAlphaTrans();
 
@@ -899,7 +899,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::reflection_mapping;
 		if (imagesBlend.hasImage(iType)) {
-			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1)) * (surface->get_reflection());
+			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
 			if (masterImage) {		// 単一テクスチャの場合.
 				imageIndex = m_storeMasterImage(masterImage, materialData.metallicTexture, masterImageName);
@@ -938,7 +938,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::roughness_mapping;
 		if (imagesBlend.hasImage(iType)) {
-			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1)) * (surface->get_roughness());
+			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
 			if (masterImage) {		// 単一テクスチャの場合.
 				imageIndex = m_storeMasterImage(masterImage, materialData.roughnessTexture, masterImageName);
@@ -957,7 +957,6 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_OPACITY;
 		if (imagesBlend.hasImage(iType)) {
-			//const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1)) * (surface->get_roughness());
 			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
 			if (!masterImage) {			// 合成したテクスチャの場合.
 				const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);

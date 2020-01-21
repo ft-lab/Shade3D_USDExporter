@@ -201,3 +201,11 @@ sxsdk::rgb_class MathUtil::convNormalToRGB (const sxsdk::vec3& n, const bool nor
 	return col;
 }
 
+/**
+ * RGBをグレイスケールに変換.
+ */
+float MathUtil::rgb_to_grayscale (const sxsdk::rgb_class& col)
+{
+	return 0.2126f * col.red + 0.7152f * col.green + 0.0722f * col.blue;
+}
+

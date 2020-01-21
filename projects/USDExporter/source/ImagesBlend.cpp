@@ -5,6 +5,9 @@
 #include "MathUtil.h"
 #include "Shade3DUtil.h"
 #include "StreamCtrl.h"
+#include "USDData.h"
+
+#include <math.h>
 
 /*
 	Shade3Dの「透明」「不透明マスク」「チャンネル合成のアルファ透明」は、すべてOpacityのテクスチャに格納される.
@@ -532,10 +535,18 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	bool singleSimpleMapping = true;				// 1枚のテクスチャのみの参照で、色反転や左右反転/上下反転などがない場合は.
 													// そのときのマスターイメージを採用 (ベイクする必要なしの場合、true).
 
+	sxsdk::rgba_class baseCol(1, 1, 1, 1);
+	if (mappingType == sxsdk::enums::diffuse_mapping) {
+		baseCol = sxsdk::rgba_class(m_surface->get_diffuse_color());
+	}
+
 	// 法線の中立値.
 	const sxsdk::rgb_class normalDefaultCol(0.5f, 0.5f, 1.0f);
 	const sxsdk::vec3 normalDefault = MathUtil::convRGBToNormal(normalDefaultCol);
-	if (mappingType == sxsdk::enums::normal_mapping) whiteCol = sxsdk::rgba_class(normalDefaultCol.red, normalDefaultCol.green, normalDefaultCol.blue, 1.0f);
+	if (mappingType == sxsdk::enums::normal_mapping) {
+		whiteCol = sxsdk::rgba_class(normalDefaultCol.red, normalDefaultCol.green, normalDefaultCol.blue, 1.0f);
+		baseCol = whiteCol;
+	}
 
 	// 合成するテクスチャサイズ.
 	const sx::vec<int,2> dstTexSize = m_getMaxMappingImageSize(mappingType);
@@ -554,10 +565,12 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		const float weight2 = 1.0f - weight;
 		if (MathUtil::isZero(weight)) continue;
 
+		bool alphaTrans = false;
 		const int type = mappingLayer.get_type();
 		if (mappingType == MAPPING_TYPE_OPACITY) {
 			if (type == sxsdk::enums::diffuse_mapping) {
 				if (mappingLayer.get_channel_mix() != sxsdk::enums::mapping_transparent_alpha_mode) continue;
+				alphaTrans = true;
 			} else if (type != sxsdk::enums::transparency_mapping && type != MAPPING_TYPE_OPACITY) continue;
 		} else {
 			if (type != mappingType) continue;
@@ -740,8 +753,20 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 				}
 
 				if (counter == 0) {
-					for (int x = 0; x < newWidth; ++x) {
-						rgbaLine[x] = rgbaLine[x] * weight + whiteCol * weight2;
+					float aV;
+					if (blendMode == 7) {							// 「乗算」合成.
+						for (int x = 0; x < newWidth; ++x) {
+							const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
+							const float w2 = 1.0f - w;
+							rgbaLine[x] = (baseCol * w2 + rgbaLine[x] * w) * baseCol;
+						}
+
+					} else {										// 「通常」合成.
+						for (int x = 0; x < newWidth; ++x) {
+							const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
+							const float w2 = 1.0f - w;
+							rgbaLine[x] = rgbaLine[x] * w + baseCol * w2;
+						}
 					}
 
 				} else {
@@ -752,7 +777,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 						sxsdk::rgb_class col;
 
 						for (int x = 0; x < newWidth; ++x) {
-							const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+							const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 							const float w2 = 1.0f - w;
 							n  = MathUtil::convRGBToNormal(sxsdk::rgb_class(rgbaLine[x].red, rgbaLine[x].green, rgbaLine[x].blue));
 							n2 = MathUtil::convRGBToNormal(sxsdk::rgb_class(rgbaLine0[x].red, rgbaLine0[x].green, rgbaLine0[x].blue));
@@ -765,20 +790,20 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 					} else {
 						if (blendMode == sxsdk::enums::mapping_blend_mode) {		// 「通常」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								const float w2 = 1.0f - w;
 								rgbaLine[x] = rgbaLine[x] * w + rgbaLine0[x] * w2;
 							}
 
 						} else if (blendMode == sxsdk::enums::mapping_mul_mode) {	// 「乗算 (レガシー)」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								const float w2 = 1.0f - w;
 								rgbaLine[x] = rgbaLine[x] * rgbaLine0[x] * w;
 							}
 						} else if (blendMode == 7) {							// 「乗算」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								const float w2 = 1.0f - w;
 
 								rgbaLine[x] = (whiteCol * w2 + rgbaLine[x] * w) * rgbaLine0[x];
@@ -786,7 +811,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 
 						} else if (blendMode == sxsdk::enums::mapping_add_mode) {		// 「加算」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								rgbaLine[x] = rgbaLine0[x] + (rgbaLine[x] * w);
 								rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
 								rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
@@ -795,7 +820,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 							}
 						} else if (blendMode == sxsdk::enums::mapping_sub_mode) {		// 「減算」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								rgbaLine[x] = rgbaLine0[x] - (rgbaLine[x] * w);
 								rgbaLine[x].red   = std::min(std::max(0.0f, rgbaLine[x].red), 1.0f);
 								rgbaLine[x].green = std::min(std::max(0.0f, rgbaLine[x].green), 1.0f);
@@ -804,14 +829,14 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 							}
 						} else if (blendMode == sxsdk::enums::mapping_min_mode) {		// 「比較(暗)」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								rgbaLine[x].red   = std::min(rgbaLine0[x].red,   rgbaLine[x].red   * w);
 								rgbaLine[x].green = std::min(rgbaLine0[x].green, rgbaLine[x].green * w);
 								rgbaLine[x].blue  = std::min(rgbaLine0[x].blue,  rgbaLine[x].blue  * w);
 							}
 						} else if (blendMode == sxsdk::enums::mapping_max_mode) {		// 「比較(明)」合成.
 							for (int x = 0; x < newWidth; ++x) {
-								const float w  = (weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight;
+								const float w  = alphaTrans ? 1.0f : ((weightWidth > 0) ? rgbaWeightLine[x].red * weight : weight);
 								rgbaLine[x].red   = std::max(rgbaLine0[x].red,   rgbaLine[x].red   * w);
 								rgbaLine[x].green = std::max(rgbaLine0[x].green, rgbaLine[x].green * w);
 								rgbaLine[x].blue  = std::max(rgbaLine0[x].blue,  rgbaLine[x].blue  * w);
@@ -892,24 +917,28 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 	*/
 
 	/*
-const sxsdk::rgb_class col0 = surface->get_diffuse_color();    
-sxsdk::rgb_class col = col0 * (surface->get_diffuse());    
-sxsdk::rgb_class reflectionCol = surface->get_reflection_color();    
-const float reflectionV  = std::max(std::min(1.0f, surface->get_reflection()), 0.0f);    
-const float reflectionV2 = 1.0f - reflectionV;    
-col = col * reflectionV2 + reflectionCol * reflectionV;    
-col.red   = std::min(col0.red, col.red);    
-col.green = std::min(col0.green, col.green);    
-col.blue  = std::min(col0.blue, col.blue);   
+ 
 	*/
 	if (!m_diffuseImage && !m_reflectionImage) {
 
 	}
 
-	const float diffuseVal = m_surface->get_diffuse();
-	const sxsdk::rgb_class diffuseCol = m_surface->get_diffuse_color();
-	const float reflectionVal = m_surface->get_reflection();
-	const sxsdk::rgb_class reflectionCol = m_surface->get_reflection_color();
+	// 反射が大きい場合にbaseColorを黒にするとglTFとして見たときは黒くなるため、reflectionも考慮.
+	// なお、ここでの「色」はテクスチャに乗算するものなので、リニア変換は行わない.
+	// 「拡散反射色」については、テクスチャ作成時にすでに考慮しているのでここでは入れない.
+	const float diffuseV = std::min(1.0f, std::max(0.0f, m_surface->get_diffuse()));
+	const sxsdk::rgb_class col0 = m_diffuseImage ? sxsdk::rgb_class(1, 1, 1) : (m_surface->get_diffuse_color());
+	sxsdk::rgb_class col = col0 * diffuseV;
+	sxsdk::rgb_class reflectionCol = m_surface->get_reflection_color();
+	const float reflectionV  = std::max(std::min(1.0f, m_surface->get_reflection()), 0.0f);
+	const float reflectionV2 = 1.0f - reflectionV;
+	col = col * reflectionV2 + reflectionCol * reflectionV;
+	m_diffuseColor.red   = std::min(col0.red, col.red);
+	m_diffuseColor.green = std::min(col0.green, col.green);
+	m_diffuseColor.blue  = std::min(col0.blue, col.blue);
+
+	m_metallic  = reflectionV;
+	m_roughness = m_surface->get_roughness();
 
 	// DiffuseとOpacityの両方が存在する場合、かつ、1つの「アルファ透明」を使用したテクスチャをベイクする場合、DiffuseのA要素としてOpacityを格納.
 	if (m_useDiffuseAlpha && m_diffuseTexturesCount == 1) {
@@ -955,48 +984,59 @@ col.blue  = std::min(col0.blue, col.blue);
 			lineCols2.resize(width);
 
 			sxsdk::rgba_class col;
-			sxsdk::rgb_class reflectionCol = m_surface->get_reflection_color();
-			sxsdk::rgb_class c0;
-			float rV, rV2;
-			float scaleV;
+			sxsdk::rgb_class baseColorCol, metallicCol;
+			float rV, d1, d2;
+			sxsdk::rgb_class blackCol(0, 0, 0);
 			sxsdk::vec3 hsv;
 
 			for (int y = 0; y < height; ++y) {
 				m_diffuseImage->get_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
 				m_reflectionImage->get_pixels_rgba_float(0, y, width, 1, &(lineCols2[0]));
 				for (int x = 0; x < width; ++x) {
-					// Diffuse色を取得し、HSVに変換.
+					// Shade3Dのdiffuse/reflection値より、PBRマテリアルでのdiffuse/metallicに変換.
 					col = lineCols[x];
-					hsv = MathUtil::rgb_to_hsv(sxsdk::rgb_class(col.red, col.green, col.blue));
+					rV  = lineCols2[x].red;
 
-					rV  = lineCols2[x].red;		// Metallic値.
-					rV2 = std::min(1.0f, rV * 2.0f);
+					baseColorCol.red   = std::max(std::min(col.red   + rV, 1.0f), 0.0f);
+					baseColorCol.green = std::max(std::min(col.green + rV, 1.0f), 0.0f);
+					baseColorCol.blue  = std::max(std::min(col.blue  + rV, 1.0f), 0.0f);
+					const float baseV = MathUtil::rgb_to_grayscale(baseColorCol);
 
-					// 明度(V)をMetallic値で調整.
-					hsv.z = std::max(rV2, hsv.z);
+					// Metallicの計算.
+					float metallicV = 0.0f;
+					if (baseV > 0.0f) {
+						d1 = 0.7f;
+						d2 = 1.0f - d1;
+						metallicV = std::min(rV / (baseV * d1 + d2), 1.0f);
+					}
 
-					// 彩度(S)をMetallic値で調整.
-					hsv.y = hsv.y * (1.0f - rV * 0.8f);	//std::min(hsv.y, (1.0f - reflectionV * 0.8f));
+					// RGB ==> HSVに変換.
+					hsv = MathUtil::rgb_to_hsv(col);
 
-					// HSVからRGBに変換して格納.
-					c0 = MathUtil::hsv_to_rgb(hsv);
-					col.red   = c0.red;
-					col.green = c0.green;
-					col.blue  = c0.blue;
-/*
-					//reflectionV  = lineCols2[x].red;
-					//reflectionV2 = 1.0f - reflectionV;
-					scaleV = reflectionV + 1.0f;
+					// Diffuse色の明度をMetallicで調整.
+					const float dd = (1.0f - hsv.y) + diffuseV + 1.0f;
+					hsv.z = std::max(0.0f, std::min(1.0f, hsv.z * dd));
+					hsv.z = hsv.z * (1.0f - (1.0f - diffuseV) * 0.2f); 
 
-					col.red   = std::min(col.red * scaleV, 1.0f);
-					col.green = std::min(col.green * scaleV, 1.0f);
-					col.blue  = std::min(col.blue * scaleV, 1.0f);
-					*/
-					lineCols[x] = col;
+					// Metallic成分が強い場合、Diffuse成分が弱い場合は、彩度をわずかに下げる.
+					d1 = (1.0f - diffuseV) * 0.8f;
+					d2 = 1.0f - d1;
+
+					const float m1 = metallicV * 0.6f;
+					float m2 = (1.0f - m1) * d2;
+					hsv.y = hsv.y * m2;
+
+					baseColorCol = MathUtil::hsv_to_rgb(hsv);
+
+					lineCols[x].red   = baseColorCol.red;
+					lineCols[x].green = baseColorCol.green;
+					lineCols[x].blue  = baseColorCol.blue;
+
+					lineCols2[x] = sxsdk::rgba_class(metallicV, metallicV, metallicV, 1.0f);
 				}
 				m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
+				m_reflectionImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols2[0]));
 			}
-  
 		}
 	}
 }
@@ -1070,3 +1110,27 @@ sx::vec<int,2> CImagesBlend::getImageRepeat (const sxsdk::enums::mapping_type ma
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_opacityRepeat;
 	return sx::vec<int,2>(1, 1);
 }
+
+/**
+ * イメージの強度を色として取得.
+ */
+sxsdk::rgb_class CImagesBlend::getImageFactor (const sxsdk::enums::mapping_type mappingType)
+{
+	sxsdk::rgb_class retCol(1, 1, 1);
+
+	if (mappingType == sxsdk::enums::diffuse_mapping) {
+		retCol = m_diffuseColor;
+	}
+	if (mappingType == sxsdk::enums::glow_mapping) {
+		retCol = m_emissiveColor;
+	}
+	if (mappingType == sxsdk::enums::roughness_mapping) {
+		retCol = sxsdk::rgb_class(m_roughness, m_roughness, m_roughness);
+	}
+	if (mappingType == sxsdk::enums::reflection_mapping) {
+		retCol = sxsdk::rgb_class(m_metallic, m_metallic, m_metallic);
+	}
+
+	return retCol;
+}
+

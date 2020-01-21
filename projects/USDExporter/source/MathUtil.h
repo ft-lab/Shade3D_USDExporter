@@ -44,6 +44,11 @@ namespace MathUtil {
 	sxsdk::rgb_class hsv_to_rgb (const sxsdk::vec3& hsv);
 
 	/**
+	 * RGBをグレイスケールに変換.
+	 */
+	float rgb_to_grayscale (const sxsdk::rgb_class& col);
+
+	/**
 	 * 法線マップのRGB( (0.5f, 0.5f, 1.0f)が中立 )を+Z向きの法線に変換.
 	 */
 	sxsdk::vec3 convRGBToNormal (const sxsdk::rgb_class& col);

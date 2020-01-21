@@ -177,6 +177,11 @@ public:
 	sx::vec<int,2> getImageRepeat (const sxsdk::enums::mapping_type mappingType);
 
 	/**
+	 * イメージの強度を色として取得.
+	 */
+	sxsdk::rgb_class getImageFactor (const sxsdk::enums::mapping_type mappingType);
+
+	/**
 	 * アルファ透明を使用しているか.
 	 */
 	bool getDiffuseAlphaTrans () { return m_diffuseAlphaTrans; }
