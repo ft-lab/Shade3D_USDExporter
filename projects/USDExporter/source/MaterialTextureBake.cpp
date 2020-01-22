@@ -867,21 +867,21 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	std::string masterImageName = "";
 	int imageIndex = -1;
 
+	// マスターマテリアル名.
+	// これをベイクのテクスチャ名で指定.
+	std::string materialName = StringUtil::getFileName(materialData.name);
+	if (!StringUtil::checkASCII(materialName)) materialName = "";
+
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::diffuse_mapping;
+		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 		if (imagesBlend.hasImage(iType)) {
-			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
 			materialData.useDiffuseAlpha = imagesBlend.getDiffuseAlphaTrans();
 
-			if (masterImage) {		// 単一テクスチャの場合.
-				imageIndex = m_storeMasterImage(masterImage, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
-			} else {				// 合成したテクスチャの場合.
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
-				materialData.diffuseColor[0] = 1.0f;
-				materialData.diffuseColor[1] = 1.0f;
-				materialData.diffuseColor[2] = 1.0f;
-			}
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
+			materialData.diffuseColor[0] = 1.0f;
+			materialData.diffuseColor[1] = 1.0f;
+			materialData.diffuseColor[2] = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.diffuseTexture.textureParam.repeatU = repeatV.x;
@@ -893,6 +893,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 				materialData.opacityTexture.textureParam.repeatV = repeatV.y;
 				materialData.opacityTexture.textureSource = USD_DATA::TEXTURE_SOURE::texture_source_a;
 			}
+		} else {
+			materialData.diffuseColor[0] = factor.red;
+			materialData.diffuseColor[1] = factor.green;
+			materialData.diffuseColor[2] = factor.blue;
 		}
 	}
 
@@ -900,13 +904,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::reflection_mapping;
 		if (imagesBlend.hasImage(iType)) {
 			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
-			if (masterImage) {		// 単一テクスチャの場合.
-				imageIndex = m_storeMasterImage(masterImage, materialData.metallicTexture, masterImageName);
-			} else {				// 合成したテクスチャの場合.
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.metallicTexture, masterImageName);
-				materialData.metallic = 1.0f;
-			}
+
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.metallicTexture, masterImageName);
+			materialData.metallic = 1.0f;
+
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.metallicTexture.textureParam.repeatU = repeatV.x;
 			materialData.metallicTexture.textureParam.repeatV = repeatV.y;
@@ -916,22 +917,21 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::glow_mapping;
+		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 		if (imagesBlend.hasImage(iType)) {
-			const sxsdk::rgb_class factor = (surface->get_glow_color()) * (surface->get_glow());
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
-			if (masterImage) {		// 単一テクスチャの場合.
-				imageIndex = m_storeMasterImage(masterImage, materialData.emissiveTexture, masterImageName);
-			} else {				// 合成したテクスチャの場合.
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
 
-				materialData.emissiveColor[0] = 1.0f;
-				materialData.emissiveColor[1] = 1.0f;
-				materialData.emissiveColor[2] = 1.0f;
-			}
+			materialData.emissiveColor[0] = 1.0f;
+			materialData.emissiveColor[1] = 1.0f;
+			materialData.emissiveColor[2] = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.emissiveTexture.textureParam.repeatU = repeatV.x;
 			materialData.emissiveTexture.textureParam.repeatV = repeatV.y;
+		} else {
+			materialData.emissiveColor[0] = factor.red;
+			materialData.emissiveColor[1] = factor.green;
+			materialData.emissiveColor[2] = factor.blue;
 		}
 	}
 
@@ -939,13 +939,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::roughness_mapping;
 		if (imagesBlend.hasImage(iType)) {
 			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
-			if (masterImage) {		// 単一テクスチャの場合.
-				imageIndex = m_storeMasterImage(masterImage, materialData.roughnessTexture, masterImageName);
-			} else {				// 合成したテクスチャの場合.
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.roughnessTexture, masterImageName);
-				materialData.roughness = 1.0f;
-			}
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.roughnessTexture, masterImageName);
+			materialData.roughness = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.roughnessTexture.textureParam.repeatU = repeatV.x;
@@ -957,12 +952,9 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_OPACITY;
 		if (imagesBlend.hasImage(iType)) {
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
-			if (!masterImage) {			// 合成したテクスチャの場合.
-				const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.opacityTexture, masterImageName);
-				materialData.opacity = 1.0f;
-			}
+			const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.opacityTexture, masterImageName);
+			materialData.opacity = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.opacityTexture.textureParam.repeatU = repeatV.x;
@@ -974,97 +966,15 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::normal_mapping;
 		if (imagesBlend.hasImage(iType)) {
 			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1));
-			sxsdk::master_image_class* masterImage = imagesBlend.getSingleMasterImage(iType);
-			if (masterImage) {		// 単一テクスチャの場合.
-				imageIndex = m_storeMasterImage(masterImage, materialData.normalTexture, masterImageName);
-			} else {				// 合成したテクスチャの場合.
-				imageIndex = m_storeCustomImage(imagesBlend.getImage(iType), factor, materialData.normalTexture, masterImageName);
-			}
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.normalTexture, masterImageName);
+
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.normalTexture.textureParam.repeatU = repeatV.x;
 			materialData.normalTexture.textureParam.repeatV = repeatV.y;
 		}
 	}
-/*
-	try {
-		// マッピングレイヤ情報を取得.
-		const int mappingLayersCou = surface->get_number_of_mapping_layers();
-		if (!(surface->get_has_mapping_layers()) || mappingLayersCou == 0) return true;
 
-		// テクスチャを取得.
-		for (int mLoop = 0; mLoop < mappingLayersCou; ++mLoop) {
-			sxsdk::mapping_layer_class& mappingLayer = surface->mapping_layer(mLoop);
-			const int mType = mappingLayer.get_type();
-			CTextureTransform texTransform;
-			texTransform.flipColor     = mappingLayer.get_flip_color();
-			texTransform.textureWeight = mappingLayer.get_weight();
-		}
-
-	} catch (...) { }
-*/
 	return true;
-}
-
-/**
- * 指定のマスターイメージをエクスポート用に格納.
- * @param[in]  masterImage      マスターイメージクラス.
- * @param[out] texMappingData   マッピング情報の格納先.
- * @param[out] masterImageName  USDでのマスターイメージ名が返る.
- * @param[in]  diffuseAlpha     DiffuseのALphaを使用する場合.
- * @return イメージ番号.
- */
-int CMaterialTextureBake::m_storeMasterImage (sxsdk::master_image_class* masterImage, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
-{
-	CTextureTransform texTransform;
-	int channelMix = 0;
-
-	int imageIndex = m_findMasterImageInImagesList(masterImage, texTransform, channelMix);
-	masterImageName = "";
-
-	if (imageIndex >= 0) {
-		const CImageData& imageD = m_imagesList[imageIndex];
-		masterImageName = imageD.fileName;
-	} else {
-		// イメージ名をASCIIのファイル名にする.
-		masterImageName = masterImage->get_name();
-		if (!StringUtil::checkASCII(masterImageName)) {
-			masterImageName = "texture";
-		}
-
-		if (diffuseAlpha) {
-			// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.
-			masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png", true);
-		} else {
-			// エクスポートオプションm_exportParam.optTextureTypeにより、pngにするかjpgにするか決める.
-			if (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name) {
-				// 拡張子がある場合はそれを採用し、ない場合はpngにする.
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, "png");
-			} else {
-				const bool usePng = (m_exportParam.optTextureType == USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_replace_png);
-				masterImageName = StringUtil::SetFileImageExtension(masterImageName, usePng ? "png" : "jpg", true);
-			}
-		}
-
-		// ユニークファイル名として追加.
-		// 同一名がある場合は、連番付きで返す.
-		masterImageName = m_findImageFileNames.appendName(masterImageName, USD_DATA::NODE_TYPE::texture_node, true);
-
-		imageIndex = (int)m_imagesList.size();
-		m_imagesList.push_back(CImageData());
-	}
-
-	if (imageIndex >= 0) {
-		CImageData& imageD = m_imagesList[imageIndex];
-		imageD.pMasterImageHandle = masterImage->get_handle();
-		imageD.fileName = masterImageName;
-		imageD.occlusionF = false;
-
-		texMappingData.textureParam.imageIndex = imageIndex;
-
-		imageD.texTransform = texTransform;
-	}
-
-	return imageIndex;
 }
 
 /**
@@ -1113,6 +1023,8 @@ int CMaterialTextureBake::m_existImage (sxsdk::image_interface* image, const sxs
 
 /**
  * 指定のカスタムイメージをエクスポート用に格納.
+ * @param[in]  mappingType      マッピングの種類.
+ * @param[in]  materialName     マテリアル名.
  * @param[in]  image            マスターイメージクラス.
  * @param[in]  factor           乗算値.
  * @param[out] texMappingData   マッピング情報の格納先.
@@ -1120,7 +1032,7 @@ int CMaterialTextureBake::m_existImage (sxsdk::image_interface* image, const sxs
  * @param[in]  diffuseAlpha     DiffuseのAlphaを使用する場合.
  * @return イメージ番号.
  */
-int CMaterialTextureBake::m_storeCustomImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
+int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type mappingType, const std::string& materialName, sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
 {
 	int imageIndex = -1;
 	if (image == NULL) return -1;
@@ -1133,7 +1045,15 @@ int CMaterialTextureBake::m_storeCustomImage (sxsdk::image_interface* image, con
 	}
 
 	// ユニークなテクスチャファイル名を取得.
-	std::string imageName = "bake_texture";
+	std::string imageName = "bake";
+	if (materialName != "") imageName = materialName;
+	if (mappingType == sxsdk::enums::diffuse_mapping) imageName += "_albedo";
+	else if (mappingType == sxsdk::enums::glow_mapping) imageName += "_emissive";
+	else if (mappingType == sxsdk::enums::reflection_mapping) imageName += "_metallic";
+	else if (mappingType == sxsdk::enums::roughness_mapping) imageName += "_roughness";
+	else if (mappingType == sxsdk::enums::normal_mapping) imageName += "_normal";
+	else if (mappingType == MAPPING_TYPE_OPACITY) imageName += "_opacity";
+	else imageName += "_texture";
 
 	if (diffuseAlpha) {
 		// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.

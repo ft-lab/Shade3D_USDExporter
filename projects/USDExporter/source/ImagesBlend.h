@@ -28,15 +28,6 @@ private:
 	bool m_hasOcclusionImage;									// Occlusionのイメージを持つか.
 	bool m_hasOpacityImage;										// Opacityのイメージを持つか.
 
-	// 以下、マッピングレイヤで1枚のみの加工不要のテクスチャである場合のマスターサーフェスクラスの参照.
-	sxsdk::master_image_class* m_diffuseMasterImage;			// Diffuseのマスターイメージクラス.
-	sxsdk::master_image_class* m_reflectionMasterImage;			// Reflectionのマスターイメージクラス.
-	sxsdk::master_image_class* m_roughnessMasterImage;			// Roughnessのマスターイメージクラス.
-	sxsdk::master_image_class* m_normalMasterImage;				// Normalのマスターイメージクラス.
-	sxsdk::master_image_class* m_glowMasterImage;				// Glowのマスターイメージクラス.
-	sxsdk::master_image_class* m_occlusionMasterImage;			// Occlusionのマスターイメージクラス.
-	sxsdk::master_image_class* m_opacityMasterImage;			// Opacityのマスターイメージクラス.
-
 	sx::vec<int,2> m_diffuseRepeat;								// Diffuseの反復回数.
 	sx::vec<int,2> m_normalRepeat;								// Normalの反復回数.
 	sx::vec<int,2> m_reflectionRepeat;							// Reflectionの反復回数.
@@ -81,13 +72,11 @@ private:
 	/**
 	 * 指定のテクスチャの種類がベイク不要の1枚のテクスチャであるかチェック.
 	 * @param[in]  mappingType   マッピングの種類.
-	 * @param[out] ppMasterImage master imageの参照を返す.
 	 * @param[out] uvTexCoord    UV用の使用テクスチャ層番号を返す.
 	 * @param[out] texRepeat     繰り返し回数.
 	 * @param[out] hasImage      イメージを持つか (単数または複数).
 	 */
-	bool m_checkSingleImage (const sxsdk::enums::mapping_type mappingType,
-		sxsdk::master_image_class** ppMasterImage,
+	bool m_checkImage (const sxsdk::enums::mapping_type mappingType,
 		int& uvTexCoord,
 		sx::vec<int,2>& texRepeat,
 		bool& hasImage);
@@ -157,11 +146,6 @@ public:
 	bool hasImage (const sxsdk::enums::mapping_type mappingType) const;
 
 	/**
-	 * 単一テクスチャを参照する場合のマスターイメージクラスを取得.
-	 */
-	sxsdk::master_image_class* getSingleMasterImage (const sxsdk::enums::mapping_type mappingType);
-
-	/**
 	 * イメージを取得.
 	 */
 	compointer<sxsdk::image_interface> getImage (const sxsdk::enums::mapping_type mappingType);
@@ -190,11 +174,6 @@ public:
 	 * Occlusionのウエイト値を取得.
 	 */
 	float getOcclusionWeight () { return m_occlusionWeight; }
-
-	/**
-	 * Occlusionのマスターイメージを取得.
-	 */
-	sxsdk::master_image_class* getOcclusionMasterImage () { return m_occlusionMasterImage; }
 
 	/**
 	 * OcclusionのUV層番号を取得.

@@ -57,27 +57,24 @@ void CImagesBlend::blendImages ()
 	m_useDiffuseAlpha = false;
 
 	// Shade3Dでの表面材質のマッピングレイヤで、加工無しの画像が参照されているかチェック.
-	m_checkSingleImage(sxsdk::enums::diffuse_mapping, &m_diffuseMasterImage, m_diffuseTexCoord, m_diffuseRepeat, m_hasDiffuseImage);
-	m_checkSingleImage(sxsdk::enums::normal_mapping, &m_normalMasterImage, m_normalTexCoord, m_normalRepeat, m_hasNormalImage);
-	m_checkSingleImage(sxsdk::enums::reflection_mapping, &m_reflectionMasterImage, m_reflectionTexCoord, m_reflectionRepeat, m_hasReflectionImage);
-	m_checkSingleImage(sxsdk::enums::roughness_mapping, &m_roughnessMasterImage, m_roughnessTexCoord, m_roughnessRepeat, m_hasRoughnessImage);
-	m_checkSingleImage(sxsdk::enums::glow_mapping, &m_glowMasterImage, m_glowTexCoord, m_glowRepeat, m_hasGlowImage);
-	m_checkSingleImage(MAPPING_TYPE_OPACITY, &m_opacityMasterImage, m_opacityTexCoord, m_opacityRepeat, m_hasOpacityImage);
+	m_checkImage(sxsdk::enums::diffuse_mapping, m_diffuseTexCoord, m_diffuseRepeat, m_hasDiffuseImage);
+	m_checkImage(sxsdk::enums::normal_mapping, m_normalTexCoord, m_normalRepeat, m_hasNormalImage);
+	m_checkImage(sxsdk::enums::reflection_mapping, m_reflectionTexCoord, m_reflectionRepeat, m_hasReflectionImage);
+	m_checkImage(sxsdk::enums::roughness_mapping, m_roughnessTexCoord, m_roughnessRepeat, m_hasRoughnessImage);
+	m_checkImage(sxsdk::enums::glow_mapping, m_glowTexCoord, m_glowRepeat, m_hasGlowImage);
+	m_checkImage(MAPPING_TYPE_OPACITY, m_opacityTexCoord, m_opacityRepeat, m_hasOpacityImage);
 
 	// マッピングレイヤのOcclusion情報を取得.
 	m_occlusionWeight = 1.0f;
 	//m_checkOcclusionSingleImage(&m_occlusionMasterImage, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
 
-	// Diffuseのアルファ透明を使用しているかチェック.
-	//m_diffuseAlphaTrans = m_checkDiffuseAlphaTrans();
-
 	// Shade3Dでの表面材質のマッピングレイヤごとに、各種イメージを合成.
-	if (!m_diffuseMasterImage && m_hasDiffuseImage) m_blendImages(sxsdk::enums::diffuse_mapping, m_diffuseRepeat);
-	if (!m_normalMasterImage && m_hasNormalImage) m_blendImages(sxsdk::enums::normal_mapping, m_normalRepeat);
-	if (!m_reflectionMasterImage && m_hasReflectionImage) m_blendImages(sxsdk::enums::reflection_mapping, m_reflectionRepeat);
-	if (!m_roughnessMasterImage && m_hasRoughnessImage) m_blendImages(sxsdk::enums::roughness_mapping, m_roughnessRepeat);
-	if (!m_glowMasterImage && m_hasGlowImage) m_blendImages(sxsdk::enums::glow_mapping, m_glowRepeat);
-	if (!m_opacityMasterImage && m_hasOpacityImage) m_blendImages(MAPPING_TYPE_OPACITY, m_opacityRepeat);
+	if (m_hasDiffuseImage) m_blendImages(sxsdk::enums::diffuse_mapping, m_diffuseRepeat);
+	if (m_hasNormalImage) m_blendImages(sxsdk::enums::normal_mapping, m_normalRepeat);
+	if (m_hasReflectionImage) m_blendImages(sxsdk::enums::reflection_mapping, m_reflectionRepeat);
+	if (m_hasRoughnessImage) m_blendImages(sxsdk::enums::roughness_mapping, m_roughnessRepeat);
+	if (m_hasGlowImage) m_blendImages(sxsdk::enums::glow_mapping, m_glowRepeat);
+	if (m_hasOpacityImage) m_blendImages(MAPPING_TYPE_OPACITY, m_opacityRepeat);
 
 	// Shade3DのマテリアルからPBRマテリアルに置き換え.
 	m_convShade3DToPBRMaterial();
@@ -86,19 +83,15 @@ void CImagesBlend::blendImages ()
 /**
  * 指定のテクスチャの種類がベイク不要の1枚のテクスチャであるかチェック.
  * @param[in]  mappingType   マッピングの種類.
- * @param[out] ppMasterImage master imageの参照を返す.
  * @param[out] uvTexCoord    UV用の使用テクスチャ層番号を返す.
  * @param[out] texRepeat     繰り返し回数。複数テクスチャ使用で異なる数の場合は(1, 1)が入る.
  * @param[out] hasImage      イメージを持つか (単数または複数).
  */
-bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingType, sxsdk::master_image_class** ppMasterImage,
+bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType, 
 		int& uvTexCoord, sx::vec<int,2>& texRepeat, bool& hasImage)
 {
 	const int layersCou = m_surface->get_number_of_mapping_layers();
-	bool singleImage = false;
 	int counter = 0;
-	sxsdk::master_image_class* pRetMasterImage = NULL;
-	*ppMasterImage = NULL;
 	texRepeat = sx::vec<int,2>(1, 1);
 	hasImage = false;
 
@@ -148,17 +141,12 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 									channelMix == sxsdk::enums::mapping_grayscale_blue_mode ||
 									channelMix == sxsdk::enums::mapping_grayscale_average_mode);
 
-		// マスターイメージを持つか調べる.
-		pRetMasterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
-		if (pRetMasterImage) {
-			if (counter == 0) {
-				singleImage     = true;
-				texRepeatSingle = true;
-				uvTexCoord  = mappingLayer.get_uv_mapping();
-				const int repeatX = mappingLayer.get_repetition_x();
-				const int repeatY = mappingLayer.get_repetition_y();
-				texRepeat = sx::vec<int,2>(repeatX, repeatY);
-			}
+		if (counter == 0) {
+			texRepeatSingle = true;
+			uvTexCoord  = mappingLayer.get_uv_mapping();
+			const int repeatX = mappingLayer.get_repetition_x();
+			const int repeatY = mappingLayer.get_repetition_y();
+			texRepeat = sx::vec<int,2>(repeatX, repeatY);
 		}
 
 		// 1つ前が「マット」の場合は無条件でベイク対象にする.
@@ -174,10 +162,6 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 					counter++;
 				}
 			}
-		}
-
-		if (flipColor || flipH || flipV || rotate90 || useChannelMix || !MathUtil::isZero(weight - 1.0f) || !MathUtil::isZero(baseV - 1.0f)) {
-			singleImage = false;
 		}
 
 		{
@@ -196,23 +180,9 @@ bool CImagesBlend::m_checkSingleImage (const sxsdk::enums::mapping_type mappingT
 		counter++;
 	}
 
-	// 「不透明マスク」の場合は強制的にベイクとする.
-	if (mappingType == MAPPING_TYPE_OPACITY) singleImage = false;
-
-	// 「アルファ透明」を持つ単一のdiffuseテクスチャの場合は、強制的にベイクとする.
-	//if (mappingType == sxsdk::enums::diffuse_mapping) {
-	//	if (m_useDiffuseAlpha && m_diffuseTexturesCount == 1) {
-	//		singleImage = false;
-	//	}
-	//}
-
 	if (!texRepeatSingle) texRepeat = sx::vec<int,2>(1, 1);
 	if (counter >= 1) hasImage = true;
-	if (singleImage && counter == 1) {
-		*ppMasterImage = pRetMasterImage;
-		return true;
-	}
-	return false;
+	return true;
 }
 
 /**
@@ -538,6 +508,9 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	sxsdk::rgba_class baseCol(1, 1, 1, 1);
 	if (mappingType == sxsdk::enums::diffuse_mapping) {
 		baseCol = sxsdk::rgba_class(m_surface->get_diffuse_color());
+	}
+	if (mappingType == sxsdk::enums::glow_mapping) {
+		baseCol = sxsdk::rgba_class(m_surface->get_glow_color());
 	}
 
 	// 法線の中立値.
@@ -909,23 +882,9 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
  */
 void CImagesBlend::m_convShade3DToPBRMaterial ()
 {
-	/*
-	m_diffuseColor  = sxsdk::rgb_class(1.0f, 1.0f, 1.0f);
-	m_emissiveColor = sxsdk::rgb_class(0.0f, 0.0f, 0.0f);
-	m_metallic  = 0.0f;
-	m_roughness = 0.0f;
-	*/
-
-	/*
- 
-	*/
-	if (!m_diffuseImage && !m_reflectionImage) {
-
-	}
-
 	// 反射が大きい場合にbaseColorを黒にするとglTFとして見たときは黒くなるため、reflectionも考慮.
 	// なお、ここでの「色」はテクスチャに乗算するものなので、リニア変換は行わない.
-	// 「拡散反射色」については、テクスチャ作成時にすでに考慮しているのでここでは入れない.
+	// 「拡散反射色」「発光色」については、テクスチャ作成時にすでに考慮しているのでここでは入れない.
 	const float diffuseV = std::min(1.0f, std::max(0.0f, m_surface->get_diffuse()));
 	const sxsdk::rgb_class col0 = m_diffuseImage ? sxsdk::rgb_class(1, 1, 1) : (m_surface->get_diffuse_color());
 	sxsdk::rgb_class col = col0 * diffuseV;
@@ -939,6 +898,11 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 
 	m_metallic  = reflectionV;
 	m_roughness = m_surface->get_roughness();
+
+	const float emissiveV = std::min(1.0f, std::max(0.0f, m_surface->get_glow()));
+	const sxsdk::rgb_class emCol0 = m_glowImage ? sxsdk::rgb_class(1, 1, 1) : (m_surface->get_glow_color());
+	sxsdk::rgb_class emCol = emCol0 * emissiveV;
+	m_emissiveColor = emCol;
 
 	// DiffuseとOpacityの両方が存在する場合、かつ、1つの「アルファ透明」を使用したテクスチャをベイクする場合、DiffuseのA要素としてOpacityを格納.
 	if (m_useDiffuseAlpha && m_diffuseTexturesCount == 1) {
@@ -965,28 +929,43 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 				m_hasOpacityImage = false;
 				m_opacityImage->Release();
 			}
-		} else if ((!m_diffuseImage && m_diffuseMasterImage) && m_opacityImage) {
-			// マスターイメージとしてdiffuse Textureを持ち、Opacity Textureを持つ場合はopacityは不要 (pngとしてRGBAで保持するため).
-			m_diffuseAlphaTrans = true;
-			m_hasOpacityImage = false;
-			m_opacityImage->Release();
 		}
 	}
 
+	// DiffuseとMetallicの両方のテクスチャが存在する場合.
 	if (m_diffuseImage && m_reflectionImage) {
-		const int width  = m_diffuseImage->get_size().x;
-		const int height = m_diffuseImage->get_size().y;
-		const int widthM  = m_reflectionImage->get_size().x;
-		const int heightM = m_reflectionImage->get_size().y;
+		int width  = m_diffuseImage->get_size().x;
+		int height = m_diffuseImage->get_size().y;
+		int widthM  = m_reflectionImage->get_size().x;
+		int heightM = m_reflectionImage->get_size().y;
+
+		// m_diffuseImageとm_reflectionImageが異なるサイズの場合、大きい方にリサイズ.
+		if (width != widthM || height != heightM) {
+			const int widthS  = std::max(width, widthM);
+			const int heightS = std::max(height, heightM);
+
+			if (width != widthS || height != heightS) {
+				compointer<sxsdk::image_interface> image(m_diffuseImage->duplicate_image(&sx::vec<int,2>(widthS, heightS)));
+				m_diffuseImage->Release();
+				m_diffuseImage = image;
+			}
+			if (widthM != widthS || heightM != heightS) {
+				compointer<sxsdk::image_interface> image(m_reflectionImage->duplicate_image(&sx::vec<int,2>(widthS, heightS)));
+				m_reflectionImage->Release();
+				m_reflectionImage = image;
+			}
+			width = widthM = widthS;
+			height = heightM = heightS;
+		}
+
 		if (width == widthM && height == heightM) {
 			std::vector<sxsdk::rgba_class> lineCols, lineCols2;
 			lineCols.resize(width);
 			lineCols2.resize(width);
 
 			sxsdk::rgba_class col;
-			sxsdk::rgb_class baseColorCol, metallicCol;
+			sxsdk::rgb_class baseColorCol;
 			float rV, d1, d2;
-			sxsdk::rgb_class blackCol(0, 0, 0);
 			sxsdk::vec3 hsv;
 
 			for (int y = 0; y < height; ++y) {
@@ -1010,23 +989,29 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 						metallicV = std::min(rV / (baseV * d1 + d2), 1.0f);
 					}
 
-					// RGB ==> HSVに変換.
-					hsv = MathUtil::rgb_to_hsv(col);
+					baseColorCol = col;
+					if (metallicV > 0.0f) {
+						// RGB ==> HSVに変換.
+						hsv = MathUtil::rgb_to_hsv(col);
+						const float orgS = hsv.y;		// 彩度.
+						const float orgV = hsv.z;		// 明度.
 
-					// Diffuse色の明度をMetallicで調整.
-					const float dd = (1.0f - hsv.y) + diffuseV + 1.0f;
-					hsv.z = std::max(0.0f, std::min(1.0f, hsv.z * dd));
-					hsv.z = hsv.z * (1.0f - (1.0f - diffuseV) * 0.2f); 
+						// Diffuse色の明度をMetallicで調整.
+						const float dd = (1.0f - hsv.y) + diffuseV + 1.0f;
+						hsv.z = std::max(0.0f, std::min(1.0f, hsv.z * dd));
+						hsv.z = hsv.z * (1.0f - (1.0f - diffuseV) * 0.2f);
+						hsv.z = orgV * (1.0f - metallicV) + hsv.z * metallicV;
 
-					// Metallic成分が強い場合、Diffuse成分が弱い場合は、彩度をわずかに下げる.
-					d1 = (1.0f - diffuseV) * 0.8f;
-					d2 = 1.0f - d1;
+						// Metallic成分が強い場合、Diffuse成分が弱い場合は、彩度をわずかに下げる.
+						d1 = (1.0f - diffuseV) * 0.8f;
+						d2 = 1.0f - d1;
 
-					const float m1 = metallicV * 0.6f;
-					float m2 = (1.0f - m1) * d2;
-					hsv.y = hsv.y * m2;
+						const float m1 = metallicV * 0.6f;
+						float m2 = (1.0f - m1) * d2;
+						hsv.y = hsv.y * m2;
 
-					baseColorCol = MathUtil::hsv_to_rgb(hsv);
+						baseColorCol = MathUtil::hsv_to_rgb(hsv);
+					}
 
 					lineCols[x].red   = baseColorCol.red;
 					lineCols[x].green = baseColorCol.green;
@@ -1038,6 +1023,76 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 				m_reflectionImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols2[0]));
 			}
 		}
+	}
+
+	// Diffuseのテクスチャが存在する場合.
+	// m_metallicの値により、Diffuseテクスチャの調整を行う.
+	if (m_diffuseImage && !m_reflectionImage) {
+		int width  = m_diffuseImage->get_size().x;
+		int height = m_diffuseImage->get_size().y;
+
+		std::vector<sxsdk::rgba_class> lineCols;
+		lineCols.resize(width);
+
+		sxsdk::rgba_class col;
+		sxsdk::rgb_class baseColorCol;
+		float rV, d1, d2;
+		sxsdk::vec3 hsv;
+
+		for (int y = 0; y < height; ++y) {
+			m_diffuseImage->get_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
+			for (int x = 0; x < width; ++x) {
+				// Shade3Dのdiffuse/reflection値より、PBRマテリアルでのdiffuse/metallicに変換.
+				col = lineCols[x];
+				rV  = m_metallic;
+
+				baseColorCol.red   = std::max(std::min(col.red   + rV, 1.0f), 0.0f);
+				baseColorCol.green = std::max(std::min(col.green + rV, 1.0f), 0.0f);
+				baseColorCol.blue  = std::max(std::min(col.blue  + rV, 1.0f), 0.0f);
+				const float baseV = MathUtil::rgb_to_grayscale(baseColorCol);
+
+				// Metallicの計算.
+				float metallicV = 0.0f;
+				if (baseV > 0.0f) {
+					d1 = 0.7f;
+					d2 = 1.0f - d1;
+					metallicV = std::min(rV / (baseV * d1 + d2), 1.0f);
+				}
+
+				baseColorCol = col;
+				if (metallicV > 0.0f) {
+					// RGB ==> HSVに変換.
+					hsv = MathUtil::rgb_to_hsv(col);
+					const float orgS = hsv.y;		// 彩度.
+					const float orgV = hsv.z;		// 明度.
+
+					// Diffuse色の明度をMetallicで調整.
+					const float dd = (1.0f - hsv.y) + diffuseV + 1.0f;
+					hsv.z = std::max(0.0f, std::min(1.0f, hsv.z * dd));
+					hsv.z = hsv.z * (1.0f - (1.0f - diffuseV) * 0.2f);
+					hsv.z = orgV * (1.0f - metallicV) + hsv.z * metallicV;
+
+					// Metallic成分が強い場合、Diffuse成分が弱い場合は、彩度をわずかに下げる.
+					d1 = (1.0f - diffuseV) * 0.8f;
+					d2 = 1.0f - d1;
+
+					const float m1 = metallicV * 0.6f;
+					float m2 = (1.0f - m1) * d2;
+					hsv.y = hsv.y * m2;
+
+					baseColorCol = MathUtil::hsv_to_rgb(hsv);
+				}
+
+				lineCols[x].red   = baseColorCol.red;
+				lineCols[x].green = baseColorCol.green;
+				lineCols[x].blue  = baseColorCol.blue;
+			}
+			m_diffuseImage->set_pixels_rgba_float(0, y, width, 1, &(lineCols[0]));
+		}
+	}
+
+	// Metallicのテクスチャが存在する場合.
+	if (!m_diffuseImage && m_reflectionImage) {
 	}
 }
 
@@ -1053,20 +1108,6 @@ bool CImagesBlend::hasImage (const sxsdk::enums::mapping_type mappingType) const
 	if (mappingType == sxsdk::enums::glow_mapping) return m_hasGlowImage;
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_hasOpacityImage;
 	return false;
-}
-
-/**
- * 単一テクスチャを参照する場合のマスターイメージクラスを取得.
- */
-sxsdk::master_image_class* CImagesBlend::getSingleMasterImage (const sxsdk::enums::mapping_type mappingType)
-{
-	if (mappingType == sxsdk::enums::diffuse_mapping) return m_diffuseMasterImage;
-	if (mappingType == sxsdk::enums::reflection_mapping) return m_reflectionMasterImage;
-	if (mappingType == sxsdk::enums::roughness_mapping) return m_roughnessMasterImage;
-	if (mappingType == sxsdk::enums::normal_mapping) return m_normalMasterImage;
-	if (mappingType == sxsdk::enums::glow_mapping) return m_glowMasterImage;
-	if (mappingType == MAPPING_TYPE_OPACITY) return m_opacityMasterImage;
-	return NULL;
 }
 
 /**
