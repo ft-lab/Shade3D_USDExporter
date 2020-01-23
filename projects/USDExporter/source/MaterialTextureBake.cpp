@@ -963,6 +963,18 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	}
 
 	{
+		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_USD_OCCLUSION;
+		if (imagesBlend.hasImage(iType)) {
+			const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);
+			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.occlusionTexture, masterImageName);
+
+			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+			materialData.occlusionTexture.textureParam.repeatU = repeatV.x;
+			materialData.occlusionTexture.textureParam.repeatV = repeatV.y;
+		}
+	}
+
+	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::normal_mapping;
 		if (imagesBlend.hasImage(iType)) {
 			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1));
@@ -1053,6 +1065,7 @@ int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type m
 	else if (mappingType == sxsdk::enums::roughness_mapping) imageName += "_roughness";
 	else if (mappingType == sxsdk::enums::normal_mapping) imageName += "_normal";
 	else if (mappingType == MAPPING_TYPE_OPACITY) imageName += "_opacity";
+	else if (mappingType == MAPPING_TYPE_USD_OCCLUSION) imageName += "_occlusion";
 	else imageName += "_texture";
 
 	if (diffuseAlpha) {

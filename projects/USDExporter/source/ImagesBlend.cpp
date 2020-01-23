@@ -63,10 +63,7 @@ void CImagesBlend::blendImages ()
 	m_checkImage(sxsdk::enums::roughness_mapping, m_roughnessTexCoord, m_roughnessRepeat, m_hasRoughnessImage);
 	m_checkImage(sxsdk::enums::glow_mapping, m_glowTexCoord, m_glowRepeat, m_hasGlowImage);
 	m_checkImage(MAPPING_TYPE_OPACITY, m_opacityTexCoord, m_opacityRepeat, m_hasOpacityImage);
-
-	// マッピングレイヤのOcclusion情報を取得.
-	m_occlusionWeight = 1.0f;
-	//m_checkOcclusionSingleImage(&m_occlusionMasterImage, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
+	m_checkImage(MAPPING_TYPE_USD_OCCLUSION, m_occlusionTexCoord, m_occlusionRepeat, m_hasOcclusionImage);
 
 	// Shade3Dでの表面材質のマッピングレイヤごとに、各種イメージを合成.
 	if (m_hasDiffuseImage) m_blendImages(sxsdk::enums::diffuse_mapping, m_diffuseRepeat);
@@ -75,6 +72,7 @@ void CImagesBlend::blendImages ()
 	if (m_hasRoughnessImage) m_blendImages(sxsdk::enums::roughness_mapping, m_roughnessRepeat);
 	if (m_hasGlowImage) m_blendImages(sxsdk::enums::glow_mapping, m_glowRepeat);
 	if (m_hasOpacityImage) m_blendImages(MAPPING_TYPE_OPACITY, m_opacityRepeat);
+	if (m_hasOcclusionImage) m_blendImages(MAPPING_TYPE_USD_OCCLUSION, m_occlusionRepeat);
 
 	// Shade3DのマテリアルからPBRマテリアルに置き換え.
 	m_convShade3DToPBRMaterial();
@@ -108,11 +106,27 @@ bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType,
 		m_useDiffuseAlpha = false;
 	}
 
+	int uvIndex = 0;
+	int occlusionChannelMix = 0;
 	for (int i = 0; i < layersCou; ++i) {
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+		if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+			uvIndex = mappingLayer.get_uv_mapping();
+		} else {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+			try {
+				compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
+				COcclusionShaderData occlusionD;
+				StreamCtrl::loadOcclusionParam(stream, occlusionD);
+				uvIndex = occlusionD.uvIndex;
+				occlusionChannelMix = occlusionD.channelMix;
+			} catch (...) {
+				continue;
+			}
+		}
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -123,7 +137,9 @@ bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType,
 				if (mappingLayer.get_channel_mix() != sxsdk::enums::mapping_transparent_alpha_mode) continue;
 			} else if (type != sxsdk::enums::transparency_mapping && type != MAPPING_TYPE_OPACITY) continue;
 		} else {
-			if (type != mappingType) continue;
+			if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+				if (type != mappingType) continue;
+			}
 		}
 
 		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
@@ -134,7 +150,13 @@ bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType,
 		const bool flipV     = mappingLayer.get_vertical_flip();		// 上下反転.
 		const bool rotate90  = mappingLayer.get_swap_axes();			// 90度回転.
 
-		const int channelMix = mappingLayer.get_channel_mix();			// イメージのチャンネル.
+		int channelMix = mappingLayer.get_channel_mix();			// イメージのチャンネル.
+		if (mappingType == MAPPING_TYPE_USD_OCCLUSION) {
+			if (occlusionChannelMix == 0) channelMix = sxsdk::enums::mapping_grayscale_red_mode;
+			else if (occlusionChannelMix == 1) channelMix = sxsdk::enums::mapping_grayscale_green_mode;
+			else if (occlusionChannelMix == 2) channelMix = sxsdk::enums::mapping_grayscale_blue_mode;
+		}
+
 		const bool useChannelMix = (channelMix == sxsdk::enums::mapping_grayscale_alpha_mode ||
 									channelMix == sxsdk::enums::mapping_grayscale_red_mode ||
 									channelMix == sxsdk::enums::mapping_grayscale_green_mode ||
@@ -143,11 +165,12 @@ bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType,
 
 		if (counter == 0) {
 			texRepeatSingle = true;
-			uvTexCoord  = mappingLayer.get_uv_mapping();
+			uvTexCoord  = uvIndex;
 			const int repeatX = mappingLayer.get_repetition_x();
 			const int repeatY = mappingLayer.get_repetition_y();
 			texRepeat = sx::vec<int,2>(repeatX, repeatY);
 		}
+		if (uvIndex != uvTexCoord) continue;
 
 		// 1つ前が「マット」の場合は無条件でベイク対象にする.
 		if (i > 0) {
@@ -186,112 +209,6 @@ bool CImagesBlend::m_checkImage (const sxsdk::enums::mapping_type mappingType,
 }
 
 /**
- * Occlusionのテクスチャの種類がベイク不要の1枚のテクスチャであるかチェック.
- * ※ OcclusionレイヤはShade3D ver.17/18段階では存在しないため COcclusionTextureShaderInterface クラスで与えている.
- * @param[out] ppMasterImage master imageの参照を返す.
- * @param[out] uvTexCoord    UV用の使用テクスチャ層番号を返す.
- * @param[out] texRepeat     繰り返し回数.
- * @param[out] hasImage      イメージを持つか (単数または複数).
- */
-bool CImagesBlend::m_checkOcclusionSingleImage (sxsdk::master_image_class** ppMasterImage,
-	int& uvTexCoord,
-	sx::vec<int,2>& texRepeat,
-	bool& hasImage)
-{
-	const int layersCou = m_surface->get_number_of_mapping_layers();
-	bool singleImage = false;
-	int counter = 0;
-	sxsdk::master_image_class* pRetMasterImage = NULL;
-	*ppMasterImage = NULL;
-	texRepeat = sx::vec<int,2>(1, 1);
-	hasImage = false;
-	uvTexCoord = 0;
-
-	for (int i = 0; i < layersCou; ++i) {
-		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-
-		// Occlusionレイヤで拡散反射かどうか.
-		if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
-		if (mappingLayer.get_type() != sxsdk::enums::diffuse_mapping) continue;
-
-		const float weight  = mappingLayer.get_weight();
-		if (MathUtil::isZero(weight)) continue;
-
-		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
-		if (!image || !(image->has_image()) || (image->get_size().x) <= 0 || (image->get_size().y) <= 0) continue;
-
-		const bool flipColor = mappingLayer.get_flip_color();			// 色反転.
-		const bool flipH     = mappingLayer.get_horizontal_flip();		// 左右反転.
-		const bool flipV     = mappingLayer.get_vertical_flip();		// 上下反転.
-		const int channelMix = mappingLayer.get_channel_mix();			// イメージのチャンネル.
-		const bool useChannelMix = (channelMix == sxsdk::enums::mapping_grayscale_alpha_mode ||
-									channelMix == sxsdk::enums::mapping_grayscale_red_mode ||
-									channelMix == sxsdk::enums::mapping_grayscale_green_mode ||
-									channelMix == sxsdk::enums::mapping_grayscale_blue_mode ||
-									channelMix == sxsdk::enums::mapping_grayscale_average_mode);
-
-		if (flipColor || flipH || flipV || useChannelMix) {
-			counter++;
-			continue;
-		}
-
-		// マスターイメージを持つか調べる.
-		pRetMasterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
-		if (pRetMasterImage) {
-			if (counter == 0) {
-				singleImage = true;
-				m_occlusionWeight = weight;
-
-				// UV層番号は、カスタムのshader_interfaceではmapping_layer_classから取得できないため、.
-				// streamに保持しているのを取得.
-				//uvTexCoord  = mappingLayer.get_uv_mapping();
-				try {
-					compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
-					COcclusionShaderData occlusionD;
-					StreamCtrl::loadOcclusionParam(stream, occlusionD);
-					uvTexCoord = occlusionD.uvIndex;
-				} catch (...) { }
-
-				const int repeatX = mappingLayer.get_repetition_x();
-				const int repeatY = mappingLayer.get_repetition_y();
-				texRepeat = sx::vec<int,2>(repeatX, repeatY);
-			}
-		}
-
-		counter++;
-		if (counter >= 2) break;
-	}
-	if (counter >= 1) hasImage = true;
-	if (singleImage && counter == 1) {
-		*ppMasterImage = pRetMasterImage;
-		return true;
-	}
-
-	return false;
-}
-
-/**
- * Diffuseのアルファ透明を使用しているかチェック.
- */
-bool CImagesBlend::m_checkDiffuseAlphaTrans ()
-{
-	bool alphaTrans = false;
-	const int layersCou = m_surface->get_number_of_mapping_layers();
-	for (int i = 0; i < layersCou; ++i) {
-		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
-		if (mappingLayer.get_type() != sxsdk::enums::diffuse_mapping) continue;
-		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-
-		if (mappingLayer.get_channel_mix() == sxsdk::enums::mapping_transparent_alpha_mode) {
-			alphaTrans = true;
-			break;
-		}
-	}
-	return alphaTrans;
-}
-
-/**
  * 指定のマッピングの種類でのテクスチャサイズの最大を取得.
  * 異なるサイズのテクスチャが混在する場合、一番大きいサイズのテクスチャに合わせる.
  * @param[in]  mappingType   マッピングの種類.
@@ -300,12 +217,27 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
 {
 	sx::vec<int,2> texSize(0, 0);
 
+	int uvTexCoord = -1;
+	int uvIndex = 0;
 	const int layersCou = m_surface->get_number_of_mapping_layers();
 	for (int i = 0; i < layersCou; ++i) {
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+		if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+			uvIndex = mappingLayer.get_uv_mapping();
+		} else {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+			try {
+				compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
+				COcclusionShaderData occlusionD;
+				StreamCtrl::loadOcclusionParam(stream, occlusionD);
+				uvIndex = occlusionD.uvIndex;
+			} catch (...) {
+				continue;
+			}
+		}
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -316,23 +248,30 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
 				if (mappingLayer.get_channel_mix() != sxsdk::enums::mapping_transparent_alpha_mode) continue;
 			} else if (type != sxsdk::enums::transparency_mapping && type != MAPPING_TYPE_OPACITY) continue;
 		} else {
-			if (type != mappingType) continue;
+			if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+				if (type != mappingType) continue;
+			}
 		}
 
 		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
 		if (!image || !(image->has_image()) || (image->get_size().x) <= 0 || (image->get_size().y) <= 0) continue;
 		sx::vec<int,2> size = image->get_size();
 
+		if (uvTexCoord < 0) uvTexCoord = uvIndex;
+		if (uvTexCoord != uvIndex) continue;
+
 		// 1つ前が「マット」の場合.
 		if (i > 0) {
 			sxsdk::mapping_layer_class& prevMappingLayer = m_surface->mapping_layer(i - 1);
 			if (prevMappingLayer.get_pattern() == sxsdk::enums::image_pattern) {
 				if (prevMappingLayer.get_type() == sxsdk::enums::weight_mapping) {
-					compointer<sxsdk::image_interface> image2(prevMappingLayer.get_image_interface());
-					if (image2 && (image2->has_image()) && (image2->get_size().x) > 0 && (image2->get_size().y) > 0) {
-						const sx::vec<int,2> size2 = image2->get_size();
-						size.x = std::max(size.x, size2.x);
-						size.y = std::max(size.y, size2.y);
+					if (uvTexCoord == prevMappingLayer.get_uv_mapping()) {
+						compointer<sxsdk::image_interface> image2(prevMappingLayer.get_image_interface());
+						if (image2 && (image2->has_image()) && (image2->get_size().x) > 0 && (image2->get_size().y) > 0) {
+							const sx::vec<int,2> size2 = image2->get_size();
+							size.x = std::max(size.x, size2.x);
+							size.y = std::max(size.y, size2.y);
+						}
 					}
 				}
 			}
@@ -352,12 +291,27 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
  {
 	bool hasF = false;
 
+	int uvIndex = 0;
+	int uvTexCoord = -1;
 	const int layersCou = m_surface->get_number_of_mapping_layers();
 	for (int i = 0; i < layersCou; ++i) {
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+		if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+			uvIndex = mappingLayer.get_uv_mapping();
+		} else {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+			try {
+				compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
+				COcclusionShaderData occlusionD;
+				StreamCtrl::loadOcclusionParam(stream, occlusionD);
+				uvIndex = occlusionD.uvIndex;
+			} catch (...) {
+				continue;
+			}
+		}
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight = mappingLayer.get_weight();
 		if (MathUtil::isZero(weight)) continue;
@@ -368,20 +322,27 @@ sx::vec<int,2> CImagesBlend::m_getMaxMappingImageSize (const sxsdk::enums::mappi
 				if (mappingLayer.get_channel_mix() != sxsdk::enums::mapping_transparent_alpha_mode) continue;
 			} else if (type != sxsdk::enums::transparency_mapping && type != MAPPING_TYPE_OPACITY) continue;
 		} else {
-			if (type != mappingType) continue;
+			if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+				if (type != mappingType) continue;
+			}
 		}
 
 		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
 		if (!image || !(image->has_image()) || (image->get_size().x) <= 0 || (image->get_size().y) <= 0) continue;
 
+		if (uvTexCoord < 0) uvTexCoord = uvIndex;
+		if (uvTexCoord != uvIndex) continue;
+
 		if (i > 0) {
 			sxsdk::mapping_layer_class& prevMappingLayer = m_surface->mapping_layer(i - 1);
 			if (prevMappingLayer.get_pattern() == sxsdk::enums::image_pattern) {
 				if (prevMappingLayer.get_type() == sxsdk::enums::weight_mapping) {
-					compointer<sxsdk::image_interface> image2(prevMappingLayer.get_image_interface());
-					if (image2 && (image2->has_image()) && (image2->get_size().x) > 0 && (image2->get_size().y) > 0) {
-						hasF = true;
-						break;
+					if (uvTexCoord == prevMappingLayer.get_uv_mapping()) {
+						compointer<sxsdk::image_interface> image2(prevMappingLayer.get_image_interface());
+						if (image2 && (image2->has_image()) && (image2->get_size().x) > 0 && (image2->get_size().y) > 0) {
+							hasF = true;
+							break;
+						}
 					}
 				}
 			}
@@ -433,7 +394,7 @@ compointer<sxsdk::image_interface> CImagesBlend::m_duplicateImage (sxsdk::image_
 		} catch (...) { }
 
 	} else {
-		dstImage = image->duplicate_image(&dstSize);
+		dstImage = Shade3DUtil::resizeImageWithAlpha(m_pScene, image, dstSize);
 	}
 
 	if (flipColor) {
@@ -468,7 +429,8 @@ compointer<sxsdk::image_interface> CImagesBlend::m_duplicateImage (sxsdk::image_
 
 	if (rotate90) {
 		try {
-			compointer<sxsdk::image_interface> image2(dstImage->duplicate_image(&sx::vec<int,2>(height, width)));
+			compointer<sxsdk::image_interface> image2 = Shade3DUtil::resizeImageWithAlpha(m_pScene, dstImage, sx::vec<int,2>(height, width));
+
 			for (int y = 0; y < height; ++y) {
 				image2->get_pixels_rgba(y, 0, 1, width, &(lineCols2[0]));
 				for (int x = 0; x < width; ++x) {
@@ -528,11 +490,27 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	// 「マット」を持つか.
 	const bool hasWeightTex = m_hasWeightTexture(mappingType);
 
+	int uvIndex = 0;
+	int occlusionChannelMix = 0;
 	for (int i = 0; i < layersCou; ++i) {
 		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
-		if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+		if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+			uvIndex = mappingLayer.get_uv_mapping();
+		} else {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+			try {
+				compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
+				COcclusionShaderData occlusionD;
+				StreamCtrl::loadOcclusionParam(stream, occlusionD);
+				uvIndex = occlusionD.uvIndex;
+				occlusionChannelMix = occlusionD.channelMix;
+			} catch (...) {
+				continue;
+			}
+		}
 		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
-		if (Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
 
 		const float weight  = std::min(std::max(mappingLayer.get_weight(), 0.0f), 1.0f);
 		const float weight2 = 1.0f - weight;
@@ -546,7 +524,9 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 				alphaTrans = true;
 			} else if (type != sxsdk::enums::transparency_mapping && type != MAPPING_TYPE_OPACITY) continue;
 		} else {
-			if (type != mappingType) continue;
+			if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+				if (type != mappingType) continue;
+			}
 		}
 
 		float repeatU = (float)mappingLayer.get_repetition_X();
@@ -570,29 +550,31 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 			sxsdk::mapping_layer_class& prevMappingLayer = m_surface->mapping_layer(i - 1);
 			if (prevMappingLayer.get_pattern() == sxsdk::enums::image_pattern) {
 				if (prevMappingLayer.get_type() == sxsdk::enums::weight_mapping) {
-					weightFlipColor = prevMappingLayer.get_flip_color();
-					weightFlipH     = prevMappingLayer.get_horizontal_flip();
-					weightFlipV     = prevMappingLayer.get_vertical_flip();
-					weightRotate90  = prevMappingLayer.get_swap_axes();
-					weightRepeatU   = prevMappingLayer.get_repetition_X();
-					weightRepeatV   = prevMappingLayer.get_repetition_Y();
-					if (repeatTex[0] != 1 || repeatTex[1] != 1) {
-						weightRepeatU = 1;
-						weightRepeatV = 1;
-					}
-
-					try {
-						weightImage = prevMappingLayer.get_image_interface();
-						if (weightImage && (weightImage->has_image())) {
-							weightWidth  = weightImage->get_size().x;
-							weightHeight = weightImage->get_size().y;
-							if (weightWidth <= 1 || weightHeight <= 1) {
-								weightWidth = weightHeight = 0;
-								weightImage->Release();
-							}
+					if (newTexCoord == prevMappingLayer.get_uv_mapping()) {
+						weightFlipColor = prevMappingLayer.get_flip_color();
+						weightFlipH     = prevMappingLayer.get_horizontal_flip();
+						weightFlipV     = prevMappingLayer.get_vertical_flip();
+						weightRotate90  = prevMappingLayer.get_swap_axes();
+						weightRepeatU   = prevMappingLayer.get_repetition_X();
+						weightRepeatV   = prevMappingLayer.get_repetition_Y();
+						if (repeatTex[0] != 1 || repeatTex[1] != 1) {
+							weightRepeatU = 1;
+							weightRepeatV = 1;
 						}
-					} catch (...) {
-						weightWidth = weightHeight = 0;
+
+						try {
+							weightImage = prevMappingLayer.get_image_interface();
+							if (weightImage && (weightImage->has_image())) {
+								weightWidth  = weightImage->get_size().x;
+								weightHeight = weightImage->get_size().y;
+								if (weightWidth <= 1 || weightHeight <= 1) {
+									weightWidth = weightHeight = 0;
+									weightImage->Release();
+								}
+							}
+						} catch (...) {
+							weightWidth = weightHeight = 0;
+						}
 					}
 				}
 			}
@@ -640,7 +622,12 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 			const bool flipH     = mappingLayer.get_horizontal_flip();		// 左右反転.
 			const bool flipV     = mappingLayer.get_vertical_flip();		// 上下反転.
 			const bool rotate90  = mappingLayer.get_swap_axes();			// 90度回転.
-			const int channelMix = mappingLayer.get_channel_mix();			// イメージのチャンネル.
+			int channelMix = mappingLayer.get_channel_mix();			// イメージのチャンネル.
+			if (mappingType == MAPPING_TYPE_USD_OCCLUSION) {
+				if (occlusionChannelMix == 0) channelMix = sxsdk::enums::mapping_grayscale_red_mode;
+				else if (occlusionChannelMix == 1) channelMix = sxsdk::enums::mapping_grayscale_green_mode;
+				else if (occlusionChannelMix == 2) channelMix = sxsdk::enums::mapping_grayscale_blue_mode;
+			}
 			const bool useChannelMix = (channelMix == sxsdk::enums::mapping_grayscale_alpha_mode ||
 										channelMix == sxsdk::enums::mapping_grayscale_red_mode ||
 										channelMix == sxsdk::enums::mapping_grayscale_green_mode ||
@@ -653,7 +640,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 				newHeight   = dstTexSize.y;
 				newRepeatX  = repeatU;
 				newRepeatY  = repeatV;
-				newTexCoord = mappingLayer.get_uv_mapping();
+				newTexCoord = uvIndex;
 				rgbaLine.resize(newWidth);
 				rgbaLine0.resize(newWidth);
 				if (hasWeightTex) rgbaWeightLine.resize(newWidth);
@@ -669,7 +656,8 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 					newTexName = pNewMasterImage->get_name();
 				}
 			}
-			if (newTexCoord != mappingLayer.get_uv_mapping()) continue;
+			if (uvIndex != newTexCoord) continue;
+
 			sx::vec<int,2> newImgSize = newImage->get_size();
 			compointer<sxsdk::image_interface> image2 = m_duplicateImage(image, newImgSize, flipColor, flipH, flipV, rotate90, repeatU, repeatV);
 
@@ -830,19 +818,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		if (singleSimpleMapping) singleSimpleMapping = false;
 	}
 
-#if 0
-	// アルファ透明のアルファ値で、アルファ値を上書き.
-	if (!alphaBuff.empty()) {
-		for (int y = 0, iPos = 0; y < newHeight; ++y, iPos += newWidth) {
-			newImage->get_pixels_rgba_float(0, y, newWidth, 1, &(rgbaLine[0]));
-			for (int x = 0; x < newWidth; ++x) {
-				rgbaLine[x].alpha = (float)alphaBuff[x + iPos] / 255.0f;
-			}
-			newImage->set_pixels_rgba_float(0, y, newWidth, 1, &(rgbaLine[0]));
-		}
-	}
-#endif
-
 	if (mappingType == sxsdk::enums::diffuse_mapping) {
 		m_diffuseImage    = newImage;
 		m_diffuseRepeat   = repeatTex;
@@ -872,6 +847,11 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		m_opacityImage    = newImage;
 		m_opacityRepeat   = repeatTex;
 		m_opacityTexCoord = newTexCoord;
+	}
+	if (mappingType == MAPPING_TYPE_USD_OCCLUSION) {
+		m_occlusionImage    = newImage;
+		m_occlusionRepeat   = repeatTex;
+		m_occlusionTexCoord = newTexCoord;
 	}
 
 	return true;
@@ -910,7 +890,7 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 			if (m_diffuseTexCoord == m_opacityTexCoord && m_diffuseRepeat == m_opacityRepeat) {
 				const int width  = m_diffuseImage->get_size().x;
 				const int height = m_diffuseImage->get_size().y;
-				compointer<sxsdk::image_interface> optImage(m_opacityImage->duplicate_image(&(sx::vec<int,2>(width, height))));
+				compointer<sxsdk::image_interface> optImage = Shade3DUtil::resizeImageWithAlpha(m_pScene, m_opacityImage, sx::vec<int,2>(width, height));
 			
 				std::vector<sxsdk::rgba_class> col1A;
 				std::vector<sxsdk::rgba_class> col2A;
@@ -945,12 +925,12 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 			const int heightS = std::max(height, heightM);
 
 			if (width != widthS || height != heightS) {
-				compointer<sxsdk::image_interface> image(m_diffuseImage->duplicate_image(&sx::vec<int,2>(widthS, heightS)));
+				compointer<sxsdk::image_interface> image = Shade3DUtil::resizeImageWithAlpha(m_pScene, m_diffuseImage, sx::vec<int,2>(widthS, heightS));
 				m_diffuseImage->Release();
 				m_diffuseImage = image;
 			}
 			if (widthM != widthS || heightM != heightS) {
-				compointer<sxsdk::image_interface> image(m_reflectionImage->duplicate_image(&sx::vec<int,2>(widthS, heightS)));
+				compointer<sxsdk::image_interface> image = Shade3DUtil::resizeImageWithAlpha(m_pScene, m_reflectionImage, sx::vec<int,2>(widthS, heightS));
 				m_reflectionImage->Release();
 				m_reflectionImage = image;
 			}
@@ -1107,6 +1087,7 @@ bool CImagesBlend::hasImage (const sxsdk::enums::mapping_type mappingType) const
 	if (mappingType == sxsdk::enums::normal_mapping) return m_hasNormalImage;
 	if (mappingType == sxsdk::enums::glow_mapping) return m_hasGlowImage;
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_hasOpacityImage;
+	if (mappingType == MAPPING_TYPE_USD_OCCLUSION) return m_hasOcclusionImage;
 	return false;
 }
 
@@ -1121,6 +1102,7 @@ compointer<sxsdk::image_interface> CImagesBlend::getImage (const sxsdk::enums::m
 	if (mappingType == sxsdk::enums::normal_mapping) return m_normalImage;
 	if (mappingType == sxsdk::enums::glow_mapping) return m_glowImage;
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_opacityImage;
+	if (mappingType == MAPPING_TYPE_USD_OCCLUSION) return m_occlusionImage;
 	return compointer<sxsdk::image_interface>();
 }
 
@@ -1135,6 +1117,8 @@ int CImagesBlend::getTexCoord (const sxsdk::enums::mapping_type mappingType)
 	if (mappingType == sxsdk::enums::normal_mapping) return m_normalTexCoord;
 	if (mappingType == sxsdk::enums::glow_mapping) return m_glowTexCoord;
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_opacityTexCoord;
+	if (mappingType == MAPPING_TYPE_USD_OCCLUSION) return m_occlusionTexCoord;
+
 	return 0;
 }
 
@@ -1149,6 +1133,7 @@ sx::vec<int,2> CImagesBlend::getImageRepeat (const sxsdk::enums::mapping_type ma
 	if (mappingType == sxsdk::enums::normal_mapping) return m_normalRepeat;
 	if (mappingType == sxsdk::enums::glow_mapping) return m_glowRepeat;
 	if (mappingType == MAPPING_TYPE_OPACITY) return m_opacityRepeat;
+	if (mappingType == MAPPING_TYPE_USD_OCCLUSION) return m_occlusionRepeat;
 	return sx::vec<int,2>(1, 1);
 }
 

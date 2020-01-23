@@ -65,11 +65,6 @@ private:
 	bool m_blendImages (const sxsdk::enums::mapping_type mappingType, const sx::vec<int,2>& repeatTex);
 
 	/**
-	 * Diffuseのアルファ透明を使用しているかチェック.
-	 */
-	bool m_checkDiffuseAlphaTrans ();
-
-	/**
 	 * 指定のテクスチャの種類がベイク不要の1枚のテクスチャであるかチェック.
 	 * @param[in]  mappingType   マッピングの種類.
 	 * @param[out] uvTexCoord    UV用の使用テクスチャ層番号を返す.
@@ -80,24 +75,6 @@ private:
 		int& uvTexCoord,
 		sx::vec<int,2>& texRepeat,
 		bool& hasImage);
-
-	/**
-	 * Occlusionのテクスチャの種類がベイク不要の1枚のテクスチャであるかチェック.
-	 * ※ OcclusionレイヤはShade3D ver.17/18段階では存在しないため COcclusionTextureShaderInterface クラスで与えている.
-	 * @param[out] ppMasterImage master imageの参照を返す.
-	 * @param[out] uvTexCoord    UV用の使用テクスチャ層番号を返す.
-	 * @param[out] texRepeat     繰り返し回数.
-	 * @param[out] hasImage      イメージを持つか (単数または複数).
-	 */
-	bool m_checkOcclusionSingleImage (sxsdk::master_image_class** ppMasterImage,
-		int& uvTexCoord,
-		sx::vec<int,2>& texRepeat,
-		bool& hasImage);
-
-	/**
-	 * 法線マップの強さを取得.
-	 */
-	float m_getNormalWeight ();
 
 	/**
 	 * 指定のマッピングの種類でのテクスチャサイズの最大を取得.
@@ -179,27 +156,6 @@ public:
 	 * OcclusionのUV層番号を取得.
 	 */
 	int getOcclusionTexCoord () { return m_occlusionTexCoord; }
-
-	/**
-	 * Diffuse色を取得.
-	 */
-	sxsdk::rgb_class getDiffuseColor () const { return m_diffuseColor; }
-
-	/**
-	 * Emissive色を取得.
-	 */
-	sxsdk::rgb_class getEmissiveColor () const { return m_emissiveColor; }
-
-	/**
-	 * Metallic値を取得.
-	 */
-	float getMetallic () const { return m_metallic; }
-
-	/**
-	 * Roughness値を取得.
-	 */
-	float getRoughness () const { return m_roughness; }
-
 };
 
 #endif
