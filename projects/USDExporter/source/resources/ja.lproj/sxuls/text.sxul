@@ -9,4 +9,8 @@
 	<string id="usd_exporter_title" value="USD ..."/>
 	<string id="occlusion_shader_title" value="Occlusion (USD)"/>
 	<string id="msg_not_ascii_file_name" value="出力ファイル名がASCII文字列で構成されていないため、ファイル名を置き換えました。"/>
+
+	<string id="bake_msg_error_mixed_uv_layer" value="テクスチャベイクで、異なるUV層が混在しています。" />
+	<string id="bake_msg_mixed_repeat" value="テクスチャベイクで、異なる反復をベイクしました。" />
+
 </strings>

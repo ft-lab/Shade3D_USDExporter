@@ -6,8 +6,17 @@
 
 #include "GlobalHeader.h"
 
+
 class CImagesBlend
 {
+public:
+	// ベイク時のエラー.
+	enum IMAGE_BAKE_RESULT {
+		bake_success = 0,				// ベイク成功.
+		bake_error_mixed_uv_layer,		// UVレイヤが混在.
+		bake_mixed_repeat,				// 繰り返し回数が混在しているのでまとめた.
+	};
+
 private:
 	sxsdk::scene_interface* m_pScene;
 	sxsdk::surface_class* m_surface;
@@ -18,7 +27,8 @@ private:
 	compointer<sxsdk::image_interface> m_roughnessImage;		// Roughnessの画像.
 	compointer<sxsdk::image_interface> m_glowImage;				// Glowの画像.
 	compointer<sxsdk::image_interface> m_occlusionImage;		// Occlusionの画像.
-	compointer<sxsdk::image_interface> m_opacityImage;			// Opacit(不透明マスク相当)の画像.
+	compointer<sxsdk::image_interface> m_transparencyImage;		// Transparencyの画像.
+	compointer<sxsdk::image_interface> m_opacityMaskImage;		// 不透明マスク相当の画像.
 
 	bool m_hasDiffuseImage;										// diffuseのイメージを持つか.
 	bool m_hasReflectionImage;									// reflectionのイメージを持つか.
@@ -26,7 +36,8 @@ private:
 	bool m_hasNormalImage;										// normalのイメージを持つか.
 	bool m_hasGlowImage;										// glowのイメージを持つか.
 	bool m_hasOcclusionImage;									// Occlusionのイメージを持つか.
-	bool m_hasOpacityImage;										// Opacityのイメージを持つか.
+	bool m_hasTransparencyImage;								// transparencyのイメージを持つか.
+	bool m_hasOpacityMaskImage;									// 不透明マスクのイメージを持つか.
 
 	sx::vec<int,2> m_diffuseRepeat;								// Diffuseの反復回数.
 	sx::vec<int,2> m_normalRepeat;								// Normalの反復回数.
@@ -34,7 +45,8 @@ private:
 	sx::vec<int,2> m_roughnessRepeat;							// Roughnessの反復回数.
 	sx::vec<int,2> m_glowRepeat;								// Glowの反復回数.
 	sx::vec<int,2> m_occlusionRepeat;							// Occlusionの反復回数.
-	sx::vec<int,2> m_opacityRepeat;								// Opacityの反復回数.
+	sx::vec<int,2> m_transparencyRepeat;						// Transparencyの反復回数.
+	sx::vec<int,2> m_opacityMaskRepeat;							// OpacityMaskの反復回数.
 
 	int m_diffuseTexCoord;										// DiffuseのUVレイヤ番号.
 	int m_normalTexCoord;										// NormalのUVレイヤ番号.
@@ -42,10 +54,10 @@ private:
 	int m_roughnessTexCoord;									// RoughnessのUVレイヤ番号.
 	int m_glowTexCoord;											// GlowのUVレイヤ番号.
 	int m_occlusionTexCoord;									// OcclusionのUVレイヤ番号.
-	int m_opacityTexCoord;										// OpacityのUVレイヤ番号.
+	int m_transparencyTexCoord;									// TransparencyのUVレイヤ番号.
+	int m_opacityMaskTexCoord;									// OpacityMaskのUVレイヤ番号.
 
 	bool m_diffuseAlphaTrans;									// Diffuseのアルファ透明を使用しているか.
-	float m_occlusionWeight;									// Occlusionのウエイト値.
 
 	int m_diffuseTexturesCount;									// Diffuseテクスチャ数.
 	bool m_useDiffuseAlpha;										// Diffuseの「アルファ透明」を使用しているか.
@@ -114,8 +126,9 @@ public:
 
 	/**
 	 * 個々のイメージを合成.
+	 * @return ベイクの結果.
 	 */
-	void blendImages ();
+	IMAGE_BAKE_RESULT blendImages ();
 
 	/**
 	 * 各種イメージを持つか (単一または複数).
@@ -146,11 +159,6 @@ public:
 	 * アルファ透明を使用しているか.
 	 */
 	bool getDiffuseAlphaTrans () { return m_diffuseAlphaTrans; }
-
-	/**
-	 * Occlusionのウエイト値を取得.
-	 */
-	float getOcclusionWeight () { return m_occlusionWeight; }
 
 	/**
 	 * OcclusionのUV層番号を取得.

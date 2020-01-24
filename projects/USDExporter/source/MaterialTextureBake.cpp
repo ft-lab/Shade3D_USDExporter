@@ -861,7 +861,18 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 {
 	// 複数テクスチャの合成クラス.
 	CImagesBlend imagesBlend(m_pScene, surface);
-	imagesBlend.blendImages();
+	CImagesBlend::IMAGE_BAKE_RESULT blendResult = imagesBlend.blendImages();
+
+	if (blendResult == CImagesBlend::bake_error_mixed_uv_layer) {
+		const std::string name = StringUtil::getFileName(materialData.name);
+		const std::string str = std::string("[") + name + std::string("] ") + std::string(m_pScene->gettext("bake_msg_error_mixed_uv_layer"));
+		m_pScene->message(str);
+	}
+	if (blendResult == CImagesBlend::bake_mixed_repeat) {
+		const std::string name = StringUtil::getFileName(materialData.name);
+		const std::string str = std::string("[") + name + std::string("] ") + std::string(m_pScene->gettext("bake_msg_mixed_repeat"));
+		m_pScene->message(str);
+	}
 
 	CTextureTransform texTransform;
 	std::string masterImageName = "";
