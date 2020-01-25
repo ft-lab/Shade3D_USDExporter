@@ -40,7 +40,7 @@ void CExportParam::clear ()
 	optDividePolyTriQuad = true;
 
 	texOptConvGrayscale     = false;
-	texOptBakeMultiTextures = false;
+	texOptBakeMultiTextures = true;
 
 	animKeyframeMode = USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only;
 	animStep = 3;

@@ -159,11 +159,6 @@ public:
 	 * アルファ透明を使用しているか.
 	 */
 	bool getDiffuseAlphaTrans () { return m_diffuseAlphaTrans; }
-
-	/**
-	 * OcclusionのUV層番号を取得.
-	 */
-	int getOcclusionTexCoord () { return m_occlusionTexCoord; }
 };
 
 #endif

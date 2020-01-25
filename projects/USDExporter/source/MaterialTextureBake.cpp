@@ -326,7 +326,7 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		if (materialData.opacityTexture.textureParam.imageIndex >= 0) {
 			if (materialData.roughnessTexture.textureParam.imageIndex < 0 && USD_DATA::isZero(materialData.roughness - 1.0f)) {
 				if (materialData.metallicTexture.textureParam.imageIndex < 0) {
-					materialData.metallic = 1.0f;
+					materialData.metallic = 0.0f;
 				}
 			}
 		}
@@ -335,7 +335,7 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		// iOS 13.1では、roughness 1 / metallic 1 にすると、完全透明部分は透過になっている.
 		if (materialData.unlitMode) {
 			materialData.roughness = 1.0f;
-			materialData.metallic  = 1.0f;
+			materialData.metallic  = 0.0f;
 			materialData.ior       = 1.0f;
 			materialData.metallicTexture.clear();
 			materialData.roughnessTexture.clear();
@@ -897,6 +897,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.diffuseTexture.textureParam.repeatU = repeatV.x;
 			materialData.diffuseTexture.textureParam.repeatV = repeatV.y;
+			materialData.diffuseTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 
 			if (materialData.useDiffuseAlpha) {
 				materialData.opacityTexture.textureParam.imageIndex = imageIndex;
@@ -922,6 +923,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.metallicTexture.textureParam.repeatU = repeatV.x;
 			materialData.metallicTexture.textureParam.repeatV = repeatV.y;
+			materialData.metallicTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 		}
 		materialData.metallic = surface->get_reflection();
 	}
@@ -939,6 +941,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.emissiveTexture.textureParam.repeatU = repeatV.x;
 			materialData.emissiveTexture.textureParam.repeatV = repeatV.y;
+			materialData.emissiveTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
+
 		} else {
 			materialData.emissiveColor[0] = factor.red;
 			materialData.emissiveColor[1] = factor.green;
@@ -956,6 +960,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.roughnessTexture.textureParam.repeatU = repeatV.x;
 			materialData.roughnessTexture.textureParam.repeatV = repeatV.y;
+			materialData.roughnessTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 		}
 		materialData.roughness = surface->get_roughness();
 	}
@@ -970,6 +975,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.opacityTexture.textureParam.repeatU = repeatV.x;
 			materialData.opacityTexture.textureParam.repeatV = repeatV.y;
+			materialData.opacityTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
+			materialData.opacity = 0.0f;
 		}
 	}
 
@@ -982,6 +989,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.occlusionTexture.textureParam.repeatU = repeatV.x;
 			materialData.occlusionTexture.textureParam.repeatV = repeatV.y;
+			materialData.occlusionTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 		}
 	}
 
@@ -994,6 +1002,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.normalTexture.textureParam.repeatU = repeatV.x;
 			materialData.normalTexture.textureParam.repeatV = repeatV.y;
+			materialData.normalTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 		}
 	}
 
