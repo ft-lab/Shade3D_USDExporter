@@ -66,6 +66,7 @@ namespace Shade3DUtil {
 	 * @return アルファ要素が1.0でないものがある場合はtrueを返す.
 	 */
 	bool hasImageAlpha (sxsdk::master_image_class* masterImage);
+	bool hasImageAlpha (sxsdk::image_interface* image);
 
 	/**
 	 * 画像を指定のサイズにリサイズ。アルファも考慮（image->duplicate_imageはアルファを考慮しないため）.
@@ -73,6 +74,11 @@ namespace Shade3DUtil {
 	 * @param[in] size   変更するサイズ.
 	 */
 	compointer<sxsdk::image_interface> resizeImageWithAlpha (sxsdk::scene_interface* scene, sxsdk::image_interface* image, const sx::vec<int,2>& size);
+
+	/**
+	 * compointerを使用せずにイメージをリサイズ.
+	 */
+	sxsdk::image_interface* resizeImageWithAlphaNotCom (sxsdk::scene_interface* scene, sxsdk::image_interface* image, const sx::vec<int,2>& size);
 
 	/**
 	 * 指定のマッピングレイヤがOcclusion用のレイヤかどうか.
@@ -113,9 +119,31 @@ namespace Shade3DUtil {
 	bool isBallJoint (sxsdk::shape_class& shape);
 
 	/**
+	 * 指定の形状がボーン/ボールジョイントかどうか.
+	 */
+	bool isBoneBallJoint (sxsdk::shape_class& shape);
+
+	/**
 	 * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
 	 */
 	sxsdk::vec3 getJointCenter (sxsdk::shape_class& shape, float *size);
+
+	/**
+	 * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
+	 */
+	sxsdk::vec3 getBoneBallJointCenter (sxsdk::shape_class& shape, float *size);
+
+	/**
+	 * ボーン/ボールジョイントのローカル座標での中心を取得.
+	 */
+	sxsdk::vec3 getBoneBallJointCenterL (sxsdk::shape_class& shape);
+
+	/**
+	 * ボールジョイントの変換行列を取得.
+	 * @param[in] shape  対象形状.
+	 * @param[in] worldM ワールド座標での変換行列を取得する場合はtrue.
+	 */
+	sxsdk::mat4 getBallJointMatrix (sxsdk::shape_class& shape, const bool worldM = false);
 }
 
 #endif

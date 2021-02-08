@@ -5,7 +5,7 @@
 #define _IMAGESBLEND_H
 
 #include "GlobalHeader.h"
-
+#include "ExportParam.h"
 
 class CImagesBlend
 {
@@ -20,15 +20,16 @@ public:
 private:
 	sxsdk::scene_interface* m_pScene;
 	sxsdk::surface_class* m_surface;
+	CExportParam m_exportParam;							// Export時のパラメータ.
 
-	compointer<sxsdk::image_interface> m_diffuseImage;			// Diffuseの画像.
-	compointer<sxsdk::image_interface> m_normalImage;			// Normalの画像.
-	compointer<sxsdk::image_interface> m_reflectionImage;		// Reflectionの画像.
-	compointer<sxsdk::image_interface> m_roughnessImage;		// Roughnessの画像.
-	compointer<sxsdk::image_interface> m_glowImage;				// Glowの画像.
-	compointer<sxsdk::image_interface> m_occlusionImage;		// Occlusionの画像.
-	compointer<sxsdk::image_interface> m_transparencyImage;		// Transparencyの画像.
-	compointer<sxsdk::image_interface> m_opacityMaskImage;		// 不透明マスク相当の画像.
+	sxsdk::image_interface* m_diffuseImage;				// Diffuseの画像.
+	sxsdk::image_interface* m_normalImage;				// Normalの画像.
+	sxsdk::image_interface* m_reflectionImage;			// Reflectionの画像.
+	sxsdk::image_interface* m_roughnessImage;			// Roughnessの画像.
+	sxsdk::image_interface* m_glowImage;				// Glowの画像.
+	sxsdk::image_interface* m_occlusionImage;			// Occlusionの画像.
+	sxsdk::image_interface* m_transparencyImage;		// Transparencyの画像.
+	sxsdk::image_interface* m_opacityMaskImage;			// 不透明マスク相当の画像.
 
 	bool m_hasDiffuseImage;										// diffuseのイメージを持つか.
 	bool m_hasReflectionImage;									// reflectionのイメージを持つか.
@@ -61,12 +62,15 @@ private:
 
 	int m_diffuseTexturesCount;									// Diffuseテクスチャ数.
 	bool m_useDiffuseAlpha;										// Diffuseの「アルファ透明」を使用しているか.
+	int m_normalTexturesCount;									// Normalテクスチャ数.
 
 	// テクスチャを使用しない場合のパラメータ.
 	sxsdk::rgb_class m_diffuseColor;							// Diffuse色.
 	sxsdk::rgb_class m_emissiveColor;							// Emmisive色.
 	float m_metallic;											// Metallic値.
 	float m_roughness;											// Roughness値.
+	float m_transparency;										// 透明度.
+	float m_normalStrength;										// 法線マップの強さ.
 
 private:
 	/**
@@ -117,18 +121,31 @@ private:
 		 const int repeatU = 1, const int repeatV = 1);
 
 	/**
+	 * 「不透明」と「透明」のテクスチャを分離もしくは合成して再格納.
+	 * @return 不透明度のテクスチャを格納.
+	 */
+	sxsdk::image_interface* m_storeOpasicyTransparencyTexture ();
+
+	/**
 	 * diffuse/roughness/metallicのテクスチャを、Shade3Dの状態からPBRマテリアルに変換.
 	 */
 	void m_convShade3DToPBRMaterial ();
 
+	/**
+	 * 加工せずにそのままPBRマテリアルとして格納.
+	 */
+	void m_noBakeShade3DToPBRMaterial ();
+
 public:
 	CImagesBlend (sxsdk::scene_interface* scene, sxsdk::surface_class* surface);
+
+	void clear ();
 
 	/**
 	 * 個々のイメージを合成.
 	 * @return ベイクの結果.
 	 */
-	IMAGE_BAKE_RESULT blendImages ();
+	IMAGE_BAKE_RESULT blendImages (const CExportParam& exportParam);
 
 	/**
 	 * 各種イメージを持つか (単一または複数).
@@ -138,7 +155,7 @@ public:
 	/**
 	 * イメージを取得.
 	 */
-	compointer<sxsdk::image_interface> getImage (const sxsdk::enums::mapping_type mappingType);
+	sxsdk::image_interface* getImage (const sxsdk::enums::mapping_type mappingType);
 
 	/**
 	 * イメージのUV層番号を取得.
@@ -154,6 +171,11 @@ public:
 	 * イメージの強度を色として取得.
 	 */
 	sxsdk::rgb_class getImageFactor (const sxsdk::enums::mapping_type mappingType);
+
+	/**
+	 * 法線マップの強さを取得.
+	 */
+	float getNormalStrength () const { return m_normalStrength; }
 
 	/**
 	 * アルファ透明を使用しているか.

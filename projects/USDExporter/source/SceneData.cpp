@@ -249,7 +249,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 				const CAnimKeyframeData& animD = keyframeData[loop];
 
 				const sxsdk::vec3 offset        = animD.offset;
-				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset + boneLCenter);		// cmに変換.
+				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset);	// + boneLCenter);		// cmに変換.
 				const sxsdk::quaternion_class q = animD.quat;
 
 				// 移動情報を格納.

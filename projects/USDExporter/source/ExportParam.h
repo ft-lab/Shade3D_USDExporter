@@ -76,6 +76,8 @@ public:
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
 	bool texOptBakeMultiTextures;							// 複数テクスチャをベイク.
 
+	bool bakeWithoutProcessingTextures;						// テクスチャを加工せずにベイク.
+
 	// アニメーションオプション.
 	USD_DATA::EXPORT::ANIM_KEYFRAME_MODE animKeyframeMode;	// キーフレームの出力の種類.
 	int animStep;											// ステップ.
@@ -98,6 +100,7 @@ public:
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
+		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
 
 		this->animKeyframeMode = v.animKeyframeMode;
 		this->animStep = v.animStep;
@@ -118,6 +121,7 @@ public:
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
+		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
 
 		this->animKeyframeMode = v.animKeyframeMode;
 		this->animStep = v.animStep;

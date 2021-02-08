@@ -861,7 +861,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 {
 	// 複数テクスチャの合成クラス.
 	CImagesBlend imagesBlend(m_pScene, surface);
-	CImagesBlend::IMAGE_BAKE_RESULT blendResult = imagesBlend.blendImages();
+	CImagesBlend::IMAGE_BAKE_RESULT blendResult = imagesBlend.blendImages(m_exportParam);
 
 	if (blendResult == CImagesBlend::bake_error_mixed_uv_layer) {
 		const std::string name = StringUtil::getFileName(materialData.name);

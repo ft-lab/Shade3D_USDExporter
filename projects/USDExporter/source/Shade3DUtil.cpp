@@ -420,6 +420,11 @@ bool Shade3DUtil::hasImageAlpha (sxsdk::master_image_class* masterImage)
 	return false;
 }
 
+bool Shade3DUtil::hasImageAlpha (sxsdk::image_interface* image)
+{
+	return ::m_hasImageAlpha(image);
+}
+
 /**
  * 画像を指定のサイズにリサイズ。アルファも考慮（image->duplicate_imageはアルファを考慮しないため）.
  * @param[in] image  元の画像.
@@ -475,6 +480,58 @@ compointer<sxsdk::image_interface> Shade3DUtil::resizeImageWithAlpha (sxsdk::sce
 	return retImage;
 }
 
+/**
+ * compointerを使用せずにイメージをリサイズ.
+ */
+sxsdk::image_interface* Shade3DUtil::resizeImageWithAlphaNotCom (sxsdk::scene_interface* scene, sxsdk::image_interface* image, const sx::vec<int,2>& size)
+{
+	// アルファを持たない場合はimage->duplicate_imageを使用.
+	if (!::m_hasImageAlpha(image)) {
+		return image->duplicate_image(&size);
+	}
+
+	sxsdk::image_interface* retImage = NULL;
+	try {
+		// Alpha要素をいったんRedに入れて、sizeの大きさにリサイズ.
+		const sx::vec<int,2> orgSize = image->get_size();
+		compointer<sxsdk::image_interface> alphaImage(scene->create_image_interface(orgSize));
+		{
+			const int wid = image->get_size().x;
+			const int hei = image->get_size().y;
+			std::vector<sxsdk::rgba_class> lineD, lineD2;
+			lineD.resize(wid);
+			lineD2.resize(wid, sxsdk::rgba_class(0, 0, 0, 1));
+			for (int y = 0; y < hei; ++y) {
+				image->get_pixels_rgba_float(0, y, wid, 1, &(lineD[0]));
+				for (int x = 0; x < wid; ++x) lineD2[x].red = lineD[x].alpha;
+				alphaImage->set_pixels_rgba_float(0, y, wid, 1, &(lineD2[0]));
+			}
+		}
+		alphaImage->update();
+		compointer<sxsdk::image_interface> alphaImage2(alphaImage->duplicate_image(&size));
+
+		// imageをsizeの大きさにリサイズし、アルファも更新.
+		retImage = image->duplicate_image(&size);
+		{
+			const int wid = size.x;
+			const int hei = size.y;
+			std::vector<sxsdk::rgba_class> lineD, lineD2;
+			lineD.resize(wid);
+			lineD2.resize(wid);
+			for (int y = 0; y < hei; ++y) {
+				retImage->get_pixels_rgba_float(0, y, wid, 1, &(lineD[0]));
+				alphaImage2->get_pixels_rgba_float(0, y, wid, 1, &(lineD2[0]));
+
+				for (int x = 0; x < wid; ++x) lineD[x].alpha = lineD2[x].red;
+				retImage->set_pixels_rgba_float(0, y, wid, 1, &(lineD[0]));
+			}
+		}
+		retImage->update();
+
+	} catch (...) { }
+
+	return retImage;
+}
 
 /**
  * 指定のマッピングレイヤがOcclusion用のレイヤかどうか.
@@ -572,6 +629,18 @@ bool Shade3DUtil::isBallJoint (sxsdk::shape_class& shape)
 }
 
 /**
+ * 指定の形状がボーン/ボールジョイントかどうか.
+ */
+bool Shade3DUtil::isBoneBallJoint (sxsdk::shape_class& shape)
+{
+	if (shape.get_type() != sxsdk::enums::part) return false;
+	sxsdk::part_class& part = shape.get_part();
+	if (part.get_part_type() == sxsdk::enums::bone_joint || part.get_part_type() == sxsdk::enums::ball_joint) return true;
+	return false;
+}
+
+
+/**
  * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
  */
 sxsdk::vec3 Shade3DUtil::getJointCenter (sxsdk::shape_class& shape, float *size)
@@ -608,5 +677,100 @@ sxsdk::vec3 Shade3DUtil::getJointCenter (sxsdk::shape_class& shape, float *size)
 
 	return sxsdk::vec3(0, 0, 0);
 
+}
+
+/**
+ * ボーン/ボールジョイントのワールド座標での中心位置とボーンサイズを取得.
+ */
+sxsdk::vec3 Shade3DUtil::getBoneBallJointCenter (sxsdk::shape_class& shape, float *size)
+{
+	if (size) *size = 0.0f;
+	if (!Shade3DUtil::isBoneBallJoint(shape)) return sxsdk::vec3(0, 0, 0);
+
+	// シーケンスOff時の中心位置を取得する.
+	// この場合は、bone->get_matrix()を使用.
+	// shape.get_transformation() を取得すると、これはシーケンスOn時の変換行列になる.
+	if (shape.get_part().get_part_type() == sxsdk::enums::bone_joint) {
+		try {
+			compointer<sxsdk::bone_joint_interface> bone(shape.get_bone_joint_interface());
+			const sxsdk::mat4 m = bone->get_matrix();
+
+			const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+			const sxsdk::vec3 center = sxsdk::vec3(0, 0, 0) * m * lwMat;
+
+			if (size) *size = bone->get_size();
+
+			return center;
+		} catch (...) { }
+
+	} else {
+		try {
+			compointer<sxsdk::ball_joint_interface> ball(shape.get_ball_joint_interface());
+			sxsdk::part_class& part = shape.get_part();
+			const sxsdk::vec3 pos = ball->get_position();
+			const sxsdk::mat4 m = inv(part.get_transformation_matrix()) * part.get_transformation();
+
+			const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+			const sxsdk::vec3 center = pos * m * lwMat;
+
+			if (size) *size = ball->get_size();
+
+			return center;
+
+		} catch (...) { }
+	}
+
+	return sxsdk::vec3(0, 0, 0);
+}
+
+/**
+ * ボーン/ボールジョイントのローカル座標での中心を取得.
+ */
+sxsdk::vec3 Shade3DUtil::getBoneBallJointCenterL (sxsdk::shape_class& shape)
+{
+	const sxsdk::vec3 centerW = getBoneBallJointCenter(shape, NULL);
+	sxsdk::vec3 centerL = centerW;
+
+	// ローカル-ワールド変換行列は、親の変換行列で変化する.
+	if (isBallJoint(shape)) {
+		const sxsdk::mat4 parentLWMat = getBallJointMatrix(*shape.get_dad(), true);
+		centerL = centerW * inv(parentLWMat);
+	} else {
+		const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+		centerL = centerW * inv(lwMat);
+	}
+	return centerL;
+}
+
+/**
+ * ボールジョイントの変換行列を取得.
+ * @param[in] shape  対象形状.
+ * @param[in] worldM ワールド座標での変換行列を取得する場合はtrue.
+ */
+sxsdk::mat4 Shade3DUtil::getBallJointMatrix (sxsdk::shape_class& shape, const bool worldM)
+{
+	const sxsdk::mat4 lwMat = shape.get_local_to_world_matrix();
+	if (!isBallJoint(shape)) {
+		return shape.get_transformation() * lwMat;
+	}
+
+	try {
+		compointer<sxsdk::ball_joint_interface> ball(shape.get_ball_joint_interface());
+		sxsdk::part_class& part = shape.get_part();
+		const sxsdk::vec3 pos = ball->get_position();
+		sxsdk::mat4 m = sxsdk::mat4::translate(pos) * inv(part.get_transformation_matrix()) * part.get_transformation();
+		if (worldM) m = m * lwMat;
+
+		if (!worldM) {
+			if (shape.has_dad()) {
+				const sxsdk::mat4 parentLWMat = getBallJointMatrix(*shape.get_dad(), true);
+				m = (m * lwMat) * inv(parentLWMat);
+			}
+		}
+
+		return m;
+	} catch (...) { }
+
+	return shape.get_transformation() * lwMat;
 }
 

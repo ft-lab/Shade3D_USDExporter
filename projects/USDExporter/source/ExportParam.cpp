@@ -41,6 +41,7 @@ void CExportParam::clear ()
 
 	texOptConvGrayscale     = false;
 	texOptBakeMultiTextures = true;
+	bakeWithoutProcessingTextures = false;
 
 	animKeyframeMode = USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only;
 	animStep = 3;
