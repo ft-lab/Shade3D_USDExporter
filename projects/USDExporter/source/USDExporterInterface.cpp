@@ -398,7 +398,6 @@ void CUSDExporterInterface::end (void *)
 		// 面の反転フラグ.
 		m_flipFace = m_shapeStack.isFlipFace();
 	}
-
 }
 
 /**

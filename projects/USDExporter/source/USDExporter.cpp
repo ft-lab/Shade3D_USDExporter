@@ -19,6 +19,7 @@
 
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdShade/shader.h"
+#include "pxr/usd/usdShade/materialBindingAPI.h"		// USD v.21.02
 
 #include "pxr/usd/usd/zipfile.h"
 
@@ -285,7 +286,9 @@ void CUSDExporter::testCreateMesh (const std::string& fileName)
 		mat.CreateSurfaceOutput().ConnectToSource(shader, TfToken("surface"));
 
 		// マテリアルをprimの形状にバインド.
-		mat.Bind(prim);
+		// USD v.21.02ではUsdShadeMaterialBindingAPIを使用する.
+		//mat.Bind(prim);
+		UsdShadeMaterialBindingAPI(prim).Bind(mat);
 	}
 
 	stage->Save();
@@ -953,7 +956,10 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 		UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(meshData.refMaterialName));
 		if (primMat.IsValid()) {
 			UsdShadeMaterial mat(primMat);
-			mat.Bind(prim);
+
+			// USD v.21.02ではUsdShadeMaterialBindingAPIを使用する.
+			//mat.Bind(prim);
+			UsdShadeMaterialBindingAPI(prim).Bind(mat);
 		}
 
 		// doubleSidedの指定.
