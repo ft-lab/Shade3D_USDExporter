@@ -61,7 +61,7 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 		{
-			iDat = data.texOptBakeMultiTextures ? 1 : 0;
+			iDat = 0;		// dummy.
 			stream->write_int(iDat);
 		}
 		{
@@ -81,6 +81,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 		// ver.102 - 
 		{
 			iDat = data.optDividePolyTriQuad ? 1 : 0;
+			stream->write_int(iDat);
+		}
+
+		// ver.103 - 
+		{
+			iDat = data.bakeWithoutProcessingTextures ? 1 : 0;
 			stream->write_int(iDat);
 		}
 
@@ -141,8 +147,7 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 			data.texOptConvGrayscale = iDat ? true: false;
 		}
 		{
-			stream->read_int(iDat);
-			data.texOptBakeMultiTextures = iDat ? true: false;
+			stream->read_int(iDat);		// dummy.
 		}
 		{
 			stream->read_int(iDat);
@@ -163,6 +168,12 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_102) {
 			stream->read_int(iDat);
 			data.optDividePolyTriQuad = iDat ? true : false;
+		}
+
+		// ver.103 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_103) {
+			stream->read_int(iDat);
+			data.bakeWithoutProcessingTextures = iDat ? true : false;
 		}
 
 	} catch (...) { }

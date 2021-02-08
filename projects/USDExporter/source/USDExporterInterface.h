@@ -144,6 +144,11 @@ private:
 	virtual bool must_round_polymesh (void *aux=0);
 
 	/**
+	 * スキン変形するか (falseでスキン変形する前の頂点座標が取得される).
+	 */
+	virtual bool must_transform_skin (void *) { return false; }
+
+	/**
 	 * バイナリで出力.
 	 */
 	virtual bool can_export_binary (void * = 0) { return false; }

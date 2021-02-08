@@ -74,8 +74,6 @@ public:
 
 	// テクスチャオプション.
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
-	bool texOptBakeMultiTextures;							// 複数テクスチャをベイク.
-
 	bool bakeWithoutProcessingTextures;						// テクスチャを加工せずにベイク.
 
 	// アニメーションオプション.
@@ -99,7 +97,6 @@ public:
 		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
-		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
 
 		this->animKeyframeMode = v.animKeyframeMode;
@@ -120,7 +117,6 @@ public:
 		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
-		this->texOptBakeMultiTextures = v.texOptBakeMultiTextures;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
 
 		this->animKeyframeMode = v.animKeyframeMode;

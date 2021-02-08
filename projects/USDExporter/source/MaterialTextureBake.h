@@ -106,13 +106,6 @@ private:
 	bool m_getMaterialDataFromShape (sxsdk::master_surface_class* masterSurface, sxsdk::surface_class* surface, CMaterialData& materialData);
 
 	/**
-	 * マッピングレイヤで、単純に1テクスチャで構成.
-	 * @param[in]  surface           表面材質クラス.
-	 * @param[out] materialData  マテリアル情報が返る.
-	 */
-	bool m_getSimpleMaterialMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData);
-
-	/**
 	 * マッピングレイヤで、複数テクスチャをベイク.
 	 * @param[in]  surface           表面材質クラス.
 	 * @param[out] materialData  マテリアル情報が返る.

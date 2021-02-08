@@ -27,10 +27,11 @@
  */
 #define OCCLUSION_PARAM_DLG_STREAM_VERSION 0x100		// Occlusion ShaderのStreamバージョン.
 
-#define USD_EXPORTER_DLG_STREAM_VERSION 0x102			// エクスポートダイアログボックスのStreamバージョン.
+#define USD_EXPORTER_DLG_STREAM_VERSION 0x103			// エクスポートダイアログボックスのStreamバージョン.
 #define USD_EXPORTER_DLG_STREAM_VERSION_100 0x100
 #define USD_EXPORTER_DLG_STREAM_VERSION_101 0x101
 #define USD_EXPORTER_DLG_STREAM_VERSION_102 0x102
+#define USD_EXPORTER_DLG_STREAM_VERSION_103 0x103
 
 #define MAPPING_TYPE_OPACITY  ((sxsdk::enums::mapping_type)24)				// sxsdk::enums::mapping_typeでの「不透明マスク」.
 #define MAPPING_TYPE_USD_OCCLUSION  ((sxsdk::enums::mapping_type)1001)		// 「オクルージョン」これはUSDで割り当てたカスタムの種類.

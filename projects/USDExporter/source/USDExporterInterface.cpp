@@ -27,7 +27,7 @@ enum {
 	dlg_option_texture = 301,				// テクスチャ出力.
 	dlg_option_max_texture_size = 302,		// 最大テクスチャサイズ.
 	dlg_option_texture_grayscale = 303,		// R/G/B/A指定をグレイスケールに分けて出力.
-	dlg_option_texture_bake_multi = 304,	// 複数テクスチャをベイク.
+	dlg_option_bake_without_processing_textures_id = 305,	// テクスチャを加工せずにベイク.
 
 	dlg_option_anim_keyframe_mode = 401,	// アニメーションのキーフレーム出力モード.
 	dlg_option_anim_keyframe_step = 402,	// アニメーションのキーフレームのステップ数.
@@ -475,6 +475,15 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 	if (m_skip) return;
 
 	sxsdk::vec3 pos = v;
+
+	// must_transform_skinでfalseを返した場合、スキン変形前の頂点が取得される.
+	// そのため、独自変換は不要。.
+	pos = pos * m_spMat;
+	if (skin) {
+		pos = pos * m_currentLWMatrix;		// スキン使用時はワールド座標に変換する.
+	}
+
+#if 0
 	if (skin) {
 		// スキン変換前の座標値を計算.
 		if (m_exportParam.optOutputBoneSkin) {
@@ -484,6 +493,7 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 			pos = sxsdk::vec3(v4.x, v4.y, v4.z);
 		}
 	}
+#endif
 
 	// 親パートがボールジョイントの場合、ボールジョイントの中心にposが来るように調整.
 	// キーフレーム出力しない場合は何もしない.
@@ -532,6 +542,19 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 					}
 				}
 
+				// 同一のボーンを参照している場合はWeight値を0にする.
+				{
+					for (int j = 0; j < 4; ++j) {
+						void* pV = m_sceneData.tmpMeshData.skinJointsHandle[i][j];
+						for (int k = j + 1; k < 4; ++k) {
+							void* pV2 = m_sceneData.tmpMeshData.skinJointsHandle[i][k];
+							if (pV == pV2) {
+								m_sceneData.tmpMeshData.skinWeights[i][k] = 0.0f;
+							}
+						}
+					}
+				}
+
 				// skinWeights[]が大きい順に並び替え.
 				for (int j = 0; j < 4; ++j) {
 					for (int k = j + 1; k < 4; ++k) {
@@ -570,8 +593,10 @@ void CUSDExporterInterface::polymesh_face_uvs (int n_list, const int list[], con
 	}
 
 	if (normals) {
+		sxsdk::vec4 v4;
 		for (int i = 0; i < n_list; ++i) {
-			m_sceneData.tmpMeshData.faceNormals.push_back(normals[i]);
+			v4 = sxsdk::vec4(normals[i], 0) * m_spMat;
+			m_sceneData.tmpMeshData.faceNormals.push_back(sxsdk::vec3(v4.x, v4.y, v4.z));
 		}
 	}
 
@@ -742,8 +767,8 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 	}
 	{
 		sxsdk::dialog_item_class* item;
-		item = &(d.get_dialog_item(dlg_option_texture_bake_multi));
-		item->set_bool(m_exportParam.texOptBakeMultiTextures);
+		item = &(d.get_dialog_item(dlg_option_bake_without_processing_textures_id));
+		item->set_bool(m_exportParam.bakeWithoutProcessingTextures);
 	}
 	{
 		sxsdk::dialog_item_class* item;
@@ -823,8 +848,8 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	if (id == dlg_option_texture_grayscale) {
 		m_exportParam.texOptConvGrayscale = item.get_bool();
 	}
-	if (id == dlg_option_texture_bake_multi) {
-		m_exportParam.texOptBakeMultiTextures = item.get_bool();
+	if (id == dlg_option_bake_without_processing_textures_id) {
+		m_exportParam.bakeWithoutProcessingTextures = item.get_bool();
 	}
 	if (id == dlg_option_anim_keyframe_mode) {
 		m_exportParam.animKeyframeMode = (USD_DATA::EXPORT::ANIM_KEYFRAME_MODE)item.get_selection();

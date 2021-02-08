@@ -18,7 +18,7 @@
 		<selection id="301" label="Texture output:|Browse extension from image name|Replace with png|Replace with jpeg" />
 		<selection id="302" label="Maximum texture size:|Unspecified|256|512|1024|2048|4096" />
 		<bool id="303" label="R/G/B/A is output in grayscale" />
-		<bool id="304" label="Bake textures" />
+		<bool id="305" label="Bake without processing textures" />
 	</group>
 
 	<group label="Animation">

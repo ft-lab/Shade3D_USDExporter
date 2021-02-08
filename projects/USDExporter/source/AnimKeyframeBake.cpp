@@ -174,6 +174,7 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 			return;
 		}
 
+		// TODO.
 		const float frameStep = (float)std::max(1, m_exportParam.animStep);
 		{
 			// キーフレーム + 再分割した位置のフレーム位置のリストを作成.

@@ -18,7 +18,7 @@
 		<selection id="301" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
 		<selection id="302" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />
 		<bool id="303" label="R/G/B/A指定をグレイスケールに分けて出力" />
-		<bool id="304" label="テクスチャをベイク" />
+		<bool id="305" label="テクスチャを加工せずにベイク" />
 	</group>
 
 	<group label="アニメーション">
