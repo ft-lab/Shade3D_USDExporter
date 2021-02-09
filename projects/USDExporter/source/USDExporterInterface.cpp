@@ -312,9 +312,23 @@ void CUSDExporterInterface::begin (void *)
 	const sxsdk::mat4 gMat = m_pluginExporter->get_transformation();
 	const std::string name(m_pCurrentShape->get_name());
 
-	m_shapeStack.push(m_currentDepth, m_pCurrentShape, gMat);
+	//m_shapeStack.push(m_currentDepth, m_pCurrentShape, gMat);
 
 	const int type = m_pCurrentShape->get_type();
+
+	// ローカル変換行列.
+	sxsdk::mat4 tPreM = m_shapeStack.getLocalToWorldMatrix();
+	sxsdk::mat4 lMat  = gMat * inv(tPreM);
+
+	// 掃除引体、回転体の場合.
+	if (m_pCurrentShape->get_type() == sxsdk::enums::line) {
+		sxsdk::line_class& lineC = m_pCurrentShape->get_line();
+		if (lineC.is_extruded() || lineC.is_revolved()) {
+			lMat = inv(m_pCurrentShape->get_transformation()) * lMat;
+		}
+	}
+
+	m_shapeStack.push(m_currentDepth, m_pCurrentShape, lMat);
 
 	// 面の反転フラグ.
 	m_flipFace = m_shapeStack.isFlipFace();
@@ -363,12 +377,34 @@ void CUSDExporterInterface::begin (void *)
 	}
 
 	if (!m_skip) {
-		// 形状がメッシュに変換できない場合は、NULLノードとする.
+		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
+
+		sxsdk::mat4 m = lMat;
+
+		if (type == sxsdk::enums::polygon_mesh) {
+			m = sxsdk::mat4::identity;
+
+		} else if (Shade3DUtil::isBallJoint(*m_pCurrentShape)) {
+			// ボールジョイントの場合のローカル座標での変換行列.
+			m = Shade3DUtil::getBallJointMatrix(*m_pCurrentShape);
+
+		} else {
+			// 親がボールジョイントの場合.
+			if (m_pCurrentShape->has_dad()) {
+				sxsdk::shape_class* parentShape = m_pCurrentShape->get_dad();
+				if (Shade3DUtil::isBallJoint(*parentShape)) {
+					const sxsdk::mat4 parentLWMat = Shade3DUtil::getBallJointMatrix(*parentShape, true);
+					m = m * lwMat;
+					m = m * inv(parentLWMat);
+				}
+			}
+		}
+
+		// 形状がメッシュに変換できない場合は、NULLノードとする(パート、ボーン、ボールジョイントなど).
 		if (!m_sceneData.checkConvertMesh(m_pCurrentShape)) {
 			// Shade3Dでのmm単位をcmに変換.
-			sxsdk::mat4 m = m_pCurrentShape->get_transformation();
+			//sxsdk::mat4 m = m_pCurrentShape->get_transformation();
 			m = Shade3DUtil::convUnit_mm_to_cm(m);
-
 			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
 		}
 	}
@@ -441,15 +477,15 @@ void CUSDExporterInterface::begin_polymesh (void *)
 		}
 	}
 
-	// 親がボールジョイントの場合、位置を保持.
-	m_parentBallPos   = sxsdk::vec3(0, 0, 0);
-	m_parentBallJoint = false;
+	// 親がボーン/ボールジョイントの場合、位置を保持.
+	m_parentBoneBallPos   = sxsdk::vec3(0, 0, 0);
+	m_parentBoneBallJoint = false;
 	if (m_pCurrentShape->has_dad()) {
 		sxsdk::shape_class* pParent = m_pCurrentShape->get_dad();
-		if (Shade3DUtil::isBallJoint(*pParent)) {
+		if (Shade3DUtil::isBoneBallJoint(*pParent)) {
 			// ワールド座標での中心を取得.
-			m_parentBallPos   = Shade3DUtil::getJointCenter(*pParent, NULL);
-			m_parentBallJoint = true;
+			m_parentBoneBallPos   = Shade3DUtil::getBoneBallJointCenter(*pParent, NULL);
+			m_parentBoneBallJoint = true;
 		}
 	}
 }
@@ -494,12 +530,12 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 	}
 #endif
 
-	// 親パートがボールジョイントの場合、ボールジョイントの中心にposが来るように調整.
+	// 親パートがボールジョイント/ボーンの場合、ボールジョイント/ボーンの中心にposが来るように調整.
 	// キーフレーム出力しない場合は何もしない.
 	sxsdk::vec3 centerPos(0, 0, 0);
-	if (m_parentBallJoint && m_exportParam.animKeyframeMode != USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) {
+	if (m_parentBoneBallJoint && m_exportParam.animKeyframeMode != USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) {
 		pos = pos * m_LWMat;
-		centerPos = m_parentBallPos;
+		centerPos = m_parentBoneBallPos;
 	}
 
 	// 頂点の座標変換 (Shade3Dはmm、USDはcm).

@@ -49,8 +49,8 @@ private:
 
 	bool m_curShapeHasSubdivision;				// カレント形状がSubdivisioを持つか.
 
-	sxsdk::vec3 m_parentBallPos;				// ボールジョイント内のメッシュの場合、親のボールジョイントの位置.
-	bool m_parentBallJoint;						// 親がボールジョイントの場合はtrue.
+	sxsdk::vec3 m_parentBoneBallPos;			// ボーン/ボールジョイント内のメッシュの場合、親の中心位置.
+	bool m_parentBoneBallJoint;					// 親がボーン/ボールジョイントの場合はtrue.
 
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }

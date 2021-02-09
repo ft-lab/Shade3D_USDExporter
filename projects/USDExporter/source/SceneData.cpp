@@ -533,39 +533,11 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 	if (!nodesList.empty()) {
 		for (size_t i = 0; i < nodesList.size(); ++i) {
 			CNodeBaseData& nodeBaseD = *nodesList[i];
-			if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node || (nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::ball_joint_node) {
+			if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node || (nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::ball_joint_node || (nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::bone_node) {
 				CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
 
-				// モーション情報を持つ場合、モーション要素にnodeD.matrixを乗算する.
+				// モーション情報を持つ場合.
 				if (nodeD.jointMotion.hasMotion()) {
-					if (!nodeD.jointMotion.translations.empty()) {
-						for (size_t j = 0; j < nodeD.jointMotion.translations.size(); ++j) {
-							CJointTranslationData& transD = nodeD.jointMotion.translations[j];
-							sxsdk::vec3 v(transD.x, transD.y, transD.z);
-							v = v * nodeD.matrix;
-							transD.x = v.x;
-							transD.y = v.y;
-							transD.z = v.z;
-						}
-					}
-
-					if (!nodeD.jointMotion.rotations.empty()) {
-						sxsdk::mat4 m = nodeD.matrix;
-						m[3][0] = m[3][1] = m[3][2] = 0.0f;
-						sxsdk::vec3 eularV;
-						for (size_t j = 0; j < nodeD.jointMotion.rotations.size(); ++j) {
-							CJointRotationData& rotD = nodeD.jointMotion.rotations[j];
-							sxsdk::quaternion_class q(-rotD.w, sxsdk::vec3(rotD.x, rotD.y, rotD.z));
-
-							q = sxsdk::quaternion_class(sxsdk::mat4(q) * m);
-							rotD.x = q.x;
-							rotD.y = q.y;
-							rotD.z = q.z;
-							rotD.w = -q.w;
-							q.get_euler(eularV);
-						}
-					}
-
 					// ジョイントの回転情報を、QuaternionからEulerに変換し格納.
 					// これは、iOS(12.4.1)環境でtransform animationのxformOp:orientが機能しないため.
 					m_calcJointQuaternionToEuler(nodeD.jointMotion);
@@ -575,7 +547,6 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 
 				// 変換行列.
 				const USD_DATA::NodeMatrixData usdMatrix = m_convMatrix(nodeD.matrix);
-
 				usdExport.appendNodeNull(nodeD.name, usdMatrix, nodeD.jointMotion);
 
 			} else if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::mesh_node) {
@@ -838,7 +809,7 @@ void CSceneData::m_exportSkeletonAndJoints (CUSDExporter& usdExport)
 
 			// もし、末端ボーンの場合は回転をクリア.
 			if (Shade3DUtil::isBoneEnd(*shape)) {
-				lwMat = Shade3DUtil::clearMatrixRotate(lwMat);
+			//	lwMat = Shade3DUtil::clearMatrixRotate(lwMat);
 			}
 
 			lwMat = Shade3DUtil::convUnit_mm_to_cm(lwMat);
