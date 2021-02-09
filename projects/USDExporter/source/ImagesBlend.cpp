@@ -15,6 +15,8 @@
 
 /*
 	Shade3Dの「透明」「不透明マスク」「チャンネル合成のアルファ透明」は、最終的に合成されてすべてOpacityのテクスチャに格納される.
+	USDの場合は、BaseColor/Metallic/Roughness/NormalのFactorとテクスチャは両方使うことはできない.
+	テクスチャを使用した場合は、Factorをテクスチャに乗算する必要がある.その処理はCMaterialTextureBakeクラスでおこなっている.
 */
 
 CImagesBlend::CImagesBlend (sxsdk::scene_interface* scene, sxsdk::surface_class* surface) : m_pScene(scene), m_surface(surface)
@@ -76,7 +78,6 @@ void CImagesBlend::clear ()
 	m_metallic  = 0.0f;
 	m_roughness = 0.0f;
 	m_transparency = 0.0f;
-	m_normalStrength = 1.0f;
 
 	m_diffuseTexturesCount = 0;
 	m_useDiffuseAlpha = false;
@@ -789,13 +790,6 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 
 		float weight = std::min(std::max(mappingLayer.get_weight(), 0.0f), 1.0f);
 		const int type = mappingLayer.get_type();
-		if (mappingType == sxsdk::enums::normal_mapping && (type == sxsdk::enums::normal_mapping || type == sxsdk::enums::bump_mapping)) {
-			if (m_normalTexturesCount == 1) {
-				m_normalStrength = mappingLayer.get_weight();
-				weight = 1.0f;
-			}
-		}
-
 		const float weight2 = 1.0f - weight;
 		if (MathUtil::isZero(weight)) continue;
 

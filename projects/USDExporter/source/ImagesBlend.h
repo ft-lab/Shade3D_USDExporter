@@ -70,7 +70,6 @@ private:
 	float m_metallic;											// Metallic値.
 	float m_roughness;											// Roughness値.
 	float m_transparency;										// 透明度.
-	float m_normalStrength;										// 法線マップの強さ.
 
 private:
 	/**
@@ -171,11 +170,6 @@ public:
 	 * イメージの強度を色として取得.
 	 */
 	sxsdk::rgb_class getImageFactor (const sxsdk::enums::mapping_type mappingType);
-
-	/**
-	 * 法線マップの強さを取得.
-	 */
-	float getNormalStrength () const { return m_normalStrength; }
 
 	/**
 	 * アルファ透明を使用しているか.
