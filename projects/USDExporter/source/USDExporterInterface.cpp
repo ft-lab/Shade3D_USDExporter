@@ -244,6 +244,12 @@ void CUSDExporterInterface::clean_up (void *)
 		m_sceneData.exportUSDZ(usdzFilePath);		// usdzファイルとして出力.
 	}
 
+	// Macでの対策.
+	// Macでは、既存のファイルが存在すると上書きされない.
+	try {
+		shade.delete_file(m_orgFilePath.c_str());
+	} catch (...) { }
+
 	// 作業用ディレクトリから、m_orgFilePathのフォルダにコピー.
 	{
 		const std::string dstDir = StringUtil::getFileDir(m_orgFilePath);
