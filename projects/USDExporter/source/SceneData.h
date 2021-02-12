@@ -137,6 +137,12 @@ private:
 	  */
 	 void m_makeUniqueName ();
 
+	 /**
+	  * 指定の表面材質を持つマテリアル番号を取得.
+	  */
+	 int m_findSameMaterial (sxsdk::surface_class* pSurface);
+	 int m_findSameMaterial (sxsdk::master_surface_class* pMasterSurface);
+
 public:
 	CSceneData ();
 	~CSceneData ();

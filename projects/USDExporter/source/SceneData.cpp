@@ -338,13 +338,22 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 	int matIndex = -1;
 	CMaterialData materialD;
 
-	// 形状自身のマテリアル、マスターサーフェスのマテリアルを格納.
-	std::vector<CMaterialData> tmpMaterials;
-	std::vector<sxsdk::master_surface_class *> tmpMaterialMasterSurfaces;
+	// 表面材質を持つ形状までたどる.
+	sxsdk::shape_class* pS = Shade3DUtil::getHasSurfaceParentShape(shape);
+	sxsdk::surface_class* pCurrentSurface = NULL;
+	if (pS && (pS->has_surface())) pCurrentSurface = pS->get_surface();
 
-	// shapeの形状に割り当てられているマテリアルを取得.
-	m_materialTextureBake->getMaterialDataFromShape(shape, materialD);
-	tmpMaterials.push_back(materialD);
+	// 形状自身のマテリアル、マスターサーフェスのマテリアルを格納.
+	std::vector<sxsdk::master_surface_class *> tmpMaterialMasterSurfaces;
+	std::vector<int> tmpMaterialIndexList;
+	std::vector<sxsdk::surface_class*> tmpMaterialSurfaceList;
+
+	// 同一のマテリアルを持つかチェック.
+	{
+		const int matIndex = m_findSameMaterial(pCurrentSurface);
+		tmpMaterialIndexList.push_back(matIndex);
+		tmpMaterialSurfaceList.push_back(pCurrentSurface);
+	}
 	tmpMaterialMasterSurfaces.push_back(NULL);
 
 	// フェイスグループのマテリアル情報を取得.
@@ -354,10 +363,11 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		for (int i = 0; i < fgCou; ++i) {
 			sxsdk::master_surface_class* pMasterSurface = pMesh.get_face_group_surface(i);
 			if (pMasterSurface) {
-				if (m_materialTextureBake->getMaterialFromMasterSurface(pMasterSurface, NULL, materialD)) {
-					tmpMaterialMasterSurfaces.push_back(pMasterSurface);
-					tmpMaterials.push_back(materialD);
-				}
+				// 同一のマテリアルを持つかチェック.
+				const int matIndex = m_findSameMaterial(pMasterSurface);
+				tmpMaterialIndexList.push_back(matIndex);
+				tmpMaterialSurfaceList.push_back(pMasterSurface->get_surface());
+				tmpMaterialMasterSurfaces.push_back(pMasterSurface);
 			}
 		}
 	}
@@ -405,34 +415,21 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		}
 		if (tmpMaterialIndex < 0) continue;
 
-		matIndex = -1;
-		const CMaterialData& materialD2 = tmpMaterials[tmpMaterialIndex];
-
-		// マテリアルで同一のものがあるか探す.
-		if (materialD2.pMasterSurfaceHandle) {
-			for (size_t i = 0; i < materialsList.size(); ++i) {
-				const CMaterialData& mD = materialsList[i];
-				if (mD.pMasterSurfaceHandle == materialD2.pMasterSurfaceHandle) {
-					matIndex = (int)i;
-					break;
-				}
-			}
-		} else {
-			for (size_t i = 0; i < materialsList.size(); ++i) {
-				const CMaterialData& mD = materialsList[i];
-				if (mD.pMasterSurfaceHandle) continue;
-				if (mD.isSame(materialD2)) {
-					matIndex = (int)i;
-					break;
-				}
-			}
-		}
+		// マテリアルで同一のものがある場合、0以上のインデックスが入る.
+		matIndex = tmpMaterialIndexList[tmpMaterialIndex];
 
 		if (matIndex < 0) {
+			// マテリアルを作成.
+			if (!masterSurface) {
+				m_materialTextureBake->getMaterialDataFromShape(shape, materialD);
+			} else {
+				m_materialTextureBake->getMaterialFromMasterSurface(masterSurface, NULL, materialD);
+			}
+
 			// ユニークなマテリアル名を取得.
-			const std::string newName = m_findNames.appendName(materialD2.name, USD_DATA::NODE_TYPE::material_node);
-			materialD = materialD2;
+			const std::string newName = m_findNames.appendName(materialD.name, USD_DATA::NODE_TYPE::material_node);
 			materialD.name = newName;
+			materialD.pSurface = (void *)tmpMaterialSurfaceList[tmpMaterialIndex];		// sxsdk::surface_classの識別用.
 			matIndex = (int)materialsList.size();
 			materialsList.push_back(materialD);
 		}
@@ -447,6 +444,30 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		nodesList.push_back(std::make_shared<CNodeMeshData>());
 		static_cast<CNodeMeshData &>(*(nodesList.back())) = nodeD;
 	}
+}
+
+/**
+ * 指定の表面材質を持つマテリアル番号を取得.
+ */
+int CSceneData::m_findSameMaterial (sxsdk::surface_class* pSurface)
+{
+	int matIndex = -1;
+	for (size_t i = 0; i < materialsList.size(); ++i) {
+		const CMaterialData& mD = materialsList[i];
+		if (mD.pSurface == (void *)pSurface) {
+			matIndex = (int)i;
+			break;
+		}
+	}
+	return matIndex;
+}
+
+int CSceneData::m_findSameMaterial (sxsdk::master_surface_class* pMasterSurface)
+{
+	if (!pMasterSurface) return -1;
+	sxsdk::surface_class* pSurface = pMasterSurface->get_surface();
+	if (!pSurface) return -1;
+	return m_findSameMaterial(pSurface);
 }
 
 /**

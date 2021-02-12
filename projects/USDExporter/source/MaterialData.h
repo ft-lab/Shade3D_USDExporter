@@ -78,6 +78,8 @@ public:
 
 	CAlphaModeMaterialData alphaModeParam;		// AlphaModeのパラメータ.
 
+	void* pSurface;								// 表面材質(sxsdk::surface_class)のポインタ。これは外部参照の場合に外部参照内のマテリアルの判別を最適化するため.
+
 public:
 	CMaterialData ();
 	~CMaterialData ();
@@ -110,6 +112,7 @@ public:
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
 		this->alphaModeParam = v.alphaModeParam;
+		this->pSurface = v.pSurface;
 	}
 
     CMaterialData& operator = (const CMaterialData &v) {
@@ -141,6 +144,7 @@ public:
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
 		this->alphaModeParam = v.alphaModeParam;
+		this->pSurface = v.pSurface;
 
 		return (*this);
 	}
