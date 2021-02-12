@@ -475,7 +475,6 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 		}
 	}
 
-
 	// 透過ピクセルがある場合、iorが影響するためior=1.0も出力する必要がある.
 	shader.CreateInput(TfToken("ior"), SdfValueTypeNames->Float).Set(materialData.ior);
 

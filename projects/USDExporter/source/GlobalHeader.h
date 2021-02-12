@@ -12,7 +12,9 @@
  * プラグインインターフェイス派生クラスのプラグインID.
  */
 #define USD_EXPORTER_INTERFACE_ID sx::uuid_class("C1DDE62B-AC0A-435B-857A-AAF5FB7C5BEA")
-#define OCCLUSION_SHADER_INTERFACE_ID sx::uuid_class("2A52E63A-B8BB-4A49-95E7-A8AAD8971FDE")
+
+// Occlusion Mapの指定はglTF Converterと共有.
+#define OCCLUSION_SHADER_INTERFACE_ID sx::uuid_class("509D92F5-D9F9-4335-B070-0FBDEE179523")
 
 // アルファモードの指定はglTF Converterと共有.
 #define ALPHA_MODE_INTERFACE_ID sx::uuid_class("F92DECA6-AC2C-4B6C-8C89-A3D2AD0F6A43")
@@ -28,7 +30,9 @@
 /**
  * streamに保存する際のバージョン.
  */
-#define OCCLUSION_PARAM_DLG_STREAM_VERSION 0x100		// Occlusion ShaderのStreamバージョン.
+#define OCCLUSION_PARAM_DLG_STREAM_VERSION		0x101
+#define OCCLUSION_PARAM_DLG_STREAM_VERSION_101	0x101
+#define OCCLUSION_PARAM_DLG_STREAM_VERSION_100	0x100
 
 #define USD_EXPORTER_DLG_STREAM_VERSION 0x103			// エクスポートダイアログボックスのStreamバージョン.
 #define USD_EXPORTER_DLG_STREAM_VERSION_100 0x100

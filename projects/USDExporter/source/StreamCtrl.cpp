@@ -222,11 +222,15 @@ bool StreamCtrl::loadOcclusionParam (sxsdk::stream_interface* stream, COcclusion
 		stream->read_int(iVersion);
 
 		stream->read_int(data.uvIndex);
-		stream->read_int(data.channelMix);
+
+		if (iVersion >= OCCLUSION_PARAM_DLG_STREAM_VERSION_101) {
+			stream->read_int(data.channelMix);
+		}
 
 		return true;
 	} catch (...) { }
 	return false;
+
 }
 
 bool StreamCtrl::loadOcclusionParam (sxsdk::mapping_layer_class& mappingLayer, COcclusionShaderData& data)
