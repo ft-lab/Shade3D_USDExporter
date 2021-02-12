@@ -462,11 +462,19 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 
 	if (materialData.opacityTexture.textureParam.imageIndex < 0) {
 		shader.CreateInput(TfToken("opacity"), SdfValueTypeNames->Float).Set(materialData.opacity);
-	} else {
-		if (materialData.opacity < 1e-4) {
-			shader.CreateInput(TfToken("opacityThreshold"), SdfValueTypeNames->Float).Set(0.95f);
+	}
+
+	if (materialData.alphaModeParam.alphaModeType == CommonParam::alpha_mode_mask) {
+		// AlphaModeでのMask指定.
+		shader.CreateInput(TfToken("opacityThreshold"), SdfValueTypeNames->Float).Set(materialData.alphaModeParam.alphaCutoff);
+
+	} else if (materialData.alphaModeParam.alphaModeType == CommonParam::alpha_mode_opaque) {
+		// 不透明マスクもしくはBaseColorにAlpha要素を持つ場合.
+		if (materialData.useDiffuseAlpha) {
+			shader.CreateInput(TfToken("opacityThreshold"), SdfValueTypeNames->Float).Set(0.5f);
 		}
 	}
+
 
 	// 透過ピクセルがある場合、iorが影響するためior=1.0も出力する必要がある.
 	shader.CreateInput(TfToken("ior"), SdfValueTypeNames->Float).Set(materialData.ior);
@@ -865,6 +873,19 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 		UsdAttribute attr = geomMesh.CreateNormalsAttr();
 		VtVec3fArray ar = VtVec3fArray(vList.begin(), vList.end());
 		attr.Set(ar);
+	}
+
+	// 頂点カラーを格納.
+	if (!meshData.color0.empty()) {
+		std::vector<GfVec3f> vList;
+		vList.resize(versCou);
+		for (size_t i = 0, iPos = 0; i < versCou; ++i, iPos += 3) {
+			vList[i].Set(meshData.color0[iPos + 0], meshData.color0[iPos + 1], meshData.color0[iPos + 2]);
+		}
+
+		UsdGeomPrimvar primV = geomMesh.CreatePrimvar(TfToken("colors"), SdfValueTypeNames->Color3fArray, UsdGeomTokens->vertex);
+		UsdAttribute attr = primV.GetAttr();
+		attr.Set(VtVec3fArray(vList.begin(), vList.end()));
 	}
 
 	// 面情報を格納.

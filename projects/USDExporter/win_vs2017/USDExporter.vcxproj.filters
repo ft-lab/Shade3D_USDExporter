@@ -82,6 +82,9 @@
     <ClCompile Include="..\source\AnimKeyframeBake.cpp">
       <Filter>mysources</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlphaModeMaterialAttributeInterface.cpp">
+      <Filter>mysources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -161,6 +164,12 @@
       <Filter>mysources</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AnimKeyframeBake.h">
+      <Filter>mysources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlphaModeMaterialAttributeInterface.h">
+      <Filter>mysources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlphaModeMaterialData.h">
       <Filter>mysources</Filter>
     </ClInclude>
   </ItemGroup>

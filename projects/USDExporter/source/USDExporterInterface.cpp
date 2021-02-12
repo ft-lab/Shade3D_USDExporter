@@ -524,18 +524,6 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 		pos = pos * m_currentLWMatrix;		// スキン使用時はワールド座標に変換する.
 	}
 
-#if 0
-	if (skin) {
-		// スキン変換前の座標値を計算.
-		if (m_exportParam.optOutputBoneSkin) {
-			const sxsdk::mat4 skin_m = skin->get_skin_world_matrix();
-			const sxsdk::mat4 skin_m_inv = inv(skin_m);
-			sxsdk::vec4 v4 = sxsdk::vec4(pos, 1) * m_LWMat * skin_m_inv;
-			pos = sxsdk::vec3(v4.x, v4.y, v4.z);
-		}
-	}
-#endif
-
 	// 親パートがボールジョイント/ボーンの場合、ボールジョイント/ボーンの中心にposが来るように調整.
 	// キーフレーム出力しない場合は何もしない.
 	sxsdk::vec3 centerPos(0, 0, 0);
@@ -737,6 +725,28 @@ void CUSDExporterInterface::end_polymesh_face_group (void *)
 {
 	if (m_skip) return;
 }
+
+/**
+ * 頂点カラー情報を受け取る.
+ */
+void CUSDExporterInterface::polymesh_face_vertex_colors (int n_list, const int list[], const sxsdk::rgba_class* vertex_colors, int layer_index, int number_of_layers, void*)
+{
+	if (!m_exportParam.optOutputVertexColor) return;
+	if (m_skip) return;
+	if (n_list <= 2) return;
+
+	if (layer_index == 0) {
+		for (int i = 0; i < n_list; ++i) {
+			sxsdk::rgba_class col = vertex_colors[i];
+
+			// 色をリニアにする.
+			USD_DATA::convColorLinear(col.red, col.green, col.blue);
+			m_sceneData.tmpMeshData.faceColor0.push_back(sxsdk::vec4(col.red, col.green, col.blue, col.alpha));
+		}
+	}
+}
+
+//--------------------------------------------------------------------.
 
 void CUSDExporterInterface::initialize_dialog (sxsdk::dialog_interface& dialog, void *)
 {

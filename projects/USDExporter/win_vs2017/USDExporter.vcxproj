@@ -279,6 +279,7 @@
     <ClCompile Include="..\..\..\include\sxcore\com.cpp" />
     <ClCompile Include="..\..\..\include\sxcore\debug.cpp" />
     <ClCompile Include="..\..\..\include\sxcore\vectors.cpp" />
+    <ClCompile Include="..\source\AlphaModeMaterialAttributeInterface.cpp" />
     <ClCompile Include="..\source\AnimationData.cpp" />
     <ClCompile Include="..\source\AnimKeyframeBake.cpp" />
     <ClCompile Include="..\source\ExportParam.cpp" />
@@ -305,6 +306,8 @@
     <ClCompile Include="..\source\USDExporterInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\AlphaModeMaterialAttributeInterface.h" />
+    <ClInclude Include="..\source\AlphaModeMaterialData.h" />
     <ClInclude Include="..\source\AnimationData.h" />
     <ClInclude Include="..\source\AnimKeyframeBake.h" />
     <ClInclude Include="..\source\ExportParam.h" />

@@ -152,4 +152,17 @@ namespace USD_DATA {
 	void convColorLinear (float& vRed, float& vGreen, float& vBlue);
 }
 
+// glTF Converterと共有するパラメータ.
+namespace CommonParam
+{
+	/**
+	 * AlphaModeの種類.
+	 */
+	enum alpha_mode_type {
+		alpha_mode_opaque = 0,					// OPAQUE.
+		alpha_mode_mask,						// MASK.
+		alpha_mode_blend,						// BLEND.
+	};
+}
+
 #endif

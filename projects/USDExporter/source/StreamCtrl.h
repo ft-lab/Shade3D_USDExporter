@@ -7,6 +7,7 @@
 
 #include "GlobalHeader.h"
 #include "OcclusionShaderData.h"
+#include "AlphaModeMaterialData.h"
 #include "ExportParam.h"
 
 namespace StreamCtrl
@@ -32,6 +33,21 @@ namespace StreamCtrl
 	 */
 	bool loadOcclusionParam (sxsdk::stream_interface* stream, COcclusionShaderData& data);
 	bool loadOcclusionParam (sxsdk::mapping_layer_class& mappingLayer, COcclusionShaderData& data);
+
+	/**
+	 * AlphaModeのマテリアル情報を保存.
+	 */
+	void saveAlphaModeMaterialParam (sxsdk::stream_interface* stream, const CAlphaModeMaterialData& data);
+	void saveAlphaModeMaterialParam (sxsdk::surface_interface* surface, const CAlphaModeMaterialData& data);
+	void saveAlphaModeMaterialParam (sxsdk::surface_class* surface, const CAlphaModeMaterialData& data);
+
+	/**
+	 * AlphaModeのマテリアル情報を取得.
+	 */
+	bool loadAlphaModeMaterialParam (sxsdk::stream_interface* stream, CAlphaModeMaterialData& data);
+	bool loadAlphaModeMaterialParam (sxsdk::surface_interface* surface, CAlphaModeMaterialData& data);
+	bool loadAlphaModeMaterialParam (sxsdk::surface_class* surface, CAlphaModeMaterialData& data);
+
 }
 
 #endif

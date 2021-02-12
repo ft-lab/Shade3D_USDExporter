@@ -73,6 +73,7 @@ void CMaterialData::clear ()
 	opacityTexture.clear();
 
 	pMasterSurfaceHandle = NULL;
+	alphaModeParam.clear();
 }
 
 /**
@@ -101,6 +102,9 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 	if (!emissiveTexture.isSame(mDat.emissiveTexture)) return false;
 	if (!occlusionTexture.isSame(mDat.occlusionTexture)) return false;
 	if (!opacityTexture.isSame(mDat.opacityTexture)) return false;
+
+	if (alphaModeParam.alphaModeType != mDat.alphaModeParam.alphaModeType) return false;
+	if (!MathUtil::isZero(alphaModeParam.alphaCutoff - mDat.alphaModeParam.alphaCutoff)) return false;
 
 	return true;
 }

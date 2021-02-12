@@ -285,6 +285,9 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		// 「陰影付けしない」.
 		materialData.unlitMode = surface->get_no_shading();
 
+		// AlphaMode.
+		StreamCtrl::loadAlphaModeMaterialParam(surface, materialData.alphaModeParam);
+
 		// 表面材質情報を取得.
 		if (surface->get_has_diffuse()) {
 			const sxsdk::rgb_class col = (surface->get_diffuse_color()) * (surface->get_diffuse());

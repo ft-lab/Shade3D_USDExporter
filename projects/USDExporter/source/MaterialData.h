@@ -7,6 +7,7 @@
 
 #include "USDData.h"
 #include "TextureParamData.h"
+#include "AlphaModeMaterialData.h"
 
 #include <string>
 #include <vector>
@@ -75,6 +76,8 @@ public:
 
 	void* pMasterSurfaceHandle;				// Shade3Dでの対応するマスターサーフェスのハンドル.
 
+	CAlphaModeMaterialData alphaModeParam;		// AlphaModeのパラメータ.
+
 public:
 	CMaterialData ();
 	~CMaterialData ();
@@ -106,6 +109,7 @@ public:
 		this->opacityTexture   = v.opacityTexture;
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
+		this->alphaModeParam = v.alphaModeParam;
 	}
 
     CMaterialData& operator = (const CMaterialData &v) {
@@ -136,6 +140,7 @@ public:
 		this->opacityTexture   = v.opacityTexture;
 
 		this->pMasterSurfaceHandle = v.pMasterSurfaceHandle;
+		this->alphaModeParam = v.alphaModeParam;
 
 		return (*this);
 	}

@@ -239,3 +239,90 @@ bool StreamCtrl::loadOcclusionParam (sxsdk::mapping_layer_class& mappingLayer, C
 	} catch (...) { }
 	return false;
 }
+
+/**
+ * AlphaModeのマテリアル情報を保存.
+ */
+void StreamCtrl::saveAlphaModeMaterialParam (sxsdk::stream_interface* stream, const CAlphaModeMaterialData& data)
+{
+	try {
+		if (!stream) return;
+		stream->set_pointer(0);
+		stream->set_size(0);
+
+		int iDat;
+		int iVersion = ALPHA_MODE_DLG_STREAM_VERSION;
+		stream->write_int(iVersion);
+
+		iDat = (int)data.alphaModeType;
+		stream->write_int(iDat);
+
+		stream->write_float(data.alphaCutoff);
+
+	} catch (...) { }
+}
+
+void StreamCtrl::saveAlphaModeMaterialParam (sxsdk::surface_interface* surface, const CAlphaModeMaterialData& data)
+{
+	try {
+		compointer<sxsdk::stream_interface> stream(surface->create_attribute_stream_interface_with_uuid(ALPHA_MODE_INTERFACE_ID));
+		if (!stream) return;
+		saveAlphaModeMaterialParam(stream, data);
+	} catch (...) { }
+}
+
+void StreamCtrl::saveAlphaModeMaterialParam (sxsdk::surface_class* surface, const CAlphaModeMaterialData& data)
+{
+	try {
+		compointer<sxsdk::stream_interface> stream(surface->create_attribute_stream_interface_with_uuid(ALPHA_MODE_INTERFACE_ID));
+		if (!stream) return;
+		saveAlphaModeMaterialParam(stream, data);
+	} catch (...) { }
+}
+
+/**
+ * AlphaModeのマテリアル情報を取得.
+ */
+bool StreamCtrl::loadAlphaModeMaterialParam (sxsdk::stream_interface* stream, CAlphaModeMaterialData& data)
+{
+	data.clear();
+	try {
+		if (!stream) return false;
+		stream->set_pointer(0);
+
+		int iVersion;
+		int iDat;
+		stream->read_int(iVersion);
+
+		stream->read_int(iDat);
+		data.alphaModeType = (CommonParam::alpha_mode_type)iDat;
+
+		stream->read_float(data.alphaCutoff);
+
+		return true;
+	} catch (...) { }
+	return false;
+}
+
+bool StreamCtrl::loadAlphaModeMaterialParam (sxsdk::surface_interface* surface, CAlphaModeMaterialData& data)
+{
+	data.clear();
+	try {
+		compointer<sxsdk::stream_interface> stream(surface->get_attribute_stream_interface_with_uuid(ALPHA_MODE_INTERFACE_ID));
+		if (!stream) return false;
+		return loadAlphaModeMaterialParam(stream, data);
+	} catch (...) { }
+	return false;
+}
+
+bool StreamCtrl::loadAlphaModeMaterialParam (sxsdk::surface_class* surface, CAlphaModeMaterialData& data)
+{
+	data.clear();
+	try {
+		compointer<sxsdk::stream_interface> stream(surface->get_attribute_stream_interface_with_uuid(ALPHA_MODE_INTERFACE_ID));
+		if (!stream) return false;
+		return loadAlphaModeMaterialParam(stream, data);
+	} catch (...) { }
+	return false;
+}
+

@@ -31,6 +31,7 @@ TEXT                    SXUL                    "..\\source\\resources\\ja.lproj
 STRINGS                 SXUL                    "..\\source\\resources\\ja.lproj\\sxuls\\strings.sxul"
 EXPORT_DLG              SXUL                    "..\\source\\resources\\ja.lproj\\sxuls\\export_dlg.sxul"
 OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\ja.lproj\\sxuls\\occlusion_mapping_dlg.sxul"
+ALPHA_MODE_DLG          SXUL                    "..\\source\\resources\\ja.lproj\\sxuls\\alpha_mode_dlg.sxul"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -118,6 +119,7 @@ TEXT                    SXUL                    "..\\source\\resources\\zh_CN.lp
 STRINGS                 SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\strings.sxul"
 EXPORT_DLG              SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\export_dlg.sxul"
 OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\occlusion_mapping_dlg.sxul"
+ALPHA_MODE_DLG          SXUL                    "..\\source\\resources\\zh_CN.lproj\\sxuls\\alpha_mode_dlg.sxul"
 
 #endif    // ������ (P.R.C.) resources
 /////////////////////////////////////////////////////////////////////////////
@@ -140,6 +142,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 TEXT                    SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\text.sxul"
 EXPORT_DLG              SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\export_dlg.sxul"
 OCCLUSION_MAPPING_DLG   SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\occlusion_mapping_dlg.sxul"
+ALPHA_MODE_DLG          SXUL                    "..\\source\\resources\\en.lproj\\sxuls\\alpha_mode_dlg.sxul"
 
 #endif    // �p�� (�č�) resources
 /////////////////////////////////////////////////////////////////////////////
