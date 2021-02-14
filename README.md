@@ -1,7 +1,10 @@
-# USD Exporter for Shade3D (ベータ)
+# USD Exporter for Shade3D
 
 PixarのUSD(Universal Scene Description)形式 ( https://graphics.pixar.com/usd/docs/index.html )のファイルをエクスポートするプラグインです。    
 USDファイルとテクスチャをzipにまとめて1つにしたusdz形式を使用することで、AppleのiOS/iPadOSでARとして3Dモデルを使うことができるようになります。    
+
+USD Exporterプラグインと、USDの動的ライブラリは対応するバージョンを使用しないと正しく動作しません。     
+USD Exporter ver.0.1.0.0以降は「USD 21.02」を使用しています。     
 
 ## USDについて
 
@@ -20,23 +23,23 @@ https://github.com/PixarAnimationStudios/USD
 ## 動作環境
 
 * Windows 7/8/10以降のOS    
+* macOS 10.11以降   
 * Shade3D ver.15以降で、Standard/Professional版（Basic版では動作しません）  
   Shade3Dの64bit版のみで使用できます。32bit版のShade3Dには対応していません。   
 
-※ 現状は、Windows版のみ対応しています。Mac版は後々ビルドします。    
+## プラグインの配置、Shade3Dの起動方法 (Windows)
 
-## プラグインの配置、Shade3Dの起動方法
-
-### プラグインと関連ファイルをダウンロード (Win)
+### プラグインと関連ファイルをダウンロード
 
 関連ファイルは以下からダウンロードできます。    
 https://github.com/ft-lab/Shade3D_USDExporter/releases    
 
-USDを作成するために参照するDLLと関連ファイルと、Shade3Dプラグインの両方が必要になります。    
+USDファイルをエクスポートするために参照する動的ライブラリ(DLL)と関連ファイル、Shade3Dプラグインの両方が必要になります。    
 
-https://github.com/ft-lab/Shade3D_USDExporter/releases/download/usd_dlls/usd_dlls_1907.zip    
-より、「usd_dlls_1907.zip」をダウンロードします。    
-usd_dlls_1907.zipを解凍し、任意の場所に配置します。    
+https://github.com/ft-lab/Shade3D_USDExporter/releases/download/usd_dlls_21_02/usd_dlls_2102.zip    
+
+より、「usd_dlls_2102.zip」をダウンロードします。    
+usd_dlls_2102.zipを解凍し、任意の場所に配置します。    
 解凍すると、「usd_dlls」フォルダに「bin」と「lib」のフォルダが入っています。     
 また、環境変数のPATHを通してShade3Dを起動するためのバッチファイル「run_shade3d_v17.bat」を同梱しています。    
 これについては後述します。    
@@ -44,8 +47,7 @@ usd_dlls_1907.zipを解凍し、任意の場所に配置します。
 次に、Shade3Dプラグインをダウンロードします。    
 
 https://github.com/ft-lab/Shade3D_USDExporter/releases    
-より、最新の「USD Exporter ver.xxxx」のzipファイルをダウンロードして解凍します。    
-
+より、最新の「USDExporter_ver_xxxx_win.zip」のzipファイルをダウンロードして解凍します。    
 
 ### プラグインを配置し、Shade3Dを起動
 
@@ -54,11 +56,12 @@ Windowsの場合は、USDExporter64.dll をShade3Dのpluginsディレクトリ�
 Shade3D実行時に「usd_dlls/bin」「usd_dlls/lib」フォルダへのPATH指定が必要です。    
 
 以下のように、バッチファイル（*.bat）をテキストエディタで作ってShade3Dを起動します。    
-> set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls    
-> set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%    
-> cd C:\Program Files\Shade3D\Shade3D ver.17\bin    
-> c:    
-> shade.exe    
+
+    set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls    
+    set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%    
+    cd C:\Program Files\Shade3D\Shade3D ver.17\bin    
+    c:    
+    shade.exe    
 
 USD_DLLS_PATHは「usd_dlls」フォルダを展開したパスを指定します。    
 set PATHで環境設定のパスを指定しています。    
@@ -72,6 +75,50 @@ Shade3Dのバージョンに合わせて書き換えるようにしてくださ�
 Shade3Dの実行は、Shade3Dのアプリケーションアイコンをダブルクリックして起動するのではなく、    
 エクスプローラでこのバッチファイルをダブルクリックして実行するようにします。    
 Shade3Dが起動したら、メインメニューの「ファイル」-「エクスポート」-「USD」が表示されるのを確認します。     
+
+## プラグインの配置、Shade3Dの起動方法 (Mac)
+
+Mac版は、プラグイン自身にUSD 21.02の動的ライブラリ(dylib)と関連ファイルが同梱されています。     
+
+Mac版のShade3Dプラグインをダウンロードします。    
+
+https://github.com/ft-lab/Shade3D_USDExporter/releases    
+より、最新の「USDExporter_ver_xxxx_mac.zip」のzipファイルをダウンロードして解凍します。    
+
+### プラグインを配置し、Shade3Dを起動
+
+Macの場合は、USDExporter.shdplugin をShade3Dのpluginsディレクトリに格納します。     
+
+Shade3D実行時にUSDエクスポートで使用する動的ライブラリ(dylib)のPATH指定が必要です。    
+
+以下のように、バッチファイル（*.command）をテキストエディタで作ってShade3Dを起動します。    
+
+    #!/bin/sh
+    
+    # Shade3Dのアプリケーションのフルパス.
+    Shade3D_APP="/Volumes/HD-PEU2/Application/Shade3D ver.16.app"
+    
+    # Shade3Dのドキュメントディレクトリのフルパス.
+    Shade3D_PLUGINS_PATH="/Users/UserName/Documents/Shade3D/Shade3D ver.17/plugins"
+    
+    export DYLD_LIBRARY_PATH="${Shade3D_PLUGINS_PATH}/USDExporter.shdplugin/Contents/Frameworks"
+    
+    "${Shade3D_APP}/Contents/MacOS/xshade"
+
+「Shade3D_APP」はShade3Dのパッケージをフルパスで指定します。    
+「Shade3D_PLUGINS_PATH」はログインユーザ別のドキュメントフォルダ内のShade3Dのプラグインを格納するパスです。     
+上記はユーザ名「UserName」、Shade3Dのバージョンをver.17としているため、環境に合わせて書き換えるようにしてください。    
+
+「DYLD_LIBRARY_PATH」はUSDの動的ライブラリの検索パスを追加する指定です。     
+複数のパスを指定する場合は「:」で区切って指定するようにします。    
+「"${Shade3D_APP}/Contents/MacOS/xshade"」により、Shade3Dを実行します。     
+
+Shade3Dの実行は、Shade3Dのアプリケーションアイコンをダブルクリックして起動するのではなく、    
+ファインダーでこのcommandファイルをダブルクリックして実行するようにします。    
+Shade3Dが起動したら、メインメニューの「ファイル」-「エクスポート」-「USD」が表示されるのを確認します。     
+
+※ Mac版でUSDエクスポート時にクラッシュする場合は、上記の動的ライブラリの検索パスの指定が失敗している可能性があります。     
+
 
 ## 使い方
 
@@ -121,18 +168,19 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 
 * USDのバイナリ(拡張子 usdc)またはテキスト(拡張子 usda)とテクスチャの出力
 * zipにまとめたusdz形式の出力
-* iOS12/iOS13のAR表示への対応 (iOS13を推奨)
+* iOS12/iOS13以降のAR表示への対応
 * ポリゴンメッシュとして形状出力
 * ポリゴンメッシュのフェイスグループを考慮
 * マテリアルはPBR (diffuse/roughness/metallic/normal/emissive/occlusion/opacity) として出力
 * 表面材質の「陰影付けしない」をOnにすることで、Unlit風表現を行う
-* ポリゴンメッシュのUV層は最大2つまで対応 (ただし、iOS12/13では1UVしか認識しない)
+* ポリゴンメッシュのUV層は最大2つまで対応 (ただし、iOS12/13/14では1UVしか認識しない)
 * ボーン＋スキンを使用したアニメーション出力対応
 * ボールジョイント内に形状を入れた場合、位置と回転をアニメーションのキーフレームとして出力
 * [ 検証用 ] ポリゴンメッシュのSubdivisionの状態を保持したまま出力。ただし、稜線のシャープネス（crease） 対応はまだ未対応 (ver.0.0.1.1-)
 * マテリアルで、複数テクスチャのベイク対応 (ver.0.0.2.0-)    
 * マテリアルで、マッピングレイヤの左右反転/上下反転/90度回転/色反転のベイク対応 (ver.0.0.2.0-)    
 * マテリアルで、「不透明マスク」「マット」対応 (ベイク出力時) (ver.0.0.2.0-)    
+* 表面材質の指定をPBRマテリアルと仮定して、加工せずに出力 (ver.0.1.0.0 - )
 
 ## シーン階層と形状
 
@@ -149,11 +197,13 @@ iOS/iPadOSでリアルタイムでAR表示する目的の場合は、極力面�
 パートを使用する場合、変換行列に「せん断」要素が入っていると子形状の位置が正しくなりません。    
 「せん断」は(0, 0, 0)になるようにします。    
 
-## 表面材質（マテリアル）の表現 (ベイクしない場合)
+## 表面材質（マテリアル）の表現 (テクスチャを加工せずにベイク)
 
+ver.0.1.0.0-。    
 USDでは「PBRマテリアル」として、diffuse(albedo)/normal/roughness/metallic/emissive/opacity/occlusionを値として、またはテクスチャとして割り当てることができます。     
-USD Exporter for Shade3Dでは、表面材質ウィンドウを単純な入れ物として扱っており、    
-レンダリング結果とUSD出力時のマテリアルでは表現が異なります（あえて一致させていません）。    
+エクスポート時に「テクスチャを加工せずにベイク」チェックボックスをOnにすることで、    
+表面材質の各パラメータを単純な入れ物として扱います。    
+この場合は、Shade3Dのレンダリング結果とあえて一致させていません。      
 
 ### 基本設定/効果設定で参照するもの
 
@@ -183,14 +233,26 @@ Shade3Dのレンダリングに合わせて拡散反射をRGB(0.0, 0.0, 0.0)と�
 * イメージ/荒さ
 * イメージ/発光
 * イメージ/透明度
+* イメージ/マット (ver.0.1.0.0-)
+* イメージ/バンプ (ver.0.1.0.0-) 
+* イメージ/不透明マスク (ver.0.1.0.0-)
 
-<img src="./docs/images/usd_export_material_02.png" />    
-それぞれの要素は1層分だけ指定できます。    
-このとき、「適用率」「色反転」が反映されます。    
-「イメージ」タブの「UV」（ただし2層まで）、「タイリング」の「リピート/なし」、「反復」が反映されます。    
+「イメージ/バンプ」はUSDエクスポート時に法線マップに置き換えられます。    
 
-また、Occlusionについては、マッピングで「Occlusion(USD)」というのが選択できるため、それで割り当てます。     
+<img src="./docs/images/usd_export_material_02.png" />     
+
+それぞれのマッピング要素が複数ある場合は、種類別に1枚のテクスチャに合成するベイクが行われます。     
+「合成」「適用率」「色反転」が反映されます。    
+「イメージ」タブの「UV」（ただし2層まで）、「左右反転」「上下反転」「90度回転」、「タイリング」の「リピート/なし」、「反復」が反映されます。    
+
+「合成」は、「通常」「加算」「減算」「乗算」「比較（明）」「比較（暗）」「乗算 (レガシー)」を指定できます (ver.0.1.0.0-)。     
+<img src="./docs/images/usd_export_material_04.png" />     
+
+また、Occlusionについては、マッピングで「Occlusion(glTF/USD)」というのが選択できるため、それで割り当てます。     
 <img src="./docs/images/usd_export_material_03.png" />    
+USD Exporter v.0.1.0.0でglTF Converter( https://github.com/ft-lab/Shade3D_GLTFConverter )とUSD Exporterは同じOcclusionマップを参照するようにしました。     
+glTF Converterの「Occlusion (glTF)」を指定しても、USDのOcclusionマップとして反映されます。    
+
 パラメータは「その他」で指定します。    
 Occlusionで「適用率」値が反映されます。    
 
@@ -260,6 +322,19 @@ Occlusionで「適用率」値が反映されます。
 荒さ(roughness)や反射(metallic)、Occlusion、透明度 (1.0 - opacity)では、グレイスケールを指定することになり、     
 チャンネル合成で「グレイスケール (R)」「グレイスケール (G)」「グレイスケール (B)」「グレイスケール (A)」をそれぞれ割り当てることができます。    
 
+## エクスポート時のAlphaModeの指定について (ver.0.1.0.0 -)
+
+表面材質の「情報」で「AlphaMode (glTF/USD)」を選択すると、
+材質が半透明の場合のモードを指定できます。     
+このパラメータはglTF Converterでも同じものを使います（「AlphaMode (glTF)」を選択しても同じ挙動になります）。      
+
+<img src="./docs/images/usd_export_material_alpha_cutoff.png" />    
+
+「AlphaMode」で「OPAQUE」は透過無しの指定になります。    
+「BLEND」は表面材質の「不透明マスク」のテクスチャをマッピングすることにより、diffuseColorのAlphaチャンネルに任意のAlpha値を与えることができます。    
+「不透明マスク」テクスチャを使用せずに「イメージ/拡散反射」の「アルファ透明」を使用することでも、同等の効果を出せます。    
+「MASK」は、アルファ値によるマスクキング（トリミング）を行います。    AlphaCutoffでマスクの敷居値を指定します。      
+
 ## Unlit風表現
 
 USDでは、テクスチャのシェーディングを行わずにテクスチャ色そのままを表現する「Unlit」の機能はありません。    
@@ -281,6 +356,7 @@ iOS12とiOS13(iPadOS13)で実装が異なるため、表現も差異がありま
 * iOS12では、Shade3Dでの「チャンネル合成」での「グレイスケール (R)」は反映されますが、G/B/Aの指定は反映されません（常にRだけ見ています）。    
 * iOS12/iOS13共に、opacityを0にして完全透明にしても、わずかに色が付いています。    
 また、opacity 1.0以外の指定がある場合は半透明面ごとのZソートが行われますがcutoutは行われないため、正常には表現できない箇所があります。    
+→ iOS14ではopacityThreshold（USD Exporterでの「AlphaMode」で「MASK」を指定したときのcutoff値）の指定により、この部分は正しく動作するようでした。     
 
 ## doubleSided対応について
 
@@ -288,7 +364,7 @@ doubleSidedとは、リアルタイムでMeshを表示する場合に裏面を�
 USDでは、形状(Mesh)に対してdoubleSidedの指定が存在します。    
 USD Exporter for Shade3Dでは、    
 マスターサーフェス名として「xxxx_doublesided」のように、「doublesided」が含まれる場合（大文字の場合でも小文字として判断）にdoubleSidedが指定されたと判断します。    
-なお、iOS12/iOS13ではdoubleSidedの指定は無効化され、常に「裏面は表示しない (doubleSided=false)」となるようです。    
+なお、iOS12/iOS13/iOS14ではdoubleSidedの指定は無効化され、常に「裏面は表示しない (doubleSided=false)」となるようです。    
 
 ## アニメーション
 
@@ -380,7 +456,7 @@ png/jpeg以外はpngに置き換えられます。
 指定なし/256/512/1024/2048/4096を指定できます。    
 「R/G/B/Aをグレイスケールに分けて出力」は、
 roughness/metallic/occlusion/opacity指定時に1枚のグレイスケール画像として出力する指定です。     
-「テクスチャをベイク」は、表面材質のマッピングで複数テクスチャを使用している場合、Diffuse/Metallic/Roughness/Normal/Emissive/Occlusion/Opacityごとに1枚に合成します (ver.0.0.2.0 -)。    
+「テクスチャを加工せずにベイク」は、表面材質のマッピングで複数テクスチャを使用している場合、Diffuse/Metallic/Roughness/Normal/Emissive/Occlusion/Opacityごとに1枚に合成します (ver.0.0.2.0 -)。    
 また、Shade3Dの表面材質はPBRマテリアルではありませんが、これをPBRマテリアルに近づけるように近似して出力します。    
 
 ### アニメーション
@@ -500,35 +576,6 @@ USDについては、この内容に従います。
 
 ## 更新履歴
 
-[2020/01/25] ver.0.0.2.0   
+更新履歴は以下のページに記載しています。    
 
-* Added : マテリアルで、複数テクスチャのベイク対応
-* Added : マテリアルで、マッピングレイヤの「合成」に対応 (ベイク出力時)
-* Added : マテリアルで、マッピングレイヤの左右反転/上下反転/90度回転/色反転の対応 (ベイク出力時)
-* Added : マテリアルで、「不透明マスク」「マット」対応 (ベイク出力時)
-* Changed : マテリアルで、Unlit時のMetallic値を0.0に変更
-
-[2019/12/16] ver.0.0.1.4   
-
-* Fixed : 表面材質のマッピングでイメージを指定していて、テクスチャの割り当てがない場合にクラッシュする問題を修正
-* Fixed : フェイスグループを使用している場合に、正しく出力されない問題を修正
-
-[2019/11/03] ver.0.0.1.3   
-
-* Added : 「多角形を三角形/四角形に分割」エクスポートオプションを追加
-* Added : USDファイルに、"USD Exporter for Shade3D (version)"のテキストを出力 (バージョンによるチェック用)
-
-[2019/10/20] ver.0.0.1.2   
-
-* Fixed : ポリゴンメッシュのフェイスグループ使用時に「無し」を割り当てるとその面が消える問題を修正
-
-[2019/10/17] ver.0.0.1.1   
-
-* Fixed : ボールジョイントを使用したtransform animationで正しいモーションにならない/ボールジョイントを階層化できない問題を修正
-* Added : エクスポートオプション「usdz出力時に作業ファイルを出力」を追加
-* エクスポートオプション「Subdivision」の仕様見直し（まだ検証中）
-
-[2019/10/12] ver.0.0.1.0   
-
-* 初回版 (ベータ)
-
+[更新履歴](./UpdateLog.md)     
