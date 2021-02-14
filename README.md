@@ -29,6 +29,8 @@ https://github.com/PixarAnimationStudios/USD
 
 ## プラグインの配置、Shade3Dの起動方法 (Windows)
 
+Windows版でのUSD Exporterプラグインでのインストールを行います。    
+
 ### プラグインと関連ファイルをダウンロード
 
 関連ファイルは以下からダウンロードできます。    
@@ -78,6 +80,7 @@ Shade3Dが起動したら、メインメニューの「ファイル」-「エク
 
 ## プラグインの配置、Shade3Dの起動方法 (Mac)
 
+Mac版でのUSD Exporterプラグインでのインストールを行います。    
 Mac版は、プラグイン自身にUSD 21.02の動的ライブラリ(dylib)と関連ファイルが同梱されています。     
 
 Mac版のShade3Dプラグインをダウンロードします。    
@@ -87,7 +90,7 @@ https://github.com/ft-lab/Shade3D_USDExporter/releases
 
 ### プラグインを配置し、Shade3Dを起動
 
-Macの場合は、USDExporter.shdplugin をShade3Dのpluginsディレクトリに格納します。     
+USDExporter.shdplugin をShade3Dのpluginsディレクトリに格納します。     
 
 Shade3D実行時にUSDエクスポートで使用する動的ライブラリ(dylib)のPATH指定が必要です。    
 

@@ -58,6 +58,9 @@
 		9206386F236DC043000BE4B9 /* AnimationData.h in Headers */ = {isa = PBXBuildFile; fileRef = 92063856236DC043000BE4B9 /* AnimationData.h */; };
 		92063870236DC043000BE4B9 /* ShapeStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 92063857236DC043000BE4B9 /* ShapeStack.h */; };
 		92063871236DC043000BE4B9 /* MathUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 92063858236DC043000BE4B9 /* MathUtil.h */; };
+		92117A6425D8BB2F00DE200E /* AlphaModeMaterialAttributeInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */; };
+		92117A6725D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 92117A6525D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h */; };
+		92117A6825D8BB3F00DE200E /* AlphaModeMaterialData.h in Headers */ = {isa = PBXBuildFile; fileRef = 92117A6625D8BB3F00DE200E /* AlphaModeMaterialData.h */; };
 		927D1E4C25D391CD009E397A /* libpcp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4725D391C5009E397A /* libpcp.dylib */; };
 		927D1E4D25D391CD009E397A /* libtf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4825D391CA009E397A /* libtf.dylib */; };
 		927D1E4E25D391CD009E397A /* libgf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4925D391CC009E397A /* libgf.dylib */; };
@@ -197,6 +200,9 @@
 		92063856236DC043000BE4B9 /* AnimationData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AnimationData.h; path = ../../source/AnimationData.h; sourceTree = "<group>"; };
 		92063857236DC043000BE4B9 /* ShapeStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShapeStack.h; path = ../../source/ShapeStack.h; sourceTree = "<group>"; };
 		92063858236DC043000BE4B9 /* MathUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MathUtil.h; path = ../../source/MathUtil.h; sourceTree = "<group>"; };
+		92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlphaModeMaterialAttributeInterface.cpp; path = ../../source/AlphaModeMaterialAttributeInterface.cpp; sourceTree = "<group>"; };
+		92117A6525D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlphaModeMaterialAttributeInterface.h; path = ../../source/AlphaModeMaterialAttributeInterface.h; sourceTree = "<group>"; };
+		92117A6625D8BB3F00DE200E /* AlphaModeMaterialData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlphaModeMaterialData.h; path = ../../source/AlphaModeMaterialData.h; sourceTree = "<group>"; };
 		927D1E4725D391C5009E397A /* libpcp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpcp.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libpcp.dylib"; sourceTree = "<group>"; };
 		927D1E4825D391CA009E397A /* libtf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtf.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libtf.dylib"; sourceTree = "<group>"; };
 		927D1E4925D391CC009E397A /* libgf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgf.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libgf.dylib"; sourceTree = "<group>"; };
@@ -309,6 +315,8 @@
 		32C88E010371C26100C91783 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				92117A6525D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h */,
+				92117A6625D8BB3F00DE200E /* AlphaModeMaterialData.h */,
 				92063856236DC043000BE4B9 /* AnimationData.h */,
 				92063850236DC042000BE4B9 /* GlobalHeader.h */,
 				92063852236DC042000BE4B9 /* ImageData.h */,
@@ -331,6 +339,7 @@
 		4A3E5BC70B0029410006A4FF /* sources */ = {
 			isa = PBXGroup;
 			children = (
+				92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */,
 				920637D7236DC020000BE4B9 /* AnimationData.cpp */,
 				920637E2236DC021000BE4B9 /* AnimKeyframeBake.cpp */,
 				920637F3236DC023000BE4B9 /* AnimKeyframeBake.h */,
@@ -483,6 +492,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9206381C236DC024000BE4B9 /* SkeletonData.h in Headers */,
+				92117A6825D8BB3F00DE200E /* AlphaModeMaterialData.h in Headers */,
 				9206381A236DC024000BE4B9 /* USDExporter.h in Headers */,
 				9206386A236DC043000BE4B9 /* OcclusionShaderInterface.h in Headers */,
 				92063866236DC043000BE4B9 /* ImagesBlend.h in Headers */,
@@ -494,6 +504,7 @@
 				9206381F236DC024000BE4B9 /* FindNames.h in Headers */,
 				92063821236DC024000BE4B9 /* NodeData.h in Headers */,
 				92063816236DC024000BE4B9 /* MaterialTextureBake.h in Headers */,
+				92117A6725D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h in Headers */,
 				9206382B236DC024000BE4B9 /* JointMotionData.h in Headers */,
 				92063867236DC043000BE4B9 /* SceneData.h in Headers */,
 				92063827236DC024000BE4B9 /* ExportParam.h in Headers */,
@@ -600,6 +611,7 @@
 				9206381B236DC024000BE4B9 /* MeshData.cpp in Sources */,
 				92063838236DC024000BE4B9 /* OcclusionShaderInterface.cpp in Sources */,
 				92063810236DC024000BE4B9 /* MathUtil.cpp in Sources */,
+				92117A6425D8BB2F00DE200E /* AlphaModeMaterialAttributeInterface.cpp in Sources */,
 				9206383B236DC024000BE4B9 /* USDExporterInterface.cpp in Sources */,
 				FFE6EF6A1A6667E60006CB66 /* vectors.cpp in Sources */,
 				92063814236DC024000BE4B9 /* TextureTransform.cpp in Sources */,
