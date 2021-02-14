@@ -24,7 +24,7 @@ https://github.com/PixarAnimationStudios/USD
 
 * Windows 7/8/10以降のOS    
 * macOS 10.11以降   
-* Shade3D ver.15以降で、Standard/Professional版（Basic版では動作しません）  
+* Shade3D ver.14以降で、Standard/Professional版（Basic版では動作しません）  
   Shade3Dの64bit版のみで使用できます。32bit版のShade3Dには対応していません。   
 
 ## プラグインの配置、Shade3Dの起動方法 (Windows)
@@ -61,17 +61,18 @@ Shade3D実行時に「usd_dlls/bin」「usd_dlls/lib」フォルダへのPATH指
 
     set USD_DLLS_PATH=E:\Data\Shade3D\USDExporter\usd_dlls    
     set PATH=%USD_DLLS_PATH%\bin;%USD_DLLS_PATH%\lib;%PATH%    
-    cd C:\Program Files\Shade3D\Shade3D ver.17\bin    
-    c:    
-    shade.exe    
+
+    set Shade3D_APP=C:\Program Files\Shade3D\Shade3D ver.17
+
+    "%Shade3D_APP%\bin\shade.exe"
+
+このファイルは「 https://github.com/ft-lab/Shade3D_USDExporter/tree/master/run_scripts/win 」にいくつかShade3Dのバージョンごとのサンプルをおいていますので、ご参照くださいませ。     
 
 USD_DLLS_PATHは「usd_dlls」フォルダを展開したパスを指定します。    
 set PATHで環境設定のパスを指定しています。    
 この場合は、Shade3D ver.17を起動しています。    
 
-「usd_dlls_1907.zip」を解凍すると、「run_shade3d_v17.bat」のファイルが同梱されています。    
-上記と同じバッチファイルになります。    
-「USD_DLLS_PATH」の指定を環境に合わせて書き換え、「C:\Program Files\Shade3D\Shade3D ver.17\bin」「c:」のドライブ指定を    
+「USD_DLLS_PATH」の指定を環境に合わせて書き換え、「Shade3D_APP」の「C:\Program Files\Shade3D\Shade3D ver.17」を    
 Shade3Dのバージョンに合わせて書き換えるようにしてください。    
 
 Shade3Dの実行は、Shade3Dのアプリケーションアイコンをダブルクリックして起動するのではなく、    
@@ -99,7 +100,7 @@ Shade3D実行時にUSDエクスポートで使用する動的ライブラリ(dyl
     #!/bin/sh
     
     # Shade3Dのアプリケーションのフルパス.
-    Shade3D_APP="/Volumes/HD-PEU2/Application/Shade3D ver.16.app"
+    Shade3D_APP="/Volumes/HD-PEU2/Application/Shade3D ver.17.app"
     
     # Shade3Dのドキュメントディレクトリのフルパス.
     Shade3D_PLUGINS_PATH="/Users/UserName/Documents/Shade3D/Shade3D ver.17/plugins"
@@ -107,6 +108,8 @@ Shade3D実行時にUSDエクスポートで使用する動的ライブラリ(dyl
     export DYLD_LIBRARY_PATH="${Shade3D_PLUGINS_PATH}/USDExporter.shdplugin/Contents/Frameworks"
     
     "${Shade3D_APP}/Contents/MacOS/xshade"
+
+このファイルは「 https://github.com/ft-lab/Shade3D_USDExporter/tree/master/run_scripts/mac 」にいくつかShade3Dのバージョンごとのサンプルをおいていますので、ご参照くださいませ。     
 
 「Shade3D_APP」はShade3Dのパッケージをフルパスで指定します。    
 「Shade3D_PLUGINS_PATH」はログインユーザ別のドキュメントフォルダ内のShade3Dのプラグインを格納するパスです。     
