@@ -2,10 +2,11 @@
 
 [2021/02/14] ver.0.1.0.0   
 
+* Added : Mac対応
+* Added : 表面材質で「AlphaMode」の指定オプションを追加。USDの「opacityThreshold」の出力に対応。
 * Changed : USD 21.02の使用に移行
 * Changed : エクスポートオプションで「テクスチャを加工せずにベイク」を追加。「テクスチャをベイク」は廃止。
 * Changed : Occlusionマッピングの指定をglTFと共有 (同じレイヤを使用するようにした)
-* Added : 表面材質で「AlphaMode」の指定オプションを追加。USDの「opacityThreshold」の出力に対応。
 * Fixed : アニメーション出力でボールジョイント/ボーン使用時に正しくエクスポートできない場合があった問題を修正。
 * Fixed : テクスチャベイクの処理を全面的に見直し。
 * Fixed : Occlusionのチャンネル指定がレンダリングに反映できてなかった問題を修正
