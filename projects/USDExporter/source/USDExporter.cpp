@@ -733,16 +733,22 @@ void CUSDExporter::setShapeReference (const std::string& nodeName, const std::st
 {
 	if (!g_stage) return;
 
-	const int iPos = nodeName.find_last_of("/");
+	int iPos = nodeName.find_last_of("/");
 	if (iPos == std::string::npos) return;
 
 	const std::string sPath = nodeName.substr(0, iPos);
 	const std::string sName = nodeName.substr(iPos + 1);
 
+	std::string rName = sName;
+	iPos = refNodeName.find_last_of("/");
+	if (iPos != std::string::npos) {
+		rName = refNodeName.substr(iPos + 1);
+	}
+
 	UsdPrim node = g_stage->GetPrimAtPath(SdfPath(sPath));
 	if (!node.IsValid()) return;
 
-	std::string nodePath = sPath + std::string("/ref_") + sName;
+	std::string nodePath = sPath + std::string("/ref_") + rName;
 	UsdPrim nodeRef = g_stage->OverridePrim(SdfPath(nodePath));
 	nodeRef.GetReferences().AddInternalReference(SdfPath(refNodeName));
 

@@ -404,7 +404,6 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 		nodeD.name = namePath;
 		nodeD.matrix = matrix;
 		nodeD.hasFaceGroup = true;
-		nodeD.shapeHandle = shape->get_handle();
 	}
 
 	// メッシュごとに格納.
@@ -416,8 +415,8 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 			nodeD.faceGroupMesh = true;
 		} else {
 			nodeD.matrix = matrix;
-			nodeD.shapeHandle = shape->get_handle();
 		}
+		nodeD.shapeHandle = shape->get_handle();
 
 		// フェイスグループの場合、マスターサーフェスを取得.
 		sxsdk::master_surface_class* masterSurface = NULL;
@@ -621,15 +620,26 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		}
 
 		// ノードの参照（Shade3Dでのリンク）の考慮.
-		for (size_t i = 0; i < nodesList.size(); ++i) {
-			CNodeBaseData& nodeBaseD = *nodesList[i];
-			if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::ref_node) {
-				// リンクの場合は、参照を作る.
-				CNodeRefData& nodeD = static_cast<CNodeRefData &>(nodeBaseD);
+		{
+			std::vector<std::string> orgNameList;
+			std::vector<std::string> orgMaterialNameList;
+			for (size_t i = 0; i < nodesList.size(); ++i) {
+				CNodeBaseData& nodeBaseD = *nodesList[i];
+				if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::ref_node) {
+					// リンクの場合は、参照を作る.
+					CNodeRefData& nodeD = static_cast<CNodeRefData &>(nodeBaseD);
 
-				std::string orgShapeName, orgMaterialName;
-				m_getShapeRef((int)i, nodeD, orgShapeName, orgMaterialName);
-				if (orgShapeName != "") usdExport.setShapeReference(nodeD.name, orgShapeName, orgMaterialName);
+					std::string orgShapeName, orgMaterialName;
+					m_getShapeRef((int)i, nodeD, orgNameList, orgMaterialNameList);
+					if (orgNameList.empty()) continue;
+
+					for (size_t j = 0; j < orgNameList.size(); ++j) {
+						orgShapeName    = orgNameList[j];
+						orgMaterialName = orgMaterialNameList[j];
+						if (orgShapeName != "") usdExport.setShapeReference(nodeD.name, orgShapeName, orgMaterialName);
+					}
+
+				}
 			}
 		}
 	}
@@ -989,10 +999,12 @@ void CSceneData::m_setMeshSkeletonRef (const CNodeMeshData& nodeMeshData, USD_DA
 /**
  * リンク情報を参照として取得.
  */
-void CSceneData::m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::string& orgName, std::string& orgMaterialName)
+void CSceneData::m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::vector<std::string>& orgNameList, std::vector<std::string>& orgMaterialNameList)
 {
-	orgName = "";
-	orgMaterialName = "";
+	orgNameList.clear();
+	orgMaterialNameList.clear();
+	std::string orgName = "";
+	std::string orgMaterialName = "";
 
 	for (size_t i = 0; i < nodesList.size(); ++i) {
 		if ((int)i == tIndex) continue;
@@ -1001,16 +1013,11 @@ void CSceneData::m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefDat
 		if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::mesh_node) {
 			CNodeMeshData& nodeD = static_cast<CNodeMeshData &>(nodeBaseD);
 			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
+				orgMaterialName = "";
 				orgName = nodeD.name;
 				if (nodeD.materialIndex >= 0) orgMaterialName = materialsList[nodeD.materialIndex].name;
-				break;
-			}
-		}
-		if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node) {
-			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
-			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
-				orgName = nodeD.name;
-				break;
+				orgNameList.push_back(orgName);
+				orgMaterialNameList.push_back(orgMaterialName);
 			}
 		}
 	}

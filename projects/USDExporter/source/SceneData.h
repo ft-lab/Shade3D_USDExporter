@@ -123,7 +123,7 @@ private:
 	/**
 	 * リンク情報を参照として取得.
 	 */
-	void m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::string& orgName, std::string& orgMaterialName);
+	void m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::vector<std::string>& orgNameList, std::vector<std::string>& orgMaterialNameList);
 
 	/**
 	 * ジョイントの回転情報を、QuaternionからEulerに変換し格納.
