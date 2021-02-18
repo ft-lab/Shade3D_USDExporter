@@ -418,10 +418,14 @@ void CUSDExporterInterface::begin (void *)
 	// リンクの場合、親を取得.
 	sxsdk::shape_class* linkedParent = m_pCurrentShape->get_linked_parent();
 	if (linkedParent) {
+		sxsdk::shape_class* pDad = NULL;
+		if (m_pCurrentShape->has_dad()) pDad = m_pCurrentShape->get_dad();
+
+		// 1つ親の場合はリンクとしては無効.
 		try {
 			compointer<sxsdk::scene_interface> scene(m_pCurrentShape->get_scene_interface());
 			if (scene) {
-				if (linkedParent->get_handle() == scene->get_shape().get_handle()) linkedParent = NULL;
+				if (linkedParent->get_handle() == (pDad->get_handle())) linkedParent = NULL;
 			}
 		} catch (...) { }
 	}
