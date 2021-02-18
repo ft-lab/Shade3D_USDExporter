@@ -49,7 +49,11 @@ CUSDExporterInterface::~CUSDExporterInterface ()
  */
 const char *CUSDExporterInterface::get_file_extension (void *)
 {
-	return (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda && !m_exportParam.exportAppleUSDZ) ? "usda" : "usdc";
+	std::string extStr = "usdc";
+	if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda) extStr = "usda";
+	if (m_exportParam.exportAppleUSDZ || (m_exportParam.exportUSDZ && !m_exportParam.exportOutputTempFiles)) extStr = "usdz";
+
+	return extStr.c_str();
 }
 
 /**
@@ -283,11 +287,6 @@ void CUSDExporterInterface::clean_up (void *)
 
 	if (usdzFilePath == "" || m_exportParam.exportOutputTempFiles) {
 		shade.message(std::string("Export : ") + filePath2);
-	} else {
-		// ファイルサイズが0の出力を削除.
-		try {
-			shade.delete_file(m_orgFilePath.c_str());
-		} catch (...) { }
 	}
 
 	if (usdzFilePath != "") {
