@@ -20,6 +20,7 @@ namespace USD_DATA {
 		ball_joint_node,	// BallJoint (joint).これはtransform animation要素とする.
 		material_node,		// Material.
 		texture_node,		// Texture.
+		ref_node,			// 参照があるノード (Shade3Dのリンク相当).
 	};
 
 	/**

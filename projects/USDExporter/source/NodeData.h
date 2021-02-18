@@ -94,4 +94,42 @@ public:
 	}
 };
 
+//------------------------------------------------------------------.
+/**
+ * 参照用のノード.
+ */
+class CNodeRefData : public CNodeBaseData
+{
+public:
+	void *shapeHandle;			// sxsdk::shape_classのハンドル.
+
+public:
+	CNodeRefData () {
+		clear();
+	}
+	virtual ~CNodeRefData () {
+	}
+
+	CNodeRefData (const CNodeRefData& v) {
+		this->name     = v.name;
+		this->matrix   = v.matrix;
+		this->nodeType = v.nodeType;
+		this->shapeHandle = v.shapeHandle;
+	}
+
+    CNodeRefData& operator = (const CNodeRefData &v) {
+		this->name     = v.name;
+		this->matrix   = v.matrix;
+		this->nodeType = v.nodeType;
+		this->shapeHandle = v.shapeHandle;
+		return (*this);
+	}
+
+	void clear () {
+		name = "";
+		matrix = sxsdk::mat4::identity;
+		nodeType = USD_DATA::NODE_TYPE::ref_node;
+		shapeHandle = NULL;
+	}
+};
 #endif

@@ -336,7 +336,7 @@ bool CUSDExporterInterface::m_checkSkipShape (sxsdk::shape_class* shape)
 	const int type = shape->get_type();
 	if (type == sxsdk::enums::part) {
 		const int partType = shape->get_part().get_part_type();
-		if (partType == sxsdk::enums::master_surface_part || partType == sxsdk::enums::master_image_part || partType == sxsdk::enums::master_shape_object_part) skipF = true;
+		if (partType == sxsdk::enums::master_surface_part || partType == sxsdk::enums::master_image_part) skipF = true;
 
 	} else {
 		if (type == sxsdk::enums::master_surface || type == sxsdk::enums::master_image) skipF = true;
@@ -460,6 +460,12 @@ void CUSDExporterInterface::begin (void *)
 			//sxsdk::mat4 m = m_pCurrentShape->get_transformation();
 			m = Shade3DUtil::convUnit_mm_to_cm(m);
 			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
+		} else {
+			if (linkedParent) {
+				// リンク形状の場合は格納自身はスキップし、参照を保持.
+				m_skip = true;
+				m_sceneData.appendNodeReference(m_pCurrentShape, m_currentPathName);
+			}
 		}
 	}
 }

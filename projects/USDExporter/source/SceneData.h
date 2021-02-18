@@ -121,6 +121,11 @@ private:
 	void m_setMeshSkeletonRef (const CNodeMeshData& nodeMeshData, USD_DATA::MeshData& meshData);
 
 	/**
+	 * リンク情報を参照として取得.
+	 */
+	void m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::string& orgName, std::string& orgMaterialName);
+
+	/**
 	 * ジョイントの回転情報を、QuaternionからEulerに変換し格納.
 	 */
 	 void m_calcJointQuaternionToEuler (CJointMotionData& motionData);
@@ -194,6 +199,13 @@ public:
 	 * @param[in] _tempMeshData  メッシュ情報.
 	 */
 	void appendNodeMesh (sxsdk::shape_class* shape, const std::string& namePath, const sxsdk::mat4& matrix, const CTempMeshData& _tempMeshData);
+
+	/**
+	 * リンクとしての参照を追加.
+	 * @param[in] shape     対象形状.
+	 * @param[in] namePath  形状パス (/root/objects/xxx のような形式).
+	 */
+	void appendNodeReference (sxsdk::shape_class* shape, const std::string& namePath);
 
 	/**
 	 * USDファイルを出力.

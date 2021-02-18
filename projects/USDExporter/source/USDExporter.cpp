@@ -724,6 +724,40 @@ void CUSDExporter::appendNodeNull (const std::string& nodeName, const USD_DATA::
 }
 
 /**
+ * 参照を指定.
+ * @param[in] nodeName           ノード名 (/root/xxx/mesh1 などのパス形式).
+ * @param[in] refNodeName        参照するノード名 (/root/xxx/mesh1 などのパス形式).
+ * @param[in] refMaterialName    参照するマテリアル名 (/root/materials/xxx1 などのパス形式).
+ */
+void CUSDExporter::setShapeReference (const std::string& nodeName, const std::string& refNodeName, const std::string& refMaterialName)
+{
+	if (!g_stage) return;
+
+	const int iPos = nodeName.find_last_of("/");
+	if (iPos == std::string::npos) return;
+
+	const std::string sPath = nodeName.substr(0, iPos);
+	const std::string sName = nodeName.substr(iPos + 1);
+
+	UsdPrim node = g_stage->GetPrimAtPath(SdfPath(sPath));
+	if (!node.IsValid()) return;
+
+	std::string nodePath = sPath + std::string("/ref_") + sName;
+	UsdPrim nodeRef = g_stage->OverridePrim(SdfPath(nodePath));
+	nodeRef.GetReferences().AddInternalReference(SdfPath(refNodeName));
+
+	// マテリアルを割り当て.
+	if (refMaterialName != "") {
+		UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(refMaterialName));
+		if (primMat.IsValid()) {
+			UsdShadeMaterial mat(primMat);
+			UsdShadeMaterialBindingAPI(nodeRef).Bind(mat);
+		}
+	}
+}
+
+
+/**
  * ノードに対してモーション情報(transform animation)を格納.
  */
 void CUSDExporter::m_setTransformAnimation (const std::string& nodeName, const CJointMotionData& jointMotion)

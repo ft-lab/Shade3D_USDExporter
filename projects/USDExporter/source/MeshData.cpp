@@ -187,6 +187,7 @@ CNodeMeshData::CNodeMeshData (const CNodeMeshData& v)
 	this->matrix   = v.matrix;
 	this->nodeType = v.nodeType;
 
+	this->shapeHandle     = v.shapeHandle;
 	this->vertices         = v.vertices;
 	this->normals          = v.normals;
 	this->faceUV0          = v.faceUV0;
@@ -215,6 +216,7 @@ void CNodeMeshData::clear ()
 	matrix = sxsdk::mat4::identity;
 	nodeType = USD_DATA::NODE_TYPE::mesh_node;
 
+	shapeHandle = NULL;
 	vertices.clear();
 	normals.clear();
 	faceUV0.clear();

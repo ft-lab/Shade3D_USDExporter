@@ -85,6 +85,8 @@ public:
 class CNodeMeshData : public CNodeBaseData
 {
 public:
+	void *shapeHandle;			// sxsdk::shape_classのハンドル.
+
 	// vertices/normals/uv0/uv1/skinWeights/skinJoints の要素数は同じ。.
 	std::vector<sxsdk::vec3> vertices;		// 頂点座標.
 	std::vector<sxsdk::vec3> normals;		// 頂点ごとの法線.
@@ -115,6 +117,7 @@ public:
 		this->matrix   = v.matrix;
 		this->nodeType = v.nodeType;
 
+		this->shapeHandle     = v.shapeHandle;
 		this->vertices        = v.vertices;
 		this->normals         = v.normals;
 		this->faceUV0         = v.faceUV0;

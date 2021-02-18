@@ -141,6 +141,14 @@ public:
 	void appendNodeMesh (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix, const USD_DATA::MeshData& meshData, const bool doubleSided);
 
 	/**
+	 * 参照を指定.
+	 * @param[in] nodeName           ノード名 (/root/xxx/mesh1 などのパス形式).
+	 * @param[in] refNodeName        参照するノード名 (/root/xxx/mesh1 などのパス形式).
+	 * @param[in] refMaterialName    参照するマテリアル名 (/root/materials/xxx1 などのパス形式).
+	 */
+	void setShapeReference (const std::string& nodeName, const std::string& refNodeName, const std::string& refMaterialName);
+
+	/**
 	 * アニメーション情報を出力.
 	 * @param[in] startFrame  開始フレーム.
 	 * @param[in] endFrame    終了フレーム.
