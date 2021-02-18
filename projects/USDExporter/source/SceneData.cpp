@@ -72,15 +72,16 @@ bool CSceneData::checkConvertMesh (sxsdk::shape_class* shape)
 /**
  * 指定の形状を格納する.
  * @param[in] shape  形状の参照.
+ * @param[in] linkedParentShape  リンク時の親の参照.
  * @return USDで格納する際の形状パス.
  */
-std::string CSceneData::appendShape (sxsdk::shape_class* shape)
+std::string CSceneData::appendShape (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape)
 {
 	const std::string name = shape->get_name();
 	const int type = shape->get_type();
 
 	// 名前をパスの形にする.
-	std::string name2 = getShapePath(shape);
+	std::string name2 = getShapePath(shape, linkedParentShape);
 
 	// ルートノード名.
 	if (!shape->has_dad()) {
@@ -108,9 +109,10 @@ std::string CSceneData::appendShape (sxsdk::shape_class* shape)
 /**
  * 指定の形状に対応するUSDでのパスを取得.
  * @param[in] shape  形状の参照.
+ * @param[in] linkedParentShape  リンク時の親の参照.
  * @return USDで格納する際の形状パス.
  */
-std::string CSceneData::getShapePath (sxsdk::shape_class* shape)
+std::string CSceneData::getShapePath (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape)
 {
 	const std::string name = shape->get_name();
 	std::string name2 = name;
@@ -133,7 +135,7 @@ std::string CSceneData::getShapePath (sxsdk::shape_class* shape)
 		}
 	}
 
-	{
+	if (!linkedParentShape) {
 		bool chkF = false;
 		void* sHandle = shape->get_handle();
 		for (size_t i = 0; i < m_elementsList.size(); ++i) {
@@ -150,8 +152,8 @@ std::string CSceneData::getShapePath (sxsdk::shape_class* shape)
 	}
 
 	sxsdk::shape_class* s = shape;
-	if (s->has_dad()) {
-		s = s->get_dad();
+	if (s->has_dad() || linkedParentShape) {
+		s = linkedParentShape ? linkedParentShape : (s->get_dad());
 		void* sHandle = s->get_handle();
 
 		for (size_t i = 0; i < m_elementsList.size(); ++i) {

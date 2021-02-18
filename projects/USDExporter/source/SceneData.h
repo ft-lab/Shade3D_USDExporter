@@ -159,16 +159,18 @@ public:
 	/**
 	 * 指定の形状を格納する.
 	 * @param[in] shape  形状の参照.
+	 * @param[in] linkedParentShape  リンク時の親の参照.
 	 * @return USDで格納する際の形状パス.
 	 */
-	std::string appendShape (sxsdk::shape_class* shape);
+	std::string appendShape (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape);
 
 	/**
 	 * 指定の形状に対応するUSDでのパスを取得.
 	 * @param[in] shape  形状の参照.
+	 * @param[in] linkedParentShape  リンク時の親の参照.
 	 * @return USDで格納する際の形状パス.
 	 */
-	std::string getShapePath (sxsdk::shape_class* shape);
+	std::string getShapePath (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape);
 
 	/**
 	 * 指定の形状がメッシュに変換できるか調べる.

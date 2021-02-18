@@ -304,12 +304,69 @@ void CUSDExporterInterface::clean_up (void *)
 }
 
 /**
+ * 指定の形状がスキップ対象か.
+ */
+bool CUSDExporterInterface::m_checkSkipShape (sxsdk::shape_class* shape)
+{
+	bool skipF = false;
+	if (!shape) return skipF;
+
+	// レンダリング対象でない場合はスキップ.
+	const std::string name(shape->get_name());
+	if (shape->get_render_flag() == 0) skipF = true;
+	if (name != "" && name[0] == '#') skipF = true;
+
+	if (!skipF && shape->get_render_flag() < 0) {		// 継承.
+		sxsdk::shape_class* pS = shape;
+		while (pS->has_dad()) {
+			pS = pS->get_dad();
+			if (pS->get_render_flag() == 0) {
+				skipF = true;
+				break;
+			}
+			if (pS->get_render_flag() == 1) {
+				skipF = false;
+				break;
+			}
+		}
+	}
+	if (skipF) return true;
+
+	// 形状により、スキップする形状を判断.
+	const int type = shape->get_type();
+	if (type == sxsdk::enums::part) {
+		const int partType = shape->get_part().get_part_type();
+		if (partType == sxsdk::enums::master_surface_part || partType == sxsdk::enums::master_image_part || partType == sxsdk::enums::master_shape_object_part) skipF = true;
+
+	} else {
+		if (type == sxsdk::enums::master_surface || type == sxsdk::enums::master_image) skipF = true;
+
+		// 光源の場合はスキップ.
+		if (type == sxsdk::enums::area_light || type == sxsdk::enums::directional_light || type == sxsdk::enums::point_light || type == sxsdk::enums::spotlight) {
+			skipF = true;
+		}
+		if (type == sxsdk::enums::line) {
+			// 面光源/線光源の場合.
+			sxsdk::line_class& lineC = shape->get_line();
+			if (lineC.get_light_intensity() > 0.0f) skipF = true;
+		}
+	}
+
+	if (type == sxsdk::enums::line) {
+		// 開いた線形状で、回転体/掃引体でない場合.
+		sxsdk::line_class& lineC = shape->get_line();
+		if (!lineC.get_closed() && !lineC.is_extruded() && !lineC.is_revolved()) m_skip = true;
+	}
+
+	return skipF;
+}
+
+/**
  * カレント形状の処理の開始.
  */
 void CUSDExporterInterface::begin (void *)
 {
 	m_pCurrentShape = NULL;
-	m_skip = false;
 	m_curShapeHasSubdivision = false;
 
 	// カレントの形状管理クラスのポインタを取得.
@@ -318,6 +375,8 @@ void CUSDExporterInterface::begin (void *)
 	const std::string name(m_pCurrentShape->get_name());
 
 	//m_shapeStack.push(m_currentDepth, m_pCurrentShape, gMat);
+
+	m_skip = m_checkSkipShape(m_pCurrentShape);
 
 	const int type = m_pCurrentShape->get_type();
 
@@ -356,30 +415,20 @@ void CUSDExporterInterface::begin (void *)
 	m_currentLWMatrix = gMat;
 	m_currentDepth++;
 
+	// リンクの場合、親を取得.
+	sxsdk::shape_class* linkedParent = m_pCurrentShape->get_linked_parent();
+	if (linkedParent) {
+		try {
+			compointer<sxsdk::scene_interface> scene(m_pCurrentShape->get_scene_interface());
+			if (scene) {
+				if (linkedParent->get_handle() == scene->get_shape().get_handle()) linkedParent = NULL;
+			}
+		} catch (...) { }
+	}
+
 	// 形状情報を追加.
 	// 戻り値は、USDのパスとしての名前.
-	m_currentPathName = m_sceneData.appendShape(m_pCurrentShape);
-
-	if (type == sxsdk::enums::light || type == sxsdk::enums::camera_joint || type == sxsdk::enums::master_surface || type == sxsdk::enums::master_image) {
-		m_skip = true;
-		return;
-	}
-	if (type == sxsdk::enums::part) {
-		const int partType = m_pCurrentShape->get_part().get_part_type();
-		if (partType == sxsdk::enums::master_image_part || partType == sxsdk::enums::master_surface_part) {
-			m_skip = true;
-			return;
-		}
-	}
-
-	if (type == sxsdk::enums::line) {
-		// 開いた線形状で、回転体/掃引体でない場合.
-		sxsdk::line_class& lineC = m_pCurrentShape->get_line();
-		if (!lineC.get_closed() && !lineC.is_extruded() && !lineC.is_revolved()) {
-			m_skip = true;
-			return;
-		}
-	}
+	m_currentPathName = m_sceneData.appendShape(m_pCurrentShape, linkedParent);
 
 	if (!m_skip) {
 		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
@@ -439,6 +488,8 @@ void CUSDExporterInterface::end (void *)
 		// 面の反転フラグ.
 		m_flipFace = m_shapeStack.isFlipFace();
 	}
+
+	m_skip = m_checkSkipShape(m_pCurrentShape);
 }
 
 /**

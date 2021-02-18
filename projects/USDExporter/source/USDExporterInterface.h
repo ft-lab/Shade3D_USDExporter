@@ -249,6 +249,12 @@ private:
 	virtual void save_dialog_data (sxsdk::dialog_interface &dialog,void * = 0);
 	virtual bool respond (sxsdk::dialog_interface &dialog, sxsdk::dialog_item_class &item, int action, void *);
 
+private:
+	/**
+	 * 指定の形状がスキップ対象か.
+	 */
+	bool m_checkSkipShape (sxsdk::shape_class* shape);
+
 public:
 	CUSDExporterInterface (sxsdk::shade_interface& shade);
 	~CUSDExporterInterface ();
