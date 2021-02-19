@@ -762,7 +762,6 @@ void CUSDExporter::setShapeReference (const std::string& nodeName, const std::st
 	}
 }
 
-
 /**
  * ノードに対してモーション情報(transform animation)を格納.
  */

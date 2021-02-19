@@ -144,6 +144,14 @@ namespace Shade3DUtil {
 	 * @param[in] worldM ワールド座標での変換行列を取得する場合はtrue.
 	 */
 	sxsdk::mat4 getBallJointMatrix (sxsdk::shape_class& shape, const bool worldM = false);
+
+	/**
+	 * リンクの参照元を取得.
+	 * @param[in]   scene       シーン.
+	 * @param[out]  shapesList  マスターオブジェクトとしての形状を格納.
+	 * @return マスターオブジェクト数.
+	 */
+	int getLinkMasterObjects (sxsdk::scene_interface* scene, std::vector<sxsdk::shape_class *>& shapesList);
 }
 
 #endif

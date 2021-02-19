@@ -52,6 +52,11 @@ private:
 	sxsdk::vec3 m_parentBoneBallPos;			// ボーン/ボールジョイント内のメッシュの場合、親の中心位置.
 	bool m_parentBoneBallJoint;					// 親がボーン/ボールジョイントの場合はtrue.
 
+	std::vector<sxsdk::shape_class *> m_linkMasterList;		// リンク時のマスター形状.
+
+	std::vector<sxsdk::shape_class *> m_linkStack;			// リンクが行われたときの形状保持用.
+
+
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }
 

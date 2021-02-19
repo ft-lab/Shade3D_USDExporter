@@ -456,8 +456,12 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 			const std::string newName = m_findNames.appendName(materialD.name, USD_DATA::NODE_TYPE::material_node);
 			materialD.name = newName;
 			materialD.pSurface = (void *)tmpMaterialSurfaceList[tmpMaterialIndex];		// sxsdk::surface_classの識別用.
+			materialD.refCount = 1;
 			matIndex = (int)materialsList.size();
 			materialsList.push_back(materialD);
+
+		} else {
+			materialsList[matIndex].refCount++;
 		}
 
 		// Meshにマテリアルの参照を渡す.
@@ -1016,6 +1020,14 @@ void CSceneData::m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefDat
 				orgMaterialName = "";
 				orgName = nodeD.name;
 				if (nodeD.materialIndex >= 0) orgMaterialName = materialsList[nodeD.materialIndex].name;
+				orgNameList.push_back(orgName);
+				orgMaterialNameList.push_back(orgMaterialName);
+			}
+		} else if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node) {
+			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
+			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
+				orgMaterialName = "";
+				orgName = nodeD.name;
 				orgNameList.push_back(orgName);
 				orgMaterialNameList.push_back(orgMaterialName);
 			}

@@ -136,6 +136,7 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 	m_orgFilePath = m_pluginExporter->get_file_path();
 
 	m_shapeStack.clear();
+	m_linkStack.clear();
 	m_currentDepth = 0;
 	m_pScene = scene;
 
@@ -150,6 +151,9 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 			m_pScene->set_sequence_mode(false);
 		}
 	}
+
+	// リンクのマスター形状を取得.
+	Shade3DUtil::getLinkMasterObjects(scene, m_linkMasterList);
 
 	// エクスポートを開始.
 	plugin_exporter->do_export();
@@ -422,17 +426,24 @@ void CUSDExporterInterface::begin (void *)
 		if (m_pCurrentShape->has_dad()) pDad = m_pCurrentShape->get_dad();
 
 		// 1つ親の場合はリンクとしては無効.
-		try {
-			compointer<sxsdk::scene_interface> scene(m_pCurrentShape->get_scene_interface());
-			if (scene) {
-				if (linkedParent->get_handle() == (pDad->get_handle())) linkedParent = NULL;
-			}
-		} catch (...) { }
+		if (linkedParent->get_handle() == (pDad->get_handle())) linkedParent = NULL;
 	}
 
 	// 形状情報を追加.
-	// 戻り値は、USDのパスとしての名前.
+	// 戻り値は、USDのパスとしての名前。リンクを考慮したパスを作る.
 	m_currentPathName = m_sceneData.appendShape(m_pCurrentShape, linkedParent);
+
+	if (linkedParent) {
+		m_linkStack.push_back(m_pCurrentShape);
+	}
+
+	// リンク形状の場合は格納自身はスキップし、参照を保持.
+	if (linkedParent) {
+		m_sceneData.appendNodeReference(m_pCurrentShape, m_currentPathName);
+	}
+
+	// リンク先を走査中の場合は格納は行わずスキップ.
+	if (!m_linkStack.empty()) m_skip = true;
 
 	if (!m_skip) {
 		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
@@ -464,12 +475,6 @@ void CUSDExporterInterface::begin (void *)
 			//sxsdk::mat4 m = m_pCurrentShape->get_transformation();
 			m = Shade3DUtil::convUnit_mm_to_cm(m);
 			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
-		} else {
-			if (linkedParent) {
-				// リンク形状の場合は格納自身はスキップし、参照を保持.
-				m_skip = true;
-				m_sceneData.appendNodeReference(m_pCurrentShape, m_currentPathName);
-			}
 		}
 	}
 }
@@ -480,6 +485,10 @@ void CUSDExporterInterface::begin (void *)
 void CUSDExporterInterface::end (void *)
 {
 	if (!m_skip) {
+	}
+
+	if (!m_linkStack.empty() && m_linkStack.back() == m_pCurrentShape) {
+		m_linkStack.pop_back();
 	}
 
 	m_shapeStack.pop();

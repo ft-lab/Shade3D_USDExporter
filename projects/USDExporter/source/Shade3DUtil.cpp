@@ -774,3 +774,49 @@ sxsdk::mat4 Shade3DUtil::getBallJointMatrix (sxsdk::shape_class& shape, const bo
 	return shape.get_transformation() * lwMat;
 }
 
+namespace {
+	/**
+	 * 再帰的にリンクの参照元の序数を格納.
+	 */
+	void m_getLinkMasterObjectsLoop (sxsdk::shape_class& shape, std::vector<int>& ordinalList) {
+		if (shape.get_type() == sxsdk::enums::part && shape.get_part().get_part_type() == sxsdk::enums::link_part) {
+			sxsdk::shape_class* pLinkMaster = shape.get_part().get_link_master();
+			if (pLinkMaster) {
+				const int ordinalV = pLinkMaster->get_ordinal();
+				if (std::find(ordinalList.begin(), ordinalList.end(), ordinalV) == ordinalList.end()) {
+					ordinalList.push_back(ordinalV);
+				}
+			}
+		}
+
+		if (shape.has_son()) {
+			sxsdk::shape_class* pS = shape.get_son();
+			while (pS->has_bro()) {
+				pS = pS->get_bro();
+				m_getLinkMasterObjectsLoop(*pS, ordinalList);
+			}
+		}
+	}
+}
+
+/**
+ * リンクの参照元を取得.
+ * @param[in]   scene       シーン.
+ * @param[out]  shapesList  マスターオブジェクトとしての形状を格納.
+ * @return マスターオブジェクト数.
+ */
+int Shade3DUtil::getLinkMasterObjects (sxsdk::scene_interface* scene, std::vector<sxsdk::shape_class *>& shapesList)
+{
+	shapesList.clear();
+	sxsdk::shape_class& rootShape = scene->get_shape();
+
+	std::vector<int> ordinalList;
+	::m_getLinkMasterObjectsLoop(rootShape, ordinalList);
+	if (ordinalList.empty()) return 0;
+
+	for (size_t i = 0; i < ordinalList.size(); ++i) {
+		sxsdk::shape_class* pS = scene->get_shape_by_ordinal(ordinalList[i]);
+		if (pS) shapesList.push_back(pS);
+	}
+	return (int)shapesList.size();
+}

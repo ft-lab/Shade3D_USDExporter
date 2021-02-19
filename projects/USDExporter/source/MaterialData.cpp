@@ -75,6 +75,7 @@ void CMaterialData::clear ()
 	pMasterSurfaceHandle = NULL;
 	alphaModeParam.clear();
 	pSurface = NULL;
+	refCount = 0;
 }
 
 /**
