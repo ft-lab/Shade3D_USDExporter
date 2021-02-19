@@ -433,10 +433,23 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 	// マテリアルを追加.
 	//-----------------------------------.
 	UsdPrim primMat = g_stage->DefinePrim(SdfPath(materialData.name), TfToken("Material"));
+	m_appendNodeMaterial(materialData.name, materialData);
+}
+
+/**
+ * 指定のUSDのパスにマテリアル情報を格納.
+ * @param[in] pathStr        USD上のパス (/root/xxx/red).
+ * @param[in] materialData   マテリアルデータ.
+ */
+void CUSDExporter::m_appendNodeMaterial (const std::string& pathStr, const CMaterialData& materialData)
+{
+	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(pathStr));
+	if (!primMat.IsValid()) return;
+
 	UsdShadeMaterial mat(primMat);
 
 	// PBR Shaderの作成.
-	UsdPrim primShader = g_stage->DefinePrim(SdfPath(materialData.name + std::string("/PBRShader")), TfToken("Shader"));
+	UsdPrim primShader = g_stage->DefinePrim(SdfPath(pathStr + std::string("/PBRShader")), TfToken("Shader"));
 	UsdShadeShader shader(primShader);
 
 	shader.CreateIdAttr().Set(TfToken("UsdPreviewSurface"));
@@ -1296,3 +1309,108 @@ void CUSDExporter::appendSkeletonData (const CSkeletonData& skelData)
 		}
 	}
 }
+
+namespace {
+	/**
+	 * 指定のノードで参照されるメッシュのノードパスを取得.
+	 */
+	void m_getMeshNodeNameList (UsdPrim prim, const std::string& basePath, std::vector<std::string>& nodeNameList) {
+		TfTokenVector chNames = prim.GetAllChildrenNames();
+	
+		for (size_t i = 0; i < chNames.size(); ++i) {
+			TfToken tk = chNames[i];
+			const std::string pathStr2 = basePath + std::string("/") + tk.GetString();
+
+			UsdPrim prim2 = g_stage->GetPrimAtPath(SdfPath(pathStr2));
+			if (!prim2.IsValid()) continue;
+
+			if (prim2.GetTypeName().GetString() == std::string("Mesh")) {
+				nodeNameList.push_back(pathStr2);
+			}
+			m_getMeshNodeNameList(prim2, pathStr2, nodeNameList);
+		}
+	}
+}
+
+/**
+ * マテリアルを複製.
+ * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
+ */
+void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList)
+{
+	if (!g_stage) return;
+
+	// すでにnodeName内に"Materials"のノードがある場合はスキップ.
+	const std::string materialsName = nodeName + std::string("/Materials");
+	UsdPrim primMaterials = g_stage->GetPrimAtPath(SdfPath(materialsName));
+	if (primMaterials.IsValid()) return;
+
+	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
+
+	std::vector<std::string> nodeNameList;
+	::m_getMeshNodeNameList(prim, nodeName, nodeNameList);
+	if (nodeNameList.empty()) return;
+
+	// nodeNameの下に"Materials"のスコープを作成.
+	g_stage->DefinePrim(SdfPath(materialsName), TfToken("Scope"));
+
+	// materialsListよりマテリアル名を取り出し.
+	std::vector<std::string> materialNameList;
+	for (size_t i = 0; i < materialsList.size(); ++i) {
+		const std::string name = materialsList[i].name;
+		const int iPos = name.find_last_of("/");
+		if (iPos != std::string::npos) {
+			materialNameList.push_back(name.substr(iPos + 1));
+		} else {
+			materialNameList.push_back("");
+		}
+	}
+
+	// nodeNameList[]のノードより、マテリアルの参照を取得.
+	for (size_t i = 0; i < nodeNameList.size(); ++i) {
+		const std::string pathStr = nodeNameList[i];
+		
+		UsdPrim prim2 = g_stage->GetPrimAtPath(SdfPath(pathStr));
+		if (!prim2.IsValid()) continue;
+
+		// マテリアルのバインドを取得.
+		UsdRelationship relationS = UsdShadeMaterialBindingAPI(prim2).GetDirectBindingRel();
+
+		// マテリアルの参照を取得.
+		SdfPathVector pathList;
+		if (!relationS.GetTargets(&pathList)) continue;
+		if (pathList.empty()) continue;
+
+		const std::string matPath = pathList[0].GetString();		// オリジナルのマテリアルのパスが返る.
+
+		const int iPos = matPath.find_last_of("/");
+		if (iPos != std::string::npos) {
+			const std::string orgMaterialName = matPath.substr(iPos + 1);
+
+			// 対象のマテリアルデータを探す.
+			int mIndex = -1;
+			for (size_t i = 0; i < materialNameList.size(); ++i) {
+				if (materialNameList[i] == orgMaterialName) {
+					mIndex = (int)i;
+					break;
+				}
+			}
+			if (mIndex < 0) continue;
+
+			// マテリアルの実体.
+			UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(matPath));
+
+			// マテリアルのノードを作成.
+			const std::string newPath = materialsName + std::string("/") + orgMaterialName;
+			UsdPrim newPrimMat = g_stage->DefinePrim(SdfPath(newPath), TfToken("Material"));
+
+			// マテリアル情報を追加.
+			m_appendNodeMaterial(newPath, materialsList[mIndex]);
+
+			// 参照を置き換え.
+			UsdShadeMaterial mat(newPrimMat);
+			UsdShadeMaterialBindingAPI(prim2).Bind(mat);
+		}
+	}
+}
+

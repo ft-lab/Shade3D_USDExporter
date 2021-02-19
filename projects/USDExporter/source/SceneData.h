@@ -126,6 +126,11 @@ private:
 	void m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefData, std::vector<std::string>& orgNameList, std::vector<std::string>& orgMaterialNameList);
 
 	/**
+	 * マスターオブジェクト的な要素でパートとして参照される場合、スコープ内にマテリアルを移動させる.
+	 */
+	void m_setLinkMaterials (CUSDExporter& usdExport, const int tIndex, const CNodeRefData& nodeRefData);
+
+	/**
 	 * ジョイントの回転情報を、QuaternionからEulerに変換し格納.
 	 */
 	 void m_calcJointQuaternionToEuler (CJointMotionData& motionData);

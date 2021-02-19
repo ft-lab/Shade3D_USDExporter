@@ -637,12 +637,18 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 					m_getShapeRef((int)i, nodeD, orgNameList, orgMaterialNameList);
 					if (orgNameList.empty()) continue;
 
+					bool linkPartF = false;
 					for (size_t j = 0; j < orgNameList.size(); ++j) {
 						orgShapeName    = orgNameList[j];
 						orgMaterialName = orgMaterialNameList[j];
 						if (orgShapeName != "") usdExport.setShapeReference(nodeD.name, orgShapeName, orgMaterialName);
+						if (orgMaterialName == "") linkPartF = true;
 					}
 
+					// パートをリンクしている場合、参照先のノードはマテリアルもスコープ内に格納する必要がある.
+					if (linkPartF) {
+						m_setLinkMaterials(usdExport, (int)i, nodeD);
+					}
 				}
 			}
 		}
@@ -1030,6 +1036,26 @@ void CSceneData::m_getShapeRef (const int tIndex, const CNodeRefData& nodeRefDat
 				orgName = nodeD.name;
 				orgNameList.push_back(orgName);
 				orgMaterialNameList.push_back(orgMaterialName);
+			}
+		}
+	}
+}
+
+/**
+ * マスターオブジェクト的な要素でパートとして参照される場合、スコープ内にマテリアルを移動させる.
+ */
+void CSceneData::m_setLinkMaterials (CUSDExporter& usdExport, const int tIndex, const CNodeRefData& nodeRefData)
+{
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		if ((int)i == tIndex) continue;
+		CNodeBaseData& nodeBaseD = *nodesList[i];
+
+		if ((nodeBaseD.nodeType) == USD_DATA::NODE_TYPE::null_node) {
+			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
+			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
+				// orgName内にある要素をたどり、「rel material:binding」のマテリアルの参照をorgNameに複製する.
+				usdExport.setMaterialsInScope(nodeD.name, materialsList);
+				break;
 			}
 		}
 	}

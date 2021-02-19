@@ -80,6 +80,13 @@ private:
 	 */
 	void m_setTransformAnimation (const std::string& nodeName, const CJointMotionData& jointMotion);
 
+	/**
+	 * 指定のUSDのパスにマテリアル情報を格納.
+	 * @param[in] pathStr        USD上のパス (/root/xxx/red).
+	 * @param[in] materialData   マテリアルデータ.
+	 */
+	void m_appendNodeMaterial (const std::string& pathStr, const CMaterialData& materialData);
+
 public:
 	//-----------------------------------------------------------.
 	// USDエクスポート用.
@@ -122,6 +129,14 @@ public:
 	 * @param[in] materialData   マテリアルデータ.
 	 */
 	void appendNodeMaterial (const CMaterialData& materialData);
+
+	/**
+	 * マテリアルを複製.
+	 * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
+	 * @param[in]  nodeName       対象のノードパス.
+	 * @param[in]  materialsList  マテリアル情報のリスト.
+	 */
+	void setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList);
 
 	/**
 	 * NULLノードを出力.
