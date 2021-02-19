@@ -506,37 +506,37 @@ void CUSDExporter::m_appendNodeMaterial (const std::string& pathStr, const CMate
 
 	// DiffuseTexture.
 	if (materialData.diffuseTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_difuseColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_difuseColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// EmissiveTexture.
 	if (materialData.emissiveTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_emissiveColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_emissiveColor, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// NormalTexture.
 	if (materialData.normalTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_normal, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_normal, USD_DATA::TEXTURE_SOURE::texture_source_rgb);
 	}
 
 	// RoughnessTexture.
 	if (materialData.roughnessTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_roughness, materialData.roughnessTexture.textureSource);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_roughness, materialData.roughnessTexture.textureSource);
 	}
 
 	// MetallicTexture.
 	if (materialData.metallicTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_metallic, materialData.metallicTexture.textureSource);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_metallic, materialData.metallicTexture.textureSource);
 	}
 
 	// OcclusionTexture.
 	if (materialData.occlusionTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_occlusion, materialData.occlusionTexture.textureSource);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_occlusion, materialData.occlusionTexture.textureSource);
 	}
 
 	// OpacityTexture.
 	if (materialData.opacityTexture.textureParam.imageIndex >= 0) {
-		m_outputTextureData(materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity, materialData.opacityTexture.textureSource);
+		m_outputTextureData(pathStr, materialData, USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_opacity, materialData.opacityTexture.textureSource);
 	}
 
 	// MaterialからShaderをつなぐ.
@@ -545,17 +545,18 @@ void CUSDExporter::m_appendNodeMaterial (const std::string& pathStr, const CMate
 
 /**
  * テクスチャ情報を出力.
+ * @param[in] pathStr        USD上のパス (/root/xxx/red).
  * @param[in] materialData  マテリアル情報クラス.
  * @param[in] patternType   テクスチャの種類.
  * @param[in] textureSource テクスチャの参照要素.
  */
-void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource)
+void CUSDExporter::m_outputTextureData (const std::string& pathStr, const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource)
 {
-	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(materialData.name));
+	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(pathStr));
 	if (!primMat.IsValid()) return;
 	UsdShadeMaterial mat(primMat);
 
-	UsdPrim primShader = g_stage->GetPrimAtPath(SdfPath(materialData.name + std::string("/PBRShader")));
+	UsdPrim primShader = g_stage->GetPrimAtPath(SdfPath(pathStr + std::string("/PBRShader")));
 	if (!primShader.IsValid()) return;
 	UsdShadeShader shader(primShader);
 
@@ -631,7 +632,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	const int uvIndex = mappingD.textureParam.uvLayerIndex;
 
 	// UVのReader.
-	const std::string stReaderPath = materialData.name + std::string((uvIndex == 0) ? "/stReader" : "/stReader2");
+	const std::string stReaderPath = pathStr + std::string((uvIndex == 0) ? "/stReader" : "/stReader2");
 	UsdPrim primReader = g_stage->GetPrimAtPath(SdfPath(stReaderPath));
 	UsdShadeShader shaderReader;
 	if (!primReader.IsValid()) {
@@ -648,7 +649,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 	UsdPrim transform2DShader;
 	if (mappingD.textureParam.repeatU > 1 || mappingD.textureParam.repeatV > 1) {
 		useTransform2D = true;
-		const std::string transform2DName = materialData.name + std::string(texName) + std::string("_Transform2d");
+		const std::string transform2DName = pathStr + std::string(texName) + std::string("_Transform2d");
 		transform2DShader = g_stage->DefinePrim(SdfPath(transform2DName), TfToken("Shader"));
 		UsdShadeShader tShader = UsdShadeShader(transform2DShader);
 		tShader.CreateIdAttr().Set(TfToken("UsdTransform2d"));
@@ -664,7 +665,7 @@ void CUSDExporter::m_outputTextureData (const CMaterialData& materialData, const
 		tShader.CreateInput(TfToken("scale"), SdfValueTypeNames->Float2).Set(GfVec2f(scaleU, scaleV));
 	}
 
-	UsdPrim texShader = g_stage->DefinePrim(SdfPath(materialData.name + std::string(texName)), TfToken("Shader"));
+	UsdPrim texShader = g_stage->DefinePrim(SdfPath(pathStr + std::string(texName)), TfToken("Shader"));
 	UsdShadeShader shaderTexture(texShader);
 
 	shaderTexture.CreateIdAttr().Set(TfToken("UsdUVTexture"));

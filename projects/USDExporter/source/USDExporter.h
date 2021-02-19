@@ -64,11 +64,12 @@ private:
 
 	/**
 	 * テクスチャ情報を出力.
+	 * @param[in] pathStr        USD上のパス (/root/xxx/red).
 	 * @param[in] materialData  マテリアル情報クラス.
 	 * @param[in] patternType   テクスチャの種類.
 	 * @param[in] textureSource テクスチャの参照要素.
 	 */
-	void m_outputTextureData (const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource);
+	void m_outputTextureData (const std::string& pathStr, const CMaterialData& materialData, const USD_DATA::TEXTURE_PATTERN_TYPE& patternType, const USD_DATA::TEXTURE_SOURE& textureSource);
 
 	/**
 	 * 指定のメッシュがスキンを持つか.
