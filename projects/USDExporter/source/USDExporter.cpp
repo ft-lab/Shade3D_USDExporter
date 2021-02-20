@@ -1415,3 +1415,18 @@ void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::
 	}
 }
 
+/**
+ * 非表示化.
+ * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
+ */
+void CUSDExporter::setVisible (const std::string& nodeName, const bool visible)
+{
+	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
+	if (!prim.IsValid()) return;
+	UsdGeomXform node(prim);
+	if (visible) node.MakeVisible();
+	else node.MakeInvisible();
+
+	prim.SetHidden(!visible);
+	prim.SetActive(visible);		// これはiOS 14.4で効いている.
+}

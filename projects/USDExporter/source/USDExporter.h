@@ -176,6 +176,13 @@ public:
 	 * Skeleton情報を出力.
 	 */
 	void appendSkeletonData (const CSkeletonData& skelData);
+
+	/**
+	 * 非表示化.
+	 * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
+	 */
+	void setVisible (const std::string& nodeName, const bool visible = true);
+
 };
 
 #endif

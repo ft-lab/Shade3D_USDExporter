@@ -188,6 +188,11 @@ public:
 	std::string searchSamePath (sxsdk::shape_class* shape);
 
 	/**
+	 * 情報として指定の形状がすでに格納済みかチェック（リンクやマスターオブジェクト格納時の最適化用）.
+	 */
+	bool existStoreShape (sxsdk::shape_class* shape);
+
+	/**
 	 * 指定の形状がメッシュに変換できるか調べる.
 	 */
 	bool checkConvertMesh (sxsdk::shape_class* shape);

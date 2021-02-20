@@ -506,8 +506,12 @@ void CUSDExporterInterface::begin (void *)
 
 		// マスターオブジェクトは、リンク先から格納する.
 		if (!m_traverseMasterObjectsMode) {
-			if (samePath != "") m_currentPathName = samePath;
-			m_skip = false;
+			if (m_skip) {
+				if (samePath != "") m_currentPathName = samePath;
+
+				// リンク時にまだ格納済みではない場合は、スキップしない.
+				if (!m_sceneData.existStoreShape(m_pCurrentShape)) m_skip = false;
+			}
 		}
 	}
 

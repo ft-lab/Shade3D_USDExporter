@@ -143,6 +143,25 @@ std::string CSceneData::searchSamePath (sxsdk::shape_class* shape)
 }
 
 /**
+ * 情報として指定の形状がすでに格納済みかチェック（リンクやマスターオブジェクト格納時の最適化用）.
+ */
+bool CSceneData::existStoreShape (sxsdk::shape_class* shape)
+{
+	const std::string pathStr = searchSamePath(shape);
+	if (pathStr == "") return false;
+
+	bool existF = false;
+	for (size_t i = 0; i < nodesList.size(); ++i) {
+		CNodeBaseData& nodeBaseD = *nodesList[i];
+		if (nodeBaseD.name == pathStr) {
+			existF = true;
+			break;
+		}
+	}
+	return existF;
+}
+
+/**
  * 指定の形状に対応するUSDでのパスを取得.
  * @param[in] shape  形状の参照.
  * @param[in] linkedParentShape  リンク時の親の参照.
@@ -679,6 +698,9 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 				}
 			}
 		}
+
+		// マスターオブジェクトノードは非表示にする.
+		usdExport.setVisible(MASTER_OBJECT_PART_PATH, false);
 	}
 
 	// エクスポート終了.
