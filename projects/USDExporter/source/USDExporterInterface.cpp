@@ -135,10 +135,9 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 	// 出力先のファイルパス.
 	m_orgFilePath = m_pluginExporter->get_file_path();
 
-	m_shapeStack.clear();
-	m_linkStack.clear();
-	m_currentDepth = 0;
 	m_pScene = scene;
+	m_traverseMasterObjectsMode = false;
+	m_inMasterObjectPart = false;
 
 	shade.message("----- USD Exporter -----");
 
@@ -155,8 +154,40 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 	// リンクのマスター形状を取得.
 	Shade3DUtil::getLinkMasterObjects(scene, m_linkMasterList);
 
+	// マスターオブジェクト（外部参照含む）を持つか.
+	m_hasMasterObject = false;
+	for (size_t i = 0; i < m_linkMasterList.size(); ++i) {
+		if (Shade3DUtil::checkInMasterObjectPart(*m_linkMasterList[i])) {
+			m_hasMasterObject = true;
+			break;
+		}
+	}
+
+	//-----------------------------------.
 	// エクスポートを開始.
-	plugin_exporter->do_export();
+	//-----------------------------------.
+	if (m_hasMasterObject) {
+		// マスターオブジェクトのみを格納.
+		// ただし、マスターオブジェクトパート内は走査されないので(begin-endは呼ばれる)実質はパスを保持するだけ.
+		m_shapeStack.clear();
+		m_linkStack.clear();
+		m_currentDepth = 0;
+
+		m_traverseMasterObjectsMode = true;
+		m_inMasterObjectPart = false;
+		plugin_exporter->do_export();
+	}
+
+	// マスターオブジェクト以外を格納.
+	{
+		m_shapeStack.clear();
+		m_linkStack.clear();
+		m_currentDepth = 0;
+
+		m_traverseMasterObjectsMode = false;
+		m_inMasterObjectPart = false;
+		plugin_exporter->do_export();
+	}
 }
 
 /**
@@ -187,6 +218,9 @@ void CUSDExporterInterface::finish (void *)
  */
 void CUSDExporterInterface::clean_up (void *)
 {
+	// マスターオブジェクトのみを格納する操作時は何もせずにスキップ.
+	if (m_traverseMasterObjectsMode) return;
+
 	// 作業用のパス.
 	const std::string tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
 
@@ -429,21 +463,53 @@ void CUSDExporterInterface::begin (void *)
 		if (linkedParent->get_handle() == (pDad->get_handle())) linkedParent = NULL;
 	}
 
-	// 形状情報を追加.
-	// 戻り値は、USDのパスとしての名前。リンクを考慮したパスを作る.
-	m_currentPathName = m_sceneData.appendShape(m_pCurrentShape, linkedParent);
-
-	if (linkedParent) {
-		m_linkStack.push_back(m_pCurrentShape);
+	// マスターオブジェクトパートの場合.
+	if (type == sxsdk::enums::part) {
+		sxsdk::part_class& part = m_pCurrentShape->get_part();
+		if (part.get_part_type() == sxsdk::enums::master_shape_part) {		// マスターオブジェクトパート.
+			m_inMasterObjectPart = true;
+		}
 	}
 
-	// リンク形状の場合は格納自身はスキップし、参照を保持.
-	if (linkedParent) {
-		m_sceneData.appendNodeReference(m_pCurrentShape, m_currentPathName);
+	// マスターオブジェクトのみを格納する走査時.
+	if (!m_skip) {
+		if (m_traverseMasterObjectsMode) {
+			if (!m_inMasterObjectPart) m_skip = true;
+		} else {
+			// マスターオブジェクト以外を格納する操作時.
+			if (m_inMasterObjectPart) m_skip = true;
+		}
 	}
 
-	// リンク先を走査中の場合は格納は行わずスキップ.
-	if (!m_linkStack.empty()) m_skip = true;
+	m_currentPathName = "";
+	if (!m_skip) {
+		// 指定の形状と同じものがすでに格納済みの場合、そのときのパスを取得.
+		const std::string samePath = m_sceneData.searchSamePath(m_pCurrentShape);
+
+		// 形状情報を追加.
+		// 戻り値は、USDのパスとしての名前。リンクを考慮したパスを作る.
+		m_currentPathName = m_sceneData.appendShape(m_pCurrentShape, linkedParent);
+
+		if (linkedParent) {
+			m_linkStack.push_back(m_pCurrentShape);
+		}
+
+		if (!m_traverseMasterObjectsMode) {
+			// リンク形状の場合は格納自身はスキップし、参照を保持.
+			if (linkedParent) {
+				m_sceneData.appendNodeReference(m_pCurrentShape, m_currentPathName);
+			}
+		}
+
+		// リンク先を走査中の場合は格納は行わずスキップ.
+		if (!m_linkStack.empty()) m_skip = true;
+
+		// マスターオブジェクトは、リンク先から格納する.
+		if (!m_traverseMasterObjectsMode) {
+			if (samePath != "") m_currentPathName = samePath;
+			m_skip = false;
+		}
+	}
 
 	if (!m_skip) {
 		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
@@ -484,11 +550,19 @@ void CUSDExporterInterface::begin (void *)
  */
 void CUSDExporterInterface::end (void *)
 {
-	if (!m_skip) {
-	}
-
 	if (!m_linkStack.empty() && m_linkStack.back() == m_pCurrentShape) {
 		m_linkStack.pop_back();
+	}
+
+	// マスターオブジェクトパートから抜ける場合.
+	if (m_inMasterObjectPart) {
+		const int type = m_pCurrentShape->get_type();
+		if (type == sxsdk::enums::part) {
+			sxsdk::part_class& part = m_pCurrentShape->get_part();
+			if (part.get_part_type() == sxsdk::enums::master_shape_part) {
+				m_inMasterObjectPart = false;
+			}
+		}
 	}
 
 	m_shapeStack.pop();

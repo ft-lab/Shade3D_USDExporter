@@ -183,6 +183,11 @@ public:
 	std::string getShapePath (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape);
 
 	/**
+	 * 同一の形状がすでに格納済みの場合は、既存のパスを取得.
+	 */
+	std::string searchSamePath (sxsdk::shape_class* shape);
+
+	/**
 	 * 指定の形状がメッシュに変換できるか調べる.
 	 */
 	bool checkConvertMesh (sxsdk::shape_class* shape);

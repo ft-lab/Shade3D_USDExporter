@@ -152,6 +152,13 @@ namespace Shade3DUtil {
 	 * @return マスターオブジェクト数.
 	 */
 	int getLinkMasterObjects (sxsdk::scene_interface* scene, std::vector<sxsdk::shape_class *>& shapesList);
+
+	/**
+	 * 指定の形状がマスターオブジェクトパート内にあるか.
+	 * @param[out]  shape     対象の形状.
+	 */
+	bool checkInMasterObjectPart (sxsdk::shape_class& shape);
+
 }
 
 #endif

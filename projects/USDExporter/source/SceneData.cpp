@@ -116,6 +116,33 @@ std::string CSceneData::appendShape (sxsdk::shape_class* shape, sxsdk::shape_cla
 }
 
 /**
+ * 同一の形状がすでに格納済みの場合は、既存のパスを取得.
+ */
+std::string CSceneData::searchSamePath (sxsdk::shape_class* shape)
+{
+	const std::string name = shape->get_name();
+	std::string name2 = name;
+
+	// すでに同様のものを格納済みか.
+	{
+		bool chkF = false;
+		void* sHandle = shape->get_handle();
+		for (size_t i = 0; i < m_elementsList.size(); ++i) {
+			const CElementData& elemD = m_elementsList[i];
+			if (elemD.shape) {
+				if (elemD.shape->get_handle() == sHandle) {
+					name2 = elemD.storeName;
+					chkF = true;
+					break;
+				}
+			}
+		}
+		if (chkF) return name2;
+	}
+	return "";
+}
+
+/**
  * 指定の形状に対応するUSDでのパスを取得.
  * @param[in] shape  形状の参照.
  * @param[in] linkedParentShape  リンク時の親の参照.

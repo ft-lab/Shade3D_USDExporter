@@ -56,6 +56,9 @@ private:
 
 	std::vector<sxsdk::shape_class *> m_linkStack;			// リンクが行われたときの形状保持用.
 
+	bool m_hasMasterObject;							// マスターオブジェクトを持つか.
+	bool m_traverseMasterObjectsMode;				// マスターオブジェクトパートのみをたどる場合.
+	bool m_inMasterObjectPart;						// マスターオブジェクトパートを走査中はtrue.
 
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }

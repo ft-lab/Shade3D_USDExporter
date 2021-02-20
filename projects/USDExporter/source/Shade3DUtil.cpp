@@ -820,3 +820,27 @@ int Shade3DUtil::getLinkMasterObjects (sxsdk::scene_interface* scene, std::vecto
 	}
 	return (int)shapesList.size();
 }
+
+/**
+ * 指定の形状がマスターオブジェクトパート内にあるか.
+ * @param[out]  shape     対象の形状.
+ */
+bool Shade3DUtil::checkInMasterObjectPart (sxsdk::shape_class& shape)
+{
+	sxsdk::shape_class* pS = &shape;
+
+	bool inMasterObjectPart = false;
+	while (1) {
+		if (pS->get_type() == sxsdk::enums::part) {
+			sxsdk::part_class& part = pS->get_part();
+			if (part.get_part_type() == sxsdk::enums::master_shape_part) {		// マスターオブジェクトパート.
+				inMasterObjectPart = true;
+				break;
+			}
+		}
+		if (!pS->has_dad()) break;
+		pS = pS->get_dad();
+	}
+
+	return inMasterObjectPart;
+}
