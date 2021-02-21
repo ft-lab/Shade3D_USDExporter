@@ -592,6 +592,11 @@ USD Exporterプラグインで「AlphaMode」の指定を「MASK」にしてCuto
  → 持てるのを確認済み。ただ、DiffuseColorと乗算合成する仕様が分からないため保留中。     
 * MorphTarget(BlendShapes)を表現できるか。
 
+## 既知の問題
+
+* ボーンでマイナススケール（変換行列のスケールがマイナス値）を使用している場合、正しく出力されない。    
+
+
 ## プラグインのビルド方法（ 開発向け ）
 
 * [USD Exporter for Shade3D : 開発情報](./docs/build.md)    
