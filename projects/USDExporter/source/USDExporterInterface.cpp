@@ -406,6 +406,7 @@ void CUSDExporterInterface::begin (void *)
 {
 	m_pCurrentShape = NULL;
 	m_curShapeHasSubdivision = false;
+	m_begin_polymesh_count = 0;
 
 	// カレントの形状管理クラスのポインタを取得.
 	m_pCurrentShape        = m_pluginExporter->get_current_shape();
@@ -514,6 +515,7 @@ void CUSDExporterInterface::begin (void *)
 			}
 		}
 	}
+	m_currentPathName0 = m_currentPathName;
 
 	if (!m_skip) {
 		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
@@ -618,6 +620,12 @@ void CUSDExporterInterface::begin_polymesh (void *)
 
 	m_LWMat = m_spMat * m_currentLWMatrix;
 	m_WLMat = inv(m_LWMat);
+
+	// 掃引体時は、begin_polymesh - end_polymeshが複数回呼ばれる.
+	// その際に、m_currentPathNameを更新する.
+	if (m_begin_polymesh_count >= 1) {
+		m_currentPathName = m_sceneData.appendUniquePath(m_pCurrentShape, m_currentPathName0);
+	}
 
 	m_sceneData.tmpMeshData.clear();
 
@@ -813,7 +821,7 @@ void CUSDExporterInterface::end_polymesh (void *)
 		// Shade3Dでのmm単位をcmに変換.
 		sxsdk::mat4 m = sxsdk::mat4::identity;
 		if (m_pCurrentShape->get_type() != sxsdk::enums::polygon_mesh) {
-			m = m_spMat * (m_pCurrentShape->get_transformation());
+			m = m_pCurrentShape->get_transformation();
 			m = Shade3DUtil::convUnit_mm_to_cm(m);
 		}
 
@@ -836,6 +844,8 @@ void CUSDExporterInterface::end_polymesh (void *)
 
 		m_sceneData.appendNodeMesh(m_pCurrentShape, m_currentPathName, m, m_sceneData.tmpMeshData);
 	}
+
+	m_begin_polymesh_count++;
 }
 
 /**

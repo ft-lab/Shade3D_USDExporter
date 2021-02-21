@@ -175,6 +175,13 @@ public:
 	std::string appendShape (sxsdk::shape_class* shape, sxsdk::shape_class* linkedParentShape);
 
 	/**
+	 * 指定のパスを格納する。このときにユニークな名前を取得.
+	 * @param[in] nodeName    "/root/xxx/cylinder"のようなUSDでのパス.
+	 * @return ユニークな形状パス.
+	 */
+	std::string appendUniquePath (sxsdk::shape_class* shape, const std::string& nodeName);
+
+	/**
 	 * 指定の形状に対応するUSDでのパスを取得.
 	 * @param[in] shape  形状の参照.
 	 * @param[in] linkedParentShape  リンク時の親の参照.

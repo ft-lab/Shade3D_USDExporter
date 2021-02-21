@@ -42,7 +42,7 @@ private:
 	bool m_flipFace;							// 面を反転する場合.
 
 	std::string m_orgFilePath;					// 出力先のファイル名.
-	std::string m_currentPathName;				// USDとしてのパス名.
+	std::string m_currentPathName0, m_currentPathName;			// USDとしてのパス名.
 
 	bool m_oldSequenceMode;						// エクスポート前のシーケンスモード.
 	bool m_oldDirty;								// エクスポート前の保存フラグ.
@@ -59,6 +59,9 @@ private:
 	bool m_hasMasterObject;							// マスターオブジェクトを持つか.
 	bool m_traverseMasterObjectsMode;				// マスターオブジェクトパートのみをたどる場合.
 	bool m_inMasterObjectPart;						// マスターオブジェクトパートを走査中はtrue.
+
+	int m_begin_polymesh_count;						// begin()を0としたとき、begin_polymeshが連続して呼ばれる場合のカウント（掃引体時）.
+
 
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }

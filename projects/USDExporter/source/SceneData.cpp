@@ -144,6 +144,44 @@ std::string CSceneData::searchSamePath (sxsdk::shape_class* shape)
 }
 
 /**
+ * 指定のパスを格納する。このときにユニークな名前を取得.
+ * @param[in] nodeName    "/root/xxx/cylinder"のようなUSDでのパス.
+ * @return ユニークな形状パス.
+ */
+std::string CSceneData::appendUniquePath (sxsdk::shape_class* shape, const std::string& nodeName)
+{
+	bool chkF = false;
+
+	int cou = 0;
+	std::string name = nodeName;
+
+	while (1) {
+		chkF = false;
+		for (size_t i = 0; i < m_elementsList.size(); ++i) {
+			const CElementData& elemD = m_elementsList[i];
+			if (elemD.storeName == name) {
+				chkF = true;
+				break;
+			}
+		}
+		if (!chkF) break;
+
+		cou++;
+		name = nodeName + std::string("_") + std::to_string(cou);
+	}
+
+	// 要素情報を格納.
+	m_elementsList.push_back(CElementData());
+	CElementData& elemD = m_elementsList.back();
+	elemD.orgName   = nodeName;
+	elemD.storeName = name;
+	elemD.shape     = shape;
+
+	return name;
+}
+
+
+/**
  * 情報として指定の形状がすでに格納済みかチェック（リンクやマスターオブジェクト格納時の最適化用）.
  */
 bool CSceneData::existStoreShape (sxsdk::shape_class* shape)
