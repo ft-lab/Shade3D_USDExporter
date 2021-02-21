@@ -1423,10 +1423,14 @@ void CUSDExporter::setVisible (const std::string& nodeName, const bool visible)
 {
 	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
 	if (!prim.IsValid()) return;
-	UsdGeomXform node(prim);
-	if (visible) node.MakeVisible();
-	else node.MakeInvisible();
 
-	prim.SetHidden(!visible);
-	prim.SetActive(visible);		// これはiOS 14.4で効いている.
+	// 以下は、iOS 14.4では効かない.
+	//UsdGeomXform node(prim);
+	//if (visible) node.MakeVisible();
+	//else node.MakeInvisible();
+
+	//prim.SetHidden(!visible);
+
+	// これはiOS 14.4で効いている.
+	prim.SetActive(visible);
 }

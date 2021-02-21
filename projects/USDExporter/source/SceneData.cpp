@@ -243,11 +243,6 @@ void CSceneData::appendNodeNull (sxsdk::shape_class* shape, const std::string& n
 	nodeD.nodeType = USD_DATA::NODE_TYPE::null_node;
 	if (Shade3DUtil::isBone(*shape)) {
 		nodeD.nodeType = USD_DATA::NODE_TYPE::bone_node;
-
-		// もし、末端ボーンの場合は回転をクリア.
-		if (Shade3DUtil::isBoneEnd(*shape)) {
-			nodeD.matrix = Shade3DUtil::clearMatrixRotate(nodeD.matrix);
-		}
 	}
 
 	if (Shade3DUtil::isBallJoint(*shape)) {
