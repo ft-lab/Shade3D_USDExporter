@@ -1419,7 +1419,7 @@ void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::
  * 非表示化.
  * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
  */
-void CUSDExporter::setVisible (const std::string& nodeName, const bool visible)
+void CUSDExporter::setActive (const std::string& nodeName, const bool activeV)
 {
 	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
 	if (!prim.IsValid()) return;
@@ -1429,8 +1429,25 @@ void CUSDExporter::setVisible (const std::string& nodeName, const bool visible)
 	//if (visible) node.MakeVisible();
 	//else node.MakeInvisible();
 
-	//prim.SetHidden(!visible);
-
 	// これはiOS 14.4で効いている.
-	prim.SetActive(visible);
+	prim.SetActive(activeV);
 }
+
+/**
+ * 非表示化。これはiOS 14.4で非表示となるわけではない.
+ * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
+ */
+void CUSDExporter::setVisible (const std::string& nodeName, const bool visible)
+{
+	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
+	if (!prim.IsValid()) return;
+
+	// 以下は、iOS 14.4では効かない.
+	const TfToken typeName = prim.GetTypeName();
+	if (typeName == TfToken("Xform") || typeName == TfToken("Scope")) {
+		UsdGeomXform node(prim);
+		if (visible) node.MakeVisible();
+		else node.MakeInvisible();
+	}
+}
+

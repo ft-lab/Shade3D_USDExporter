@@ -12,6 +12,7 @@
 #include "AnimKeyframeBake.h"
 
 #define MATERIAL_ROOT_PATH  "/root/Materials"
+#define SKELETONS_ROOT_PATH  "/root/Skeletons"
 #define ROOT_PATH  "/root"
 #define MASTER_OBJECT_PART_PATH "/root/MasterObjects"
 
@@ -695,7 +696,11 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		}
 
 		// マスターオブジェクトノードは非表示にする.
-		usdExport.setVisible(MASTER_OBJECT_PART_PATH, false);
+		// iOS 14.4の場合はVisibleではなくActiveフラグで非表示指定になる.
+		usdExport.setActive(MASTER_OBJECT_PART_PATH, false);
+
+		// Skeletonsノードを非表示にする.
+		usdExport.setVisible(std::string(SKELETONS_ROOT_PATH), false);
 	}
 
 	// エクスポート終了.

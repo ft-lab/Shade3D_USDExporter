@@ -181,6 +181,12 @@ public:
 	 * 非表示化.
 	 * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
 	 */
+	void setActive (const std::string& nodeName, const bool activeV = true);
+
+	/**
+	 * 非表示化。これはiOS 14.4で非表示となるわけではない.
+	 * @param[in] nodeName    ノード名 (/root/xxx/mesh1 などのパス形式).
+	 */
 	void setVisible (const std::string& nodeName, const bool visible = true);
 
 };
