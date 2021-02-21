@@ -738,7 +738,7 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		usdExport.setActive(MASTER_OBJECT_PART_PATH, false);
 
 		// Skeletonsノードを非表示にする.
-		usdExport.setVisible(std::string(SKELETONS_ROOT_PATH), false);
+		//usdExport.setVisible(std::string(SKELETONS_ROOT_PATH), false);
 	}
 
 	// エクスポート終了.

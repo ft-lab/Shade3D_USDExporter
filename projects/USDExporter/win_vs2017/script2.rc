@@ -40,8 +40,8 @@ ALPHA_MODE_DLG          SXUL                    "..\\source\\resources\\ja.lproj
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,0,0
- PRODUCTVERSION 0,1,0,0
+ FILEVERSION 0,1,0,1
+ PRODUCTVERSION 0,1,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -58,11 +58,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "ft-lab."
             VALUE "FileDescription", "USD Exporter"
-            VALUE "FileVersion", "0, 1, 0, 0"
+            VALUE "FileVersion", "0, 1, 0, 1"
             VALUE "InternalName", "USD Exporter"
             VALUE "LegalCopyright", "Copyright (C) 2019-2021 ft-lab."
             VALUE "ProductName", "USD Exporter"
-            VALUE "ProductVersion", "0, 1, 0, 0"
+            VALUE "ProductVersion", "0, 1, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
