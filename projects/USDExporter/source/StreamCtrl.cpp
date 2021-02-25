@@ -90,6 +90,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 
+		// ver.104 -
+		{
+			iDat = data.optDividePolyTri ? 1 : 0;
+			stream->write_int(iDat);
+		}
+
 	} catch (...) { }
 }
 
@@ -174,6 +180,12 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_103) {
 			stream->read_int(iDat);
 			data.bakeWithoutProcessingTextures = iDat ? true : false;
+		}
+
+		// ver.104 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_104) {
+			stream->read_int(iDat);
+			data.optDividePolyTri = iDat ? true : false;
 		}
 
 	} catch (...) { }

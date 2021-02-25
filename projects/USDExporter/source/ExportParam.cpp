@@ -38,6 +38,7 @@ void CExportParam::clear ()
 	optOutputVertexColor = true;
 	optSubdivision = false;
 	optDividePolyTriQuad = true;
+	optDividePolyTri = false;
 
 	texOptConvGrayscale     = false;
 	bakeWithoutProcessingTextures = false;

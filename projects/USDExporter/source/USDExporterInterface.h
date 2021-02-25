@@ -145,6 +145,11 @@ private:
 	virtual bool must_divide_polymesh (void *aux=0);
 
 	/**
+	 * ポリゴンメッシュの面は三角形分割する.
+	 */
+	virtual bool must_triangulate_polymesh (void *);
+
+	/**
 	 * trueを返す場合、ポリゴンメッシュの面はSubdivisionされる (デフォルトtrue).
 	 */
 	virtual bool must_round_polymesh (void *aux=0);

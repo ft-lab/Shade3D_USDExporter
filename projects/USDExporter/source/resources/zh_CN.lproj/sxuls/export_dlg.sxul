@@ -11,7 +11,8 @@
 		<bool id="206" label="Subdivison" />
 		<bool id="203" label="Output bones and skins" />
 		<bool id="204" label="Output vertex color" />
-		<bool id="207" label="Divide a polygon into triangles/quadrangles" />
+		<bool id="207" label="Divide polygons into triangles/quadrangles" />
+		<bool id="208" label="Divide polygons into triangles" />
 	</group>
 
 	<group label="Texture">
