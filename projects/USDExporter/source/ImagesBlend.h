@@ -6,6 +6,7 @@
 
 #include "GlobalHeader.h"
 #include "ExportParam.h"
+#include "usddata.h"
 
 class CImagesBlend
 {
@@ -175,6 +176,11 @@ public:
 	 * アルファ透明を使用しているか.
 	 */
 	bool getDiffuseAlphaTrans () { return m_diffuseAlphaTrans; }
+
+	/**
+	 * 指定のマッピングの種類でのイメージフォーマットの種類を取得.
+	 */
+	USD_DATA::IMAGE_FORMAT_TYPE getImageFormatType (const sxsdk::enums::mapping_type mappingType);
 };
 
 #endif

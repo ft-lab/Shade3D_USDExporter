@@ -48,6 +48,16 @@ namespace USD_DATA {
 		texture_pattern_type_occlusion,			// occlusion.
 	};
 
+	// イメージの種類.
+	enum IMAGE_FORMAT_TYPE {
+		image_format_none = 0,
+		image_format_png,				// png.
+		image_format_jpg,				// jpeg.
+		image_format_hdr,				// hdr.
+		image_format_exr,				// exr.
+		image_format_other				// その他.
+	};
+
 	/**
 	 * メッシュの情報.
 	 * これは、USDにエクスポートする際に使用する作業情報.

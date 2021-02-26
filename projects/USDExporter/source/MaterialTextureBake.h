@@ -143,6 +143,7 @@ private:
 	/**
 	 * 指定のカスタムイメージをエクスポート用に格納.
 	 * @param[in]  mappingType      マッピングの種類.
+	 * @param[in]  imageFormatType  イメージフォーマットの種類.
 	 * @param[in]  materialName     マテリアル名.
 	 * @param[in]  image            マスターイメージクラス.
 	 * @param[in]  factor           乗算値.
@@ -151,7 +152,7 @@ private:
 	 * @param[in]  diffuseAlpha     DiffuseのAlphaを使用する場合.
 	 * @return イメージ番号.
 	 */
-	int m_storeCustomImage (const sxsdk::enums::mapping_type mappingType, const std::string& materialName, sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha = false);
+	int m_storeCustomImage (const sxsdk::enums::mapping_type mappingType, const USD_DATA::IMAGE_FORMAT_TYPE imageFormatType, const std::string& materialName, sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha = false);
 
 	/**
 	 * 指定のimageと同じものがm_imagesList内に存在するか.

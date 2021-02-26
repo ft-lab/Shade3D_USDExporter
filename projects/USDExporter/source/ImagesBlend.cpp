@@ -5,6 +5,7 @@
 #include "MathUtil.h"
 #include "Shade3DUtil.h"
 #include "StreamCtrl.h"
+#include "StringUtil.h"
 #include "USDData.h"
 
 #include <math.h>
@@ -1823,5 +1824,60 @@ sxsdk::rgb_class CImagesBlend::getImageFactor (const sxsdk::enums::mapping_type 
 	}
 
 	return retCol;
+}
+
+/**
+ * 指定のマッピングの種類でのイメージフォーマットの種類を取得.
+ */
+USD_DATA::IMAGE_FORMAT_TYPE CImagesBlend::getImageFormatType (const sxsdk::enums::mapping_type mappingType)
+{
+	USD_DATA::IMAGE_FORMAT_TYPE fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_none;
+	if (!m_surface) return fType;
+
+	const int layersCou = m_surface->get_number_of_mapping_layers();
+	for (int i = 0; i < layersCou; ++i) {
+		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
+		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+
+		const float weight = mappingLayer.get_weight();
+		if (MathUtil::isZero(weight)) continue;
+
+		const int type = mappingLayer.get_type();
+		if (mappingType == MAPPING_TYPE_USD_OCCLUSION) {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+		} else {
+			if (mappingType == sxsdk::enums::normal_mapping) {
+				if (type != sxsdk::enums::normal_mapping && type != sxsdk::enums::bump_mapping) continue;
+			} else if (type != mappingType) continue;
+		}
+
+		// イメージからマスターイメージを取得し、名前を取得.
+		compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+		if (!image || !(image->has_image()) || (image->get_size().x) <= 0 || (image->get_size().y) <= 0) continue;
+
+		sxsdk::master_image_class* masterImage = Shade3DUtil::getMasterImageFromImage(m_pScene, image);
+		if (!masterImage) continue;
+		const std::string name(masterImage->get_name());
+
+		const std::string extStr = StringUtil::getFileExtension(name);
+		if (extStr == "png") {
+			fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_png;
+			break;
+		} else if (extStr == "jpg" || extStr == "jpeg") {
+			fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_jpg;
+			break;
+		} else if (extStr == "hdr") {
+			fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_hdr;
+			break;
+		} else if (extStr == "exr") {
+			fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_exr;
+			break;
+		} else {
+			fType = USD_DATA::IMAGE_FORMAT_TYPE::image_format_other;
+		}
+	}
+
+	return fType;
 }
 

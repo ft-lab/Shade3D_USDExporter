@@ -741,7 +741,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		if (imagesBlend.hasImage(iType)) {
 			materialData.useDiffuseAlpha = imagesBlend.getDiffuseAlphaTrans();
 
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
 			materialData.diffuseColor[0] = 1.0f;
 			materialData.diffuseColor[1] = 1.0f;
 			materialData.diffuseColor[2] = 1.0f;
@@ -769,7 +770,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		if (imagesBlend.hasImage(iType)) {
 			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.metallicTexture, masterImageName);
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.metallicTexture, masterImageName);
 			materialData.metallic = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
@@ -784,7 +786,8 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::glow_mapping;
 		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 		if (imagesBlend.hasImage(iType)) {
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
 
 			materialData.emissiveColor[0] = 1.0f;
 			materialData.emissiveColor[1] = 1.0f;
@@ -805,8 +808,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::roughness_mapping;
 		if (imagesBlend.hasImage(iType)) {
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+
 			const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.roughnessTexture, masterImageName);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.roughnessTexture, masterImageName);
 			materialData.roughness = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
@@ -820,8 +825,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_OPACITY;
 		if (imagesBlend.hasImage(iType)) {
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+
 			const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.opacityTexture, masterImageName);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.opacityTexture, masterImageName);
 			materialData.opacity = 1.0f;
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
@@ -835,8 +842,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_USD_OCCLUSION;
 		if (imagesBlend.hasImage(iType)) {
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+
 			const sxsdk::rgb_class factor(1.0f, 1.0f, 1.0f);
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.occlusionTexture, masterImageName);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.occlusionTexture, masterImageName);
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.occlusionTexture.textureParam.repeatU = repeatV.x;
@@ -848,8 +857,10 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::normal_mapping;
 		if (imagesBlend.hasImage(iType)) {
+			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+
 			const sxsdk::rgb_class factor = (sxsdk::rgb_class(1, 1, 1));
-			imageIndex = m_storeCustomImage(iType, materialName, imagesBlend.getImage(iType), factor, materialData.normalTexture, masterImageName);
+			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.normalTexture, masterImageName);
 
 			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
 			materialData.normalTexture.textureParam.repeatU = repeatV.x;
@@ -908,6 +919,7 @@ int CMaterialTextureBake::m_existImage (sxsdk::image_interface* image, const sxs
 /**
  * 指定のカスタムイメージをエクスポート用に格納.
  * @param[in]  mappingType      マッピングの種類.
+ * @param[in]  imageFormatType  イメージフォーマットの種類.
  * @param[in]  materialName     マテリアル名.
  * @param[in]  image            マスターイメージクラス.
  * @param[in]  factor           乗算値.
@@ -916,7 +928,7 @@ int CMaterialTextureBake::m_existImage (sxsdk::image_interface* image, const sxs
  * @param[in]  diffuseAlpha     DiffuseのAlphaを使用する場合.
  * @return イメージ番号.
  */
-int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type mappingType, const std::string& materialName, sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
+int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type mappingType, const USD_DATA::IMAGE_FORMAT_TYPE imageFormatType, const std::string& materialName, sxsdk::image_interface* image, const sxsdk::rgb_class factor, CTextureMappingData& texMappingData, std::string& masterImageName, const bool diffuseAlpha)
 {
 	int imageIndex = -1;
 	if (image == NULL) return -1;
@@ -939,6 +951,15 @@ int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type m
 	else if (mappingType == MAPPING_TYPE_OPACITY) imageName += "_opacity";
 	else if (mappingType == MAPPING_TYPE_USD_OCCLUSION) imageName += "_occlusion";
 	else imageName += "_texture";
+
+	// mappingType別に割り当てられたイメージより、ファイル拡張子をつける.
+	if (imageFormatType != USD_DATA::IMAGE_FORMAT_TYPE::image_format_none) {
+		if (imageFormatType == USD_DATA::IMAGE_FORMAT_TYPE::image_format_png) {
+			imageName = StringUtil::SetFileImageExtension(imageName, "png");
+		} else if (imageFormatType == USD_DATA::IMAGE_FORMAT_TYPE::image_format_jpg) {
+			imageName = StringUtil::SetFileImageExtension(imageName, "jpg");
+		}
+	}
 
 	if (diffuseAlpha) {
 		// 「アルファ透明」使用時でデフォルトのパラメータの時は、強制的にpng出力.
