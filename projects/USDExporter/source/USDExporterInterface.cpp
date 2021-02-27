@@ -69,6 +69,7 @@ const char *CUSDExporterInterface::get_file_description (void *)
  * 受け付けることのできるポリゴンメッシュ面の頂点の最大数.
  */
 int CUSDExporterInterface::get_max_vertices_per_face (void *) {
+	if (m_exportParam.exportAppleUSDZ) return 3;
 	if (m_exportParam.optDividePolyTriQuad && m_exportParam.optDividePolyTri) return 3;
 	if (m_exportParam.optDividePolyTriQuad) return 4;
 	return 65535;
@@ -87,6 +88,7 @@ bool CUSDExporterInterface::must_divide_polymesh (void *) {
  */
 bool CUSDExporterInterface::must_triangulate_polymesh (void *)
 {
+	if (m_exportParam.exportAppleUSDZ) return true;
 	return (m_exportParam.optDividePolyTriQuad && m_exportParam.optDividePolyTri);
 }
 
@@ -976,12 +978,13 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_divide_poly_tri_quad));
 		item->set_bool(m_exportParam.optDividePolyTriQuad);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
 	{
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_option_divide_poly_tri));
 		item->set_bool(m_exportParam.optDividePolyTri);
-		item->set_enabled(m_exportParam.optDividePolyTriQuad);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ && m_exportParam.optDividePolyTriQuad);
 	}
 
 	{
