@@ -316,19 +316,6 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 	if (!shape->has_motion()) return;
 	if (m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) return;
 
-	// ルートボーンの場合、変換行列を計算.
-	sxsdk::mat4 boneRootMat = sxsdk::mat4::identity;
-	try {
-		if (shape->has_dad()) {
-			sxsdk::shape_class* pParentShape = shape->get_dad();
-			if (pParentShape->get_type() == sxsdk::enums::part) {
-				if (pParentShape->get_part().get_part_type() == sxsdk::enums::simple_part) {
-					boneRootMat = shape->get_local_to_world_matrix();
-				}
-			}
-		}
-	} catch (...) { }
-
 	// ジョイント値を取得。ステップ数での再分割も行う.
 	const CAnimationData animD = m_getAnimationData(m_pScene);
 	CAnimKeyframeBake keyframeBake(m_pScene, m_exportParam);
@@ -340,7 +327,6 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 		try {
 			const sxsdk::vec3 boneWCenter = Shade3DUtil::getJointCenter(*shape, NULL);
 			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
-			const sxsdk::vec3 boneLCenter = (boneWCenter * inv(lwMat)) * boneRootMat;
 
 			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
 			const int pointsCou = motion->get_number_of_motion_points();
@@ -350,11 +336,12 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 			CJointMotionData& jointMotionD = nodeD.jointMotion;
 			CJointTranslationData transD;
 			CJointRotationData rotD;
+			CJointScaleData scaleD;
 			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
 				const CAnimKeyframeData& animD = keyframeData[loop];
 
 				const sxsdk::vec3 offset        = animD.offset;
-				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset);	// + boneLCenter);		// cmに変換.
+				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset);		// cmに変換.
 				const sxsdk::quaternion_class q = animD.quat;
 
 				// 移動情報を格納.
@@ -370,8 +357,13 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 				rotD.y = q.y;
 				rotD.z = q.z;
 				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
-
 				jointMotionD.rotations.push_back(rotD);
+
+				// スケール情報を格納.
+				scaleD.x = animD.scale.x;
+				scaleD.y = animD.scale.y;
+				scaleD.z = animD.scale.z;
+				jointMotionD.scales.push_back(scaleD);
 			}
 
 		} catch (...) { }
@@ -390,6 +382,7 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 			CJointMotionData& jointMotionD = nodeD.jointMotion;
 			CJointTranslationData transD;
 			CJointRotationData rotD;
+			CJointScaleData scaleD;
 			sxsdk::vec3 dirV;
 			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
 				const CAnimKeyframeData& animD = keyframeData[loop];
@@ -411,8 +404,13 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 				rotD.y = q.y;
 				rotD.z = q.z;
 				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
-
 				jointMotionD.rotations.push_back(rotD);
+
+				// スケール情報を格納.
+				scaleD.x = animD.scale.x;
+				scaleD.y = animD.scale.y;
+				scaleD.z = animD.scale.z;
+				jointMotionD.scales.push_back(scaleD);
 			}
 
 			// ジョイント値で位置と回転を保持するため、ボールジョイント自身の変換行列は使用しない.

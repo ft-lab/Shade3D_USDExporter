@@ -21,6 +21,7 @@ public:
 	float framePos;						// フレーム位置.
 	sxsdk::vec3 offset;					// オフセット値.
 	sxsdk::quaternion_class quat;		// 回転情報.
+	sxsdk::vec3 scale;					// スケール (マイナススケール指定もありうるため).
 
 public:
 	CAnimKeyframeData ();
@@ -30,12 +31,14 @@ public:
 		this->framePos = v.framePos;
 		this->offset   = v.offset;
 		this->quat     = v.quat;
+		this->scale    = v.scale;
 	}
 
     CAnimKeyframeData& operator = (const CAnimKeyframeData &v) {
 		this->framePos = v.framePos;
 		this->offset   = v.offset;
 		this->quat     = v.quat;
+		this->scale    = v.scale;
 		return (*this);
 	}
 

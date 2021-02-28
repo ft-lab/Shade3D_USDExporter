@@ -649,18 +649,6 @@ void CUSDExporterInterface::begin_polymesh (void *)
 			m_curShapeHasSubdivision = true;
 		}
 	}
-
-	// 親がボーン/ボールジョイントの場合、位置を保持.
-	m_parentBoneBallPos   = sxsdk::vec3(0, 0, 0);
-	m_parentBoneBallJoint = false;
-	if (m_pCurrentShape->has_dad()) {
-		sxsdk::shape_class* pParent = m_pCurrentShape->get_dad();
-		if (Shade3DUtil::isBoneBallJoint(*pParent)) {
-			// ワールド座標での中心を取得.
-			m_parentBoneBallPos   = Shade3DUtil::getBoneBallJointCenter(*pParent, NULL);
-			m_parentBoneBallJoint = true;
-		}
-	}
 }
 
 /**
@@ -691,16 +679,8 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 		pos = pos * m_currentLWMatrix;		// スキン使用時はワールド座標に変換する.
 	}
 
-	// 親パートがボールジョイント/ボーンの場合、ボールジョイント/ボーンの中心にposが来るように調整.
-	// キーフレーム出力しない場合は何もしない.
-	sxsdk::vec3 centerPos(0, 0, 0);
-	if (m_parentBoneBallJoint && m_exportParam.animKeyframeMode != USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_none) {
-		pos = pos * m_LWMat;
-		centerPos = m_parentBoneBallPos;
-	}
-
 	// 頂点の座標変換 (Shade3Dはmm、USDはcm).
-	const sxsdk::vec3 v2 = Shade3DUtil::convUnit_mm_to_cm(pos - centerPos);
+	const sxsdk::vec3 v2 = Shade3DUtil::convUnit_mm_to_cm(pos);
 
 	m_sceneData.tmpMeshData.vertices[i] = v2;
 

@@ -21,6 +21,7 @@ void CAnimKeyframeData::clear ()
 	framePos = 0.0f;
 	offset   = sxsdk::vec3(0, 0 ,0);
 	quat     = sxsdk::quaternion_class();
+	scale    = sxsdk::vec3(1, 1, 1);
 }
 
 CAnimKeyframeBake::CAnimKeyframeBake (sxsdk::scene_interface* scene, const CExportParam& exportParam) : m_pScene(scene), m_exportParam(exportParam)
@@ -97,6 +98,7 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 		std::vector<float> tmpKeyframes;
 		std::vector<sxsdk::vec3> tmpOffsets;
 		std::vector<sxsdk::vec3> tmpRotations;
+		std::vector<sxsdk::vec3> tmpScales;
 		std::vector<bool> tmpLinears;
 
 		float prevRotatorVal = 0.0f;
@@ -116,6 +118,7 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 			sxsdk::vec3 offset2       = offset + boneLCenter;
 			sxsdk::quaternion_class q = motionPoint->get_rotation();
 			q.get_euler(eularV);
+			sxsdk::vec3 aScale(1.0f, 1.0f, 1.0f);
 
 			if (isBoneJoint) {
 				// ボーンの変換行列は、回転 * ローカル変換行列 * オフセット.
@@ -124,11 +127,13 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 				m.unmatrix(scale, shear, rotate, trans);
 				offset2 = trans;
 				eularV  = rotate;
+				aScale  = scale;
 			}
 
 			tmpKeyframes.push_back(seqPos);
 			tmpOffsets.push_back(offset2);
 			tmpRotations.push_back(eularV);
+			tmpScales.push_back(aScale);
 
 			oldSeqPos = seqPos;
 		}
@@ -143,6 +148,7 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 					const sxsdk::quaternion_class q = motion->get_joint_rotation(seqPos);
 					sxsdk::vec3 offset2 = offset + boneLCenter;
 					q.get_euler(eularV);
+					sxsdk::vec3 aScale(1.0f, 1.0f, 1.0f);
 
 					if (isBoneJoint) {
 						// ボーンの変換行列は、回転 * ローカル変換行列 * オフセット.
@@ -151,12 +157,13 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 						m.unmatrix(scale, shear, rotate, trans);
 						offset2 = trans;
 						eularV  = rotate;
+						aScale  = scale;
 					}
 
 					tmpKeyframes.push_back(seqPos);
 					tmpOffsets.push_back(offset2);
 					tmpRotations.push_back(eularV);
-
+					tmpScales.push_back(aScale);
 				}
 				seqPos += frameStep;
 			}
@@ -167,6 +174,7 @@ void CAnimKeyframeBake::storeKeyframes (sxsdk::shape_class* shape, const float s
 			keyframeD.framePos = tmpKeyframes[i];
 			keyframeD.offset   = tmpOffsets[i];
 			keyframeD.quat     = sxsdk::quaternion_class(tmpRotations[i]);
+			keyframeD.scale    = tmpScales[i];
 			m_keyframeData.push_back(keyframeD);
 		}
 	} catch (...) { }
