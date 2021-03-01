@@ -50,11 +50,9 @@ CUSDExporterInterface::~CUSDExporterInterface ()
  */
 const char *CUSDExporterInterface::get_file_extension (void *)
 {
-	std::string extStr = "usdc";
-	if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda) extStr = "usda";
-	if (m_exportParam.exportAppleUSDZ || (m_exportParam.exportUSDZ && !m_exportParam.exportOutputTempFiles)) extStr = "usdz";
-
-	return extStr.c_str();
+	if (m_exportParam.exportAppleUSDZ || (m_exportParam.exportUSDZ && !m_exportParam.exportOutputTempFiles)) return "usdz";
+	if (m_exportParam.exportFileType == USD_DATA::EXPORT::FILE_TYPE::file_type_usda) return "usda";
+	return "usdc";
 }
 
 /**
