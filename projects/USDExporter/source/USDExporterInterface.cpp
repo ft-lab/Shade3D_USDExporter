@@ -528,6 +528,7 @@ void CUSDExporterInterface::begin (void *)
 		}
 	}
 	m_currentPathName0 = m_currentPathName;
+	m_ballJointM = sxsdk::mat4::identity;
 
 	if (!m_skip) {
 		const sxsdk::mat4 lwMat = m_pCurrentShape->get_local_to_world_matrix();
@@ -540,18 +541,17 @@ void CUSDExporterInterface::begin (void *)
 		} else if (Shade3DUtil::isBallJoint(*m_pCurrentShape)) {
 			// ボールジョイントの場合のローカル座標での変換行列.
 			m = Shade3DUtil::getBallJointMatrix(*m_pCurrentShape);
+		}
 
-		} else {
-			// 親がボールジョイントの場合.
-			if (m_pCurrentShape->has_dad()) {
-				sxsdk::shape_class* parentShape = m_pCurrentShape->get_dad();
-				if (Shade3DUtil::isBallJoint(*parentShape)) {
-					const sxsdk::mat4 parentLWMat = Shade3DUtil::getBallJointMatrix(*parentShape, true);
-					m = m * lwMat;
-					m = m * inv(parentLWMat);
-				}
+		// 親がボールジョイントの場合.
+		if (m_pCurrentShape->has_dad()) {
+			sxsdk::shape_class* parentShape = m_pCurrentShape->get_dad();
+			if (Shade3DUtil::isBallJoint(*parentShape)) {
+				const sxsdk::mat4 parentLWMat = Shade3DUtil::getBallJointMatrix(*parentShape, true);
+				m_ballJointM = (m * lwMat) * inv(parentLWMat);
 			}
 		}
+
 
 		// 形状がメッシュに変換できない場合は、NULLノードとする(パート、ボーン、ボールジョイントなど).
 		if (!m_sceneData.checkConvertMesh(m_pCurrentShape)) {
@@ -678,6 +678,7 @@ void CUSDExporterInterface::polymesh_vertex (int i, const sxsdk::vec3 &v, const 
 	if (skin) {
 		pos = pos * m_currentLWMatrix;		// スキン使用時はワールド座標に変換する.
 	}
+	pos = pos * m_ballJointM;				// 親がボールジョイントの場合の補正.
 
 	// 頂点の座標変換 (Shade3Dはmm、USDはcm).
 	const sxsdk::vec3 v2 = Shade3DUtil::convUnit_mm_to_cm(pos);

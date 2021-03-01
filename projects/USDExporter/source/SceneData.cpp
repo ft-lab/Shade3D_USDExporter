@@ -323,102 +323,46 @@ void CSceneData::m_getJointMotionData (sxsdk::shape_class* shape, CNodeNullData&
 
 	const std::vector<CAnimKeyframeData>& keyframeData = keyframeBake.getKeyframes();
 
-	if (Shade3DUtil::isBone(*shape)) {				// ボーンの場合.
-		try {
-			const sxsdk::vec3 boneWCenter = Shade3DUtil::getJointCenter(*shape, NULL);
-			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
+	try {
+		compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
+		const int pointsCou = motion->get_number_of_motion_points();
+		if (pointsCou == 0) return;
 
-			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
-			const int pointsCou = motion->get_number_of_motion_points();
-			if (pointsCou == 0) return;
+		// 移動(offset)/回転/スケール要素をキーフレームとして格納.
+		CJointMotionData& jointMotionD = nodeD.jointMotion;
+		CJointTranslationData transD;
+		CJointRotationData rotD;
+		CJointScaleData scaleD;
+		for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
+			const CAnimKeyframeData& animD = keyframeData[loop];
 
-			// 移動(offset)/回転要素をキーフレームとして格納.
-			CJointMotionData& jointMotionD = nodeD.jointMotion;
-			CJointTranslationData transD;
-			CJointRotationData rotD;
-			CJointScaleData scaleD;
-			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
-				const CAnimKeyframeData& animD = keyframeData[loop];
+			const sxsdk::vec3 offset        = animD.offset;
+			sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset);		// cmに変換.
+			const sxsdk::quaternion_class q = animD.quat;
 
-				const sxsdk::vec3 offset        = animD.offset;
-				sxsdk::vec3 offset2             = Shade3DUtil::convUnit_mm_to_cm(offset);		// cmに変換.
-				const sxsdk::quaternion_class q = animD.quat;
+			// 移動情報を格納.
+			transD.frame = animD.framePos;
+			transD.x = offset2.x;
+			transD.y = offset2.y;
+			transD.z = offset2.z;
+			jointMotionD.translations.push_back(transD);
 
-				// 移動情報を格納.
-				transD.frame = animD.framePos;
-				transD.x = offset2.x;
-				transD.y = offset2.y;
-				transD.z = offset2.z;
-				jointMotionD.translations.push_back(transD);
+			// 回転情報を格納.
+			rotD.frame = animD.framePos;
+			rotD.x = q.x;
+			rotD.y = q.y;
+			rotD.z = q.z;
+			rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
+			jointMotionD.rotations.push_back(rotD);
 
-				// 回転情報を格納.
-				rotD.frame = animD.framePos;
-				rotD.x = q.x;
-				rotD.y = q.y;
-				rotD.z = q.z;
-				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
-				jointMotionD.rotations.push_back(rotD);
+			// スケール情報を格納.
+			scaleD.x = animD.scale.x;
+			scaleD.y = animD.scale.y;
+			scaleD.z = animD.scale.z;
+			jointMotionD.scales.push_back(scaleD);
+		}
 
-				// スケール情報を格納.
-				scaleD.x = animD.scale.x;
-				scaleD.y = animD.scale.y;
-				scaleD.z = animD.scale.z;
-				jointMotionD.scales.push_back(scaleD);
-			}
-
-		} catch (...) { }
-
-	} else if (Shade3DUtil::isBallJoint(*shape)) {				// ボールジョイントの場合.
-		try {
-			const sxsdk::mat4 lwMat = shape->get_local_to_world_matrix();
-			const sxsdk::vec3 wCenter = Shade3DUtil::getJointCenter(*shape, NULL);
-			const sxsdk::vec3 ballLCenter = (wCenter * inv(lwMat));
-
-			compointer<sxsdk::motion_interface> motion(shape->get_motion_interface());
-			const int pointsCou = motion->get_number_of_motion_points();
-			if (pointsCou == 0) return;
-
-			// 移動(offset)/回転要素をキーフレームとして格納.
-			CJointMotionData& jointMotionD = nodeD.jointMotion;
-			CJointTranslationData transD;
-			CJointRotationData rotD;
-			CJointScaleData scaleD;
-			sxsdk::vec3 dirV;
-			for (size_t loop = 0; loop < keyframeData.size(); ++loop) {
-				const CAnimKeyframeData& animD = keyframeData[loop];
-
-				const sxsdk::vec3 offset        = animD.offset;
-				const sxsdk::vec3 offset2       = Shade3DUtil::convUnit_mm_to_cm(offset + ballLCenter);		// cmに変換.
-				const sxsdk::quaternion_class q = animD.quat;
-
-				// 移動情報を格納.
-				transD.frame = animD.framePos;
-				transD.x = offset2.x;
-				transD.y = offset2.y;
-				transD.z = offset2.z;
-				jointMotionD.translations.push_back(transD);
-
-				// 回転情報を格納.
-				rotD.frame = animD.framePos;
-				rotD.x = q.x;
-				rotD.y = q.y;
-				rotD.z = q.z;
-				rotD.w = -q.w;		// wはマイナスにしないと回転が逆になる.
-				jointMotionD.rotations.push_back(rotD);
-
-				// スケール情報を格納.
-				scaleD.x = animD.scale.x;
-				scaleD.y = animD.scale.y;
-				scaleD.z = animD.scale.z;
-				jointMotionD.scales.push_back(scaleD);
-			}
-
-			// ジョイント値で位置と回転を保持するため、ボールジョイント自身の変換行列は使用しない.
-			nodeD.matrix = sxsdk::mat4::identity;
-
-		} catch (...) { }
-	}
-
+	} catch (...) { }
 }
 
 /**
