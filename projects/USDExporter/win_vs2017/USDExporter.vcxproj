@@ -304,6 +304,7 @@
     <ClCompile Include="..\source\USDData.cpp" />
     <ClCompile Include="..\source\USDExporter.cpp" />
     <ClCompile Include="..\source\USDExporterInterface.cpp" />
+    <ClCompile Include="..\source\WarningCheck.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlphaModeMaterialAttributeInterface.h" />
@@ -334,6 +335,7 @@
     <ClInclude Include="..\source\USDData.h" />
     <ClInclude Include="..\source\USDExporter.h" />
     <ClInclude Include="..\source\USDExporterInterface.h" />
+    <ClInclude Include="..\source\WarningCheck.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

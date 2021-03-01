@@ -159,6 +159,15 @@ namespace Shade3DUtil {
 	 */
 	bool checkInMasterObjectPart (sxsdk::shape_class& shape);
 
+	/**
+	 * 指定の変換行列でせん断要素を持つかチェック.
+	 */
+	bool hasShearInMatrix (sxsdk::mat4& m);
+
+	/**
+	 * エクスポート時にサポートされていないジョイントかチェック.
+	 */
+	bool usedUnsupportedJoint (sxsdk::shape_class& shape);
 }
 
 #endif

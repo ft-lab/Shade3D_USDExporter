@@ -9,6 +9,7 @@
 #include "ShapeStack.h"
 #include "SceneData.h"
 #include "ExportParam.h"
+#include "WarningCheck.h"
 
 #include <string>
 #include <vector>
@@ -60,6 +61,9 @@ private:
 	int m_begin_polymesh_count;						// begin()を0としたとき、begin_polymeshが連続して呼ばれる場合のカウント（掃引体時）.
 
 	sxsdk::mat4 m_ballJointM;						// 親がボールジョイントの場合、補正のための変換行列.
+
+	CWarningCheck m_warningCheck;					// 警告を出すための情報を蓄えるクラス.
+	int m_currentShapeSkinType;						// カレント形状でのスキンの種類.
 
 	virtual sx::uuid_class get_uuid (void *) { return USD_EXPORTER_INTERFACE_ID; }
 	virtual int get_shade_version () const { return SHADE_BUILD_NUMBER; }

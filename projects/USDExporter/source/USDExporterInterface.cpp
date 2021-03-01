@@ -135,6 +135,7 @@ void CUSDExporterInterface::do_export (sxsdk::plugin_exporter_interface *plugin_
 
 	m_sceneData.clear();
 	m_sceneData.setupExport(scene, m_exportParam);
+	m_warningCheck.clear();
 
 	try {
 		m_pluginExporter = plugin_exporter;
@@ -232,6 +233,9 @@ void CUSDExporterInterface::clean_up (void *)
 {
 	// マスターオブジェクトのみを格納する操作時は何もせずにスキップ.
 	if (m_traverseMasterObjectsMode) return;
+
+	// 警告のメッセージがある場合は表示.
+	m_warningCheck.outputWarningMessage(shade);
 
 	// 作業用のパス.
 	const std::string tempPath = std::string(shade.get_temporary_path("shade3d_temp_usd"));
@@ -419,6 +423,7 @@ void CUSDExporterInterface::begin (void *)
 	m_pCurrentShape = NULL;
 	m_curShapeHasSubdivision = false;
 	m_begin_polymesh_count = 0;
+	m_currentShapeSkinType = false;
 
 	// カレントの形状管理クラスのポインタを取得.
 	m_pCurrentShape        = m_pluginExporter->get_current_shape();
@@ -559,6 +564,23 @@ void CUSDExporterInterface::begin (void *)
 			//sxsdk::mat4 m = m_pCurrentShape->get_transformation();
 			m = Shade3DUtil::convUnit_mm_to_cm(m);
 			m_sceneData.appendNodeNull(m_pCurrentShape, m_currentPathName, m);
+		}
+
+		if (!m_traverseMasterObjectsMode) {
+			// 未サポートのジョイントを使用している場合.
+			if (Shade3DUtil::usedUnsupportedJoint(*m_pCurrentShape)) {
+				m_warningCheck.appendUnsupportedJointUsedShape(m_pCurrentShape);
+			}
+
+			// 変換行列mがせん断を持つ場合.
+			if (Shade3DUtil::hasShearInMatrix(m)) {
+				m_warningCheck.appendShearUsedShape(m_pCurrentShape);
+			}
+
+			m_currentShapeSkinType = m_pCurrentShape->get_skin_type();
+			if (m_currentShapeSkinType == 0) {		// クラシックスキン.
+				m_warningCheck.appendClassicSkinUsedShape(m_pCurrentShape);
+			}
 		}
 	}
 }
