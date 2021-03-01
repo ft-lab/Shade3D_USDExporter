@@ -61,6 +61,8 @@
 		92117A6425D8BB2F00DE200E /* AlphaModeMaterialAttributeInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */; };
 		92117A6725D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 92117A6525D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h */; };
 		92117A6825D8BB3F00DE200E /* AlphaModeMaterialData.h in Headers */ = {isa = PBXBuildFile; fileRef = 92117A6625D8BB3F00DE200E /* AlphaModeMaterialData.h */; };
+		925EE73E25ECAE74000E5E68 /* WarningCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 925EE73C25ECAE73000E5E68 /* WarningCheck.h */; };
+		925EE73F25ECAE74000E5E68 /* WarningCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 925EE73D25ECAE74000E5E68 /* WarningCheck.cpp */; };
 		927D1E4C25D391CD009E397A /* libpcp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4725D391C5009E397A /* libpcp.dylib */; };
 		927D1E4D25D391CD009E397A /* libtf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4825D391CA009E397A /* libtf.dylib */; };
 		927D1E4E25D391CD009E397A /* libgf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 927D1E4925D391CC009E397A /* libgf.dylib */; };
@@ -203,6 +205,8 @@
 		92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlphaModeMaterialAttributeInterface.cpp; path = ../../source/AlphaModeMaterialAttributeInterface.cpp; sourceTree = "<group>"; };
 		92117A6525D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlphaModeMaterialAttributeInterface.h; path = ../../source/AlphaModeMaterialAttributeInterface.h; sourceTree = "<group>"; };
 		92117A6625D8BB3F00DE200E /* AlphaModeMaterialData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlphaModeMaterialData.h; path = ../../source/AlphaModeMaterialData.h; sourceTree = "<group>"; };
+		925EE73C25ECAE73000E5E68 /* WarningCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WarningCheck.h; path = ../../source/WarningCheck.h; sourceTree = "<group>"; };
+		925EE73D25ECAE74000E5E68 /* WarningCheck.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WarningCheck.cpp; path = ../../source/WarningCheck.cpp; sourceTree = "<group>"; };
 		927D1E4725D391C5009E397A /* libpcp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpcp.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libpcp.dylib"; sourceTree = "<group>"; };
 		927D1E4825D391CA009E397A /* libtf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtf.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libtf.dylib"; sourceTree = "<group>"; };
 		927D1E4925D391CC009E397A /* libgf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgf.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libgf.dylib"; sourceTree = "<group>"; };
@@ -339,6 +343,8 @@
 		4A3E5BC70B0029410006A4FF /* sources */ = {
 			isa = PBXGroup;
 			children = (
+				925EE73D25ECAE74000E5E68 /* WarningCheck.cpp */,
+				925EE73C25ECAE73000E5E68 /* WarningCheck.h */,
 				92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */,
 				920637D7236DC020000BE4B9 /* AnimationData.cpp */,
 				920637E2236DC021000BE4B9 /* AnimKeyframeBake.cpp */,
@@ -515,6 +521,7 @@
 				92063823236DC024000BE4B9 /* OcclusionShaderData.h in Headers */,
 				92063865236DC043000BE4B9 /* StringUtil.h in Headers */,
 				92063869236DC043000BE4B9 /* GlobalHeader.h in Headers */,
+				925EE73E25ECAE74000E5E68 /* WarningCheck.h in Headers */,
 				92063820236DC024000BE4B9 /* TextureParamData.h in Headers */,
 				92063819236DC024000BE4B9 /* USDExporterInterface.h in Headers */,
 				9206386B236DC043000BE4B9 /* ImageData.h in Headers */,
@@ -623,6 +630,7 @@
 				92063829236DC024000BE4B9 /* FindNames.cpp in Sources */,
 				92063817236DC024000BE4B9 /* AnimKeyframeBake.cpp in Sources */,
 				92063815236DC024000BE4B9 /* ImageData.cpp in Sources */,
+				925EE73F25ECAE74000E5E68 /* WarningCheck.cpp in Sources */,
 				9206383A236DC024000BE4B9 /* ImagesBlend.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

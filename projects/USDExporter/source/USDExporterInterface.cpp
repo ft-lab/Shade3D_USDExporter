@@ -557,7 +557,6 @@ void CUSDExporterInterface::begin (void *)
 			}
 		}
 
-
 		// 形状がメッシュに変換できない場合は、NULLノードとする(パート、ボーン、ボールジョイントなど).
 		if (!m_sceneData.checkConvertMesh(m_pCurrentShape)) {
 			// Shade3Dでのmm単位をcmに変換.
