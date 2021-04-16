@@ -437,6 +437,28 @@ void CUSDExporter::appendNodeMaterial (const CMaterialData& materialData)
 }
 
 /**
+ * OmniverseのMDLとしてMaterialノードを出力.
+ * @param[in] materialData   マテリアルデータ.
+ */
+void CUSDExporter::appendNodeMaterial_OmniverseMDL (const CMaterialData& materialData)
+{
+	if (!g_stage) return;
+
+	// "/Materials"が存在しない場合は追加.
+	const std::string materialsName = MATERIAL_ROOT_PATH;
+	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(materialsName));
+	if (!prim.IsValid()) {
+		g_stage->DefinePrim(SdfPath(materialsName), TfToken("Scope"));
+	}
+
+	//-----------------------------------.
+	// マテリアルを追加.
+	//-----------------------------------.
+	UsdPrim primMat = g_stage->DefinePrim(SdfPath(materialData.name), TfToken("Material"));
+	m_appendNodeMaterial_OmniverseMDL(materialData.name, materialData);
+}
+
+/**
  * 指定のUSDのパスにマテリアル情報を格納.
  * @param[in] pathStr        USD上のパス (/root/xxx/red).
  * @param[in] materialData   マテリアルデータ.
@@ -713,6 +735,288 @@ void CUSDExporter::m_outputTextureData (const std::string& pathStr, const CMater
 
 	// Textureに割り当てるUVを接続.
 	shaderReader.CreateInput(TfToken("varname"), SdfValueTypeNames->Token).ConnectToSource(stInput);
+}
+
+/**
+ * 指定のUSDのパスにマテリアル情報を格納 (OmniverseのMDL用).
+ * @param[in] pathStr        USD上のパス (/root/xxx/red).
+ * @param[in] materialData   マテリアルデータ.
+ */
+void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr, const CMaterialData& materialData)
+{
+	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(pathStr));
+	if (!primMat.IsValid()) return;
+
+	UsdShadeMaterial mat(primMat);
+	const TfToken mdlToken("mdl");
+
+	// OmniPBRの作成.
+	UsdPrim primShader = g_stage->DefinePrim(SdfPath(pathStr + std::string("/Shader")), TfToken("Shader"));
+	UsdShadeShader shader(primShader);
+
+	shader.SetSourceAsset(SdfAssetPath("OmniPBR.mdl"), mdlToken);
+	shader.GetPrim().CreateAttribute(TfToken("info:mdl:sourceAsset:subIdentifier"), SdfValueTypeNames->Token, false, SdfVariabilityUniform).Set(TfToken("OmniPBR")); 
+
+	//-----------------------------------------------.
+	// BaseColorの指定.
+	//-----------------------------------------------.
+	if (materialData.diffuseTexture.textureParam.imageIndex < 0) {
+		// 色をリニアにする.
+		float vR, vG, vB;
+		vR = materialData.diffuseColor[0];
+		vG = materialData.diffuseColor[1];
+		vB = materialData.diffuseColor[2];
+		USD_DATA::convColorLinear(vR, vG, vB);
+
+		UsdShadeInput in = shader.CreateInput(TfToken("diffuse_color_constant"), SdfValueTypeNames->Color3f);
+		in.Set(GfVec3f(vR, vG, vB));
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Albedo"));
+		attr.SetDisplayName(std::string("Base Color"));
+
+		// デフォルトの値を指定.
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(0.2f, 0.2f, 0.2f)));
+		{
+			VtDictionary dic;
+			dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
+			dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
+			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+
+	} else {
+		// BaseColorテクスチャを指定.
+		const CTextureMappingData& mappingD = materialData.diffuseTexture;
+
+		{
+			const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+			UsdShadeInput in = shader.CreateInput(TfToken("diffuse_texture"), SdfValueTypeNames->Asset);
+			in.Set(SdfAssetPath(fileName));
+
+			UsdAttribute attr = in.GetAttr();
+			attr.SetColorSpace(TfToken("sRGB"));
+			attr.SetDisplayGroup(std::string("Albedo"));
+			attr.SetDisplayName(std::string("Albedo Map"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+		}
+
+		// Diffuseテクスチャに乗算する色を指定.
+		{
+			// 色をリニアにする.
+			float vR, vG, vB;
+			vR = materialData.diffuseColor[0];
+			vG = materialData.diffuseColor[1];
+			vB = materialData.diffuseColor[2];
+			USD_DATA::convColorLinear(vR, vG, vB);
+
+			UsdShadeInput in = shader.CreateInput(TfToken("diffuse_tint"), SdfValueTypeNames->Color3f);
+			in.Set(GfVec3f(vR, vG, vB));
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Albedo"));
+			attr.SetDisplayName(std::string("Color Tint"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1, 1, 1)));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
+				dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Normal mapの指定.
+	//-----------------------------------------------.
+	if (materialData.normalTexture.textureParam.imageIndex >= 0) {
+		const CTextureMappingData& mappingD = materialData.normalTexture;
+
+		{
+			const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+			UsdShadeInput in = shader.CreateInput(TfToken("normalmap_texture"), SdfValueTypeNames->Asset);
+			in.Set(SdfAssetPath(fileName));
+
+			UsdAttribute attr = in.GetAttr();
+			attr.SetColorSpace(TfToken("raw"));
+			attr.SetDisplayGroup(std::string("Normal"));
+			attr.SetDisplayName(std::string("Normal Map"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+		}
+
+		// Normal Mapの強さを指定.
+		{
+			UsdShadeInput in = shader.CreateInput(TfToken("detail_bump_factor"), SdfValueTypeNames->Float);
+			in.Set(1.0f);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Normal"));
+			attr.SetDisplayName(std::string("Normal Map Strength"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(100000.0f));
+				dic.SetValueAtPath("min", VtValue(-100000.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Metallicの指定.
+	//-----------------------------------------------.
+	{
+		const CTextureMappingData& mappingD = materialData.metallicTexture;
+
+		if (mappingD.textureParam.imageIndex < 0) {
+			UsdShadeInput in = shader.CreateInput(TfToken("metallic_constant"), SdfValueTypeNames->Float);
+			in.Set(materialData.metallic);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Reflectivity"));
+			attr.SetDisplayName(std::string("Metallic Amount"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(1.0f));
+				dic.SetValueAtPath("min", VtValue(0.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		} else {
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("metallic_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("Reflectivity"));
+				attr.SetDisplayName(std::string("Metallic Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("metallic_texture_influence"), SdfValueTypeNames->Float);
+				in.Set(materialData.metallic);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Reflectivity"));
+				attr.SetDisplayName(std::string("Metallic Map Influence"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Roughnessの指定.
+	//-----------------------------------------------.
+	{
+		const CTextureMappingData& mappingD = materialData.roughnessTexture;
+
+		if (mappingD.textureParam.imageIndex < 0) {
+			UsdShadeInput in = shader.CreateInput(TfToken("reflection_roughness_constant"), SdfValueTypeNames->Float);
+			in.Set(materialData.roughness);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Reflectivity"));
+			attr.SetDisplayName(std::string("Roughness Amount"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.5f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(1.0f));
+				dic.SetValueAtPath("min", VtValue(0.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		} else {
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("reflectionroughness_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("Reflectivity"));
+				attr.SetDisplayName(std::string("Roughness Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+
+			// reflection_roughness_texture_influenceで1.0を指定すると、Roughness Mapの値をそのまま反映.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("reflection_roughness_texture_influence"), SdfValueTypeNames->Float);
+				in.Set(1.0f);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Reflectivity"));
+				attr.SetDisplayName(std::string("Roughness Map Influence"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Occlusionの指定.
+	//-----------------------------------------------.
+	{
+		const CTextureMappingData& mappingD = materialData.occlusionTexture;
+		if (mappingD.textureParam.imageIndex >= 0) {
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("ao_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("AO"));
+				attr.SetDisplayName(std::string("Ambient Occlusion Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("ao_to_diffuse"), SdfValueTypeNames->Float);
+				in.Set(1.0f);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("AO"));
+				attr.SetDisplayName(std::string("AO to Diffuse"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(100000.0f));
+					dic.SetValueAtPath("min", VtValue(-100000.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+		}
+	}
+
+	// MaterialからShaderをつなぐ.
+	UsdShadeOutput mdlOutput = mat.CreateSurfaceOutput(mdlToken);
+	mdlOutput.ConnectToSource(shader, TfToken("out"));
 }
 
 /**
@@ -1113,6 +1417,27 @@ void CUSDExporter::appendNodeMesh (const std::string& nodeName, const USD_DATA::
 }
 
 /**
+ * 主にSubdivisionの指定 (Omniverseにパラメータがある).
+ * @param[in] nodeName        ノード名 (/root/xxx/mesh1 などのパス形式).
+ * @param[in] enableOverride   refinementEnableOverrideの指定.
+ * @param[in] refinementLevel  refinementLevelの指定.
+ */
+void CUSDExporter::setRefinement (const std::string& nodeName, const bool enableOverride, const int refinementLevel)
+{
+	UsdPrim prim = g_stage->GetPrimAtPath(SdfPath(nodeName));
+	if (!prim.IsValid()) return;
+
+	{
+		UsdAttribute attr = prim.GetAttribute(TfToken("refinementEnableOverride"));
+		attr.Set(enableOverride);
+	}
+	{
+		UsdAttribute attr = prim.GetAttribute(TfToken("refinementLevel"));
+		attr.Set(refinementLevel);
+	}
+}
+
+/**
  * usdzファイルを出力.
  * @param[in] filePath  出力ファイルパス.
  * @param[in] files     出力で追加するファイル（すべて絶対パスで指定）.
@@ -1406,6 +1731,7 @@ void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::
 			UsdPrim newPrimMat = g_stage->DefinePrim(SdfPath(newPath), TfToken("Material"));
 
 			// マテリアル情報を追加.
+			// TODO : Omniverseの場合は切り替え.
 			m_appendNodeMaterial(newPath, materialsList[mIndex]);
 
 			// 参照を置き換え.

@@ -15,6 +15,10 @@
 		<bool id="208" label="三角形に分割" />
 	</group>
 
+	<group label="マテリアル">
+		<selection id="501" label="Shader:|UsdPreviewSurface|NVIDIA Omniverse (MDL)" />
+	</group>
+
 	<group label="テクスチャ">
 		<selection id="301" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
 		<selection id="302" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />

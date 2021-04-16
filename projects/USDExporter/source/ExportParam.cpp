@@ -31,6 +31,7 @@ void CExportParam::clear ()
 	exportFileType = USD_DATA::EXPORT::FILE_TYPE::file_type_usdc;
 	exportUSDZ = true;
 	exportOutputTempFiles = true;
+	materialShaderType = USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface;
 
 	optTextureType = USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name;
 	optMaxTextureSize = USD_DATA::EXPORT::MAX_TEXTURE_SIZE::texture_size_2048;

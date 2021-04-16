@@ -32,6 +32,8 @@ enum {
 
 	dlg_option_anim_keyframe_mode = 401,	// アニメーションのキーフレーム出力モード.
 	dlg_option_anim_keyframe_step = 402,	// アニメーションのキーフレームのステップ数.
+
+	dlg_material_shader_type = 501,			// USDでのShaderの種類.
 };
 
 CUSDExporterInterface::CUSDExporterInterface (sxsdk::shade_interface& shade) : shade(shade)
@@ -1008,6 +1010,13 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		item->set_int(m_exportParam.animStep);
 		item->set_enabled(m_exportParam.animKeyframeMode == USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_step);
 	}
+
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_material_shader_type));
+		item->set_selection((int)m_exportParam.materialShaderType);
+	}
+
 }
 
 void CUSDExporterInterface::save_dialog_data (sxsdk::dialog_interface &dialog,void *)
@@ -1091,6 +1100,11 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	}
 	if (id == dlg_option_anim_keyframe_step) {
 		m_exportParam.animStep = std::max(1, item.get_int());
+		return true;
+	}
+
+	if (id == dlg_material_shader_type) {
+		m_exportParam.materialShaderType = (USD_DATA::EXPORT::MATERIAL_SHADER_TYPE)item.get_selection();
 		return true;
 	}
 

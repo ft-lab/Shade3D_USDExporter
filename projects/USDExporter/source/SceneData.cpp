@@ -587,7 +587,11 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		usdExport.SetImagesList(m_materialTextureBake->getImagesList());
 		for (size_t i = 0; i < materialsList.size(); ++i) {
 			const CMaterialData& matD = materialsList[i];
-			usdExport.appendNodeMaterial(matD);
+			if (m_exportParam.materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+				usdExport.appendNodeMaterial(matD);
+			} else {
+				usdExport.appendNodeMaterial_OmniverseMDL(matD);
+			}
 		}
 	}
 

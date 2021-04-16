@@ -96,6 +96,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 
+		// ver.105 - 
+		{
+			iDat = (int)data.materialShaderType;
+			stream->write_int(iDat);
+		}
+
 	} catch (...) { }
 }
 
@@ -188,6 +194,11 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 			data.optDividePolyTri = iDat ? true : false;
 		}
 
+		// ver.105 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_105) {
+			stream->read_int(iDat);
+			data.materialShaderType = (USD_DATA::EXPORT::MATERIAL_SHADER_TYPE)iDat;
+		}
 	} catch (...) { }
 }
 

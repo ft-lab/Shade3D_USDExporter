@@ -17,6 +17,14 @@ namespace USD_DATA {
 		};
 
 		/**
+		 * Shaderの種類.
+		 */
+		enum MATERIAL_SHADER_TYPE {
+			material_shader_type_UsdPreviewSurface = 0,		// デフォルト.
+			material_shader_type_NVIDIA_MDL_omniverse,		// OmniverseのOmnPBRなど.
+		};
+
+		/**
 		 * テクスチャ出力時の種類.
 		 */
 		enum TEXTURE_TYPE {
@@ -61,6 +69,8 @@ class CExportParam
 public:
 	bool exportAppleUSDZ;									// Appleのusdz互換.
 	USD_DATA::EXPORT::FILE_TYPE exportFileType;				// 出力形式.
+	USD_DATA::EXPORT::MATERIAL_SHADER_TYPE materialShaderType;	// マテリアルでのShaderの種類.
+
 	bool exportUSDZ;										// usdzを出力.
 	bool exportOutputTempFiles;								// usdz出力時に作業ファイルを出力 (ver.0.0.1.1 - ).
 
@@ -90,6 +100,8 @@ public:
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
 		this->exportOutputTempFiles = v.exportOutputTempFiles;
+		this->materialShaderType   = v.materialShaderType;
+
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;
 		this->optOutputBoneSkin    = v.optOutputBoneSkin;
@@ -110,6 +122,7 @@ public:
 		this->exportFileType       = v.exportFileType;
 		this->exportUSDZ           = v.exportUSDZ;
 		this->exportOutputTempFiles = v.exportOutputTempFiles;
+		this->materialShaderType   = v.materialShaderType;
 
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;

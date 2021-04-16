@@ -88,6 +88,13 @@ private:
 	 */
 	void m_appendNodeMaterial (const std::string& pathStr, const CMaterialData& materialData);
 
+	/**
+	 * 指定のUSDのパスにマテリアル情報を格納 (OmniverseのMDL用).
+	 * @param[in] pathStr        USD上のパス (/root/xxx/red).
+	 * @param[in] materialData   マテリアルデータ.
+	 */
+	void m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr, const CMaterialData& materialData);
+
 public:
 	//-----------------------------------------------------------.
 	// USDエクスポート用.
@@ -132,6 +139,12 @@ public:
 	void appendNodeMaterial (const CMaterialData& materialData);
 
 	/**
+	 * OmniverseのMDLとしてMaterialノードを出力.
+	 * @param[in] materialData   マテリアルデータ.
+	 */
+	void appendNodeMaterial_OmniverseMDL (const CMaterialData& materialData);
+
+	/**
 	 * マテリアルを複製.
 	 * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
 	 * @param[in]  nodeName       対象のノードパス.
@@ -155,6 +168,14 @@ public:
 	 * @param[in] doubleSided 両面表示するか.
 	 */
 	void appendNodeMesh (const std::string& nodeName, const USD_DATA::NodeMatrixData& matrix, const USD_DATA::MeshData& meshData, const bool doubleSided);
+
+	/**
+	 * 主にSubdivisionの指定 (Omniverseにパラメータがある).
+	 * @param[in] nodeName        ノード名 (/root/xxx/mesh1 などのパス形式).
+	 * @param[in] enableOverride   refinementEnableOverrideの指定.
+	 * @param[in] refinementLevel  refinementLevelの指定.
+	 */
+	void setRefinement (const std::string& nodeName, const bool enableOverride = false, const int refinementLevel = 0);
 
 	/**
 	 * 参照を指定.
