@@ -112,6 +112,7 @@ std::string CFindNames::appendName (const std::string& name, const USD_DATA::NOD
 
 /**
  * 指定の名前が存在するかチェック.
+ * パスが異なる場合、同一名であっても問題なし.
  */
 bool CFindNames::existName (const std::string& name)
 {
@@ -122,7 +123,7 @@ bool CFindNames::existName (const std::string& name)
 	bool existF = false;
 	const size_t cou = m_namesList.size();
 	for (size_t i = 0; i < cou; ++i) {
-		std::string name3 = StringUtil::getFileName(m_namesList[i], false);
+		std::string name3 = m_namesList[i];
 		std::transform(name3.begin(), name3.end(), name3.begin(), ::tolower);
 		if (name2 == name3) {
 			existF = true;

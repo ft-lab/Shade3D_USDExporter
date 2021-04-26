@@ -1123,13 +1123,11 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
 			}
-
 		}
 	}
 
 	//-----------------------------------------------.
 	// Emissiveの指定.
-	// TODO : emissive_intensityの調整はまだ.
 	//-----------------------------------------------.
 	const float emissiveMinV = 0.001f;
 	if (!materialData.unlitMode && (materialData.emissiveColor[0] > emissiveMinV || materialData.emissiveColor[1] > emissiveMinV || materialData.emissiveColor[2] > emissiveMinV)) {
@@ -1184,7 +1182,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 		{
 			UsdShadeInput in = shader.CreateInput(TfToken("emissive_intensity"), SdfValueTypeNames->Float);
-			in.Set(10000.0f);
+			in.Set(10000.0f);		// TODO : Emissive Intensityは計算していれる.
 			UsdAttribute attr = in.GetAttr();
 			attr.SetDisplayGroup(std::string("Emissive"));
 			attr.SetDisplayName(std::string("Emissive Intensity"));
