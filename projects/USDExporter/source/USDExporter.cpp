@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <memory>
 #include <iostream>
+#include <map>
 
 // 以下のnamespace内に、UsdXXXXのクラスがある.
 using namespace PXR_INTERNAL_NS;
@@ -810,6 +811,11 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 			vB = materialData.diffuseColor[2];
 			USD_DATA::convColorLinear(vR, vG, vB);
 
+			// Unlitの場合は無視.
+			if (materialData.unlitMode) {
+				vR = vG = vB = 1.0f;
+			}
+
 			UsdShadeInput in = shader.CreateInput(TfToken("diffuse_tint"), SdfValueTypeNames->Color3f);
 			in.Set(GfVec3f(vR, vG, vB));
 			UsdAttribute attr = in.GetAttr();
@@ -1008,6 +1014,325 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(100000.0f));
 					dic.SetValueAtPath("min", VtValue(-100000.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Opacityの指定.
+	//-----------------------------------------------.
+	{
+		const CTextureMappingData& mappingD = materialData.opacityTexture;
+		if (mappingD.textureParam.imageIndex >= 0) {
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("enable_opacity"), SdfValueTypeNames->Bool);
+				in.Set(true);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Enable Opacity"));
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
+			}
+
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("enable_opacity_texture"), SdfValueTypeNames->Bool);
+				in.Set(true);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Enable Opacity Texture"));
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
+			}
+
+			// Opacityの影響度.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("opacity_constant"), SdfValueTypeNames->Float);
+				in.Set(1.0f);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Amount"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+			
+			// Mono Sourceを"mono_alpha"とすると、BaseColorのAlphaをOpacityとすることになる.
+			if (materialData.useDiffuseAlpha) {
+				UsdShadeInput in = shader.CreateInput(TfToken("opacity_mode"), SdfValueTypeNames->Int);
+				in.Set(0);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Mono Source"));
+
+				attr.SetMetadata(TfToken("renderType"), VtValue("::base::mono_mode"));
+
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("__SDR__enum_value", VtValue("mono_average"));
+					dic.SetValueAtPath("options", VtValue("mono_alpha:0|mono_average:1|mono_luminance:2|mono_maximum:3"));
+					NdrTokenMap tMap;
+					tMap[TfToken("__SDR__enum_value")].append("mono_average");
+					tMap[TfToken("options")].append("mono_alpha:0|mono_average:1|mono_luminance:2|mono_maximum:3");
+
+					in.SetSdrMetadata(tMap);
+				}
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(1));
+			}
+
+			// テクスチャの指定.
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("opacity_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+
+			// Cutout(cutoff)の指定.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("opacity_threshold"), SdfValueTypeNames->Float);
+				in.Set(0.0f);
+				if (materialData.alphaModeParam.alphaModeType == CommonParam::alpha_mode_type::alpha_mode_mask) {
+					in.Set(materialData.alphaModeParam.alphaCutoff);
+				}
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Threshold"));
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+
+		}
+	}
+
+	//-----------------------------------------------.
+	// Emissiveの指定.
+	// TODO : emissive_intensityの調整はまだ.
+	//-----------------------------------------------.
+	const float emissiveMinV = 0.001f;
+	if (!materialData.unlitMode && (materialData.emissiveColor[0] > emissiveMinV || materialData.emissiveColor[1] > emissiveMinV || materialData.emissiveColor[2] > emissiveMinV)) {
+		{
+			UsdShadeInput in = shader.CreateInput(TfToken("enable_emission"), SdfValueTypeNames->Bool);
+			in.Set(true);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Emissive"));
+			attr.SetDisplayName(std::string("Emissive Emission"));
+
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
+		}
+
+		const CTextureMappingData& mappingD = materialData.emissiveTexture;
+		if (mappingD.textureParam.imageIndex >= 0) {
+			const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+			UsdShadeInput in = shader.CreateInput(TfToken("emissive_color_texture"), SdfValueTypeNames->Asset);
+			in.Set(SdfAssetPath(fileName));
+
+			UsdAttribute attr = in.GetAttr();
+			attr.SetColorSpace(TfToken("auto"));
+			attr.SetDisplayGroup(std::string("Emissive"));
+			attr.SetDisplayName(std::string("Emissive Color map"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+
+		}
+		{
+			// 色をリニアにする.
+			float vR, vG, vB;
+			vR = materialData.emissiveColor[0];
+			vG = materialData.emissiveColor[1];
+			vB = materialData.emissiveColor[2];
+			USD_DATA::convColorLinear(vR, vG, vB);
+
+			UsdShadeInput in = shader.CreateInput(TfToken("emissive_color"), SdfValueTypeNames->Color3f);
+			in.Set(GfVec3f(vR, vG, vB));
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Emissive"));
+			attr.SetDisplayName(std::string("Emissive Color"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1.0f, 0.1f, 0.1f)));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
+				dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		}
+
+		{
+			UsdShadeInput in = shader.CreateInput(TfToken("emissive_intensity"), SdfValueTypeNames->Float);
+			in.Set(10000.0f);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Emissive"));
+			attr.SetDisplayName(std::string("Emissive Intensity"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(40.0f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(100000.0f));
+				dic.SetValueAtPath("min", VtValue(-100000.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		}
+	}
+
+	// Unlitの場合はBaseColorに格納(Unlitは無効とする).
+	if (materialData.unlitMode && (materialData.emissiveColor[0] > emissiveMinV || materialData.emissiveColor[1] > emissiveMinV || materialData.emissiveColor[2] > emissiveMinV)) {
+		const CTextureMappingData& mappingD = materialData.emissiveTexture;
+		if (mappingD.textureParam.imageIndex >= 0) {
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("diffuse_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("sRGB"));
+				attr.SetDisplayGroup(std::string("Albedo"));
+				attr.SetDisplayName(std::string("Albedo Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// テクスチャの繰り返しの指定.
+	// すべてのテクスチャで、同一の繰り返し数の場合のみ反映される.
+	//-----------------------------------------------.
+	{
+		int texRepeatX, texRepeatY;
+		texRepeatX = texRepeatY = 0;
+		bool sameF = true;
+		{
+			{
+				const CTextureMappingData& mappingD = materialData.diffuseTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					texRepeatX = mappingD.textureParam.repeatU;
+					texRepeatY = mappingD.textureParam.repeatV;
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.normalTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.metallicTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.roughnessTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.occlusionTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.opacityTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.emissiveTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+
+			if (!sameF || texRepeatX == 0) {
+				texRepeatX = texRepeatY = 1;
+			}
+
+			if (texRepeatX != 1 || texRepeatY != 1) {
+				UsdShadeInput in = shader.CreateInput(TfToken("texture_scale"), SdfValueTypeNames->Float2);
+				in.Set(GfVec2f(texRepeatX, texRepeatY));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("UV"));
+				attr.SetDisplayName(std::string("Texture Scale"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec2f(1, 1)));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(GfVec2f(100000, 100000)));
+					dic.SetValueAtPath("min", VtValue(GfVec2f(-100000, -100000)));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
 			}
