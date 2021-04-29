@@ -117,7 +117,7 @@ std::string CFindNames::appendName (const std::string& name, const USD_DATA::NOD
 bool CFindNames::existName (const std::string& name)
 {
 	// 拡張子がある場合はそれを除去.
-	std::string name2 = StringUtil::getFileName(name, false);
+	std::string name2 = StringUtil::getFileDir(name) + std::string("/") + StringUtil::getFileName(name, false);
 	std::transform(name2.begin(), name2.end(), name2.begin(), ::tolower);
 
 	bool existF = false;
