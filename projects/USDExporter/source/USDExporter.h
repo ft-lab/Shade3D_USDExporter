@@ -9,6 +9,7 @@
 #include "SkeletonData.h"
 #include "JointMotionData.h"
 #include "ImageData.h"
+#include "ExportParam.h"
 
 #include <string>
 #include <vector>
@@ -149,8 +150,9 @@ public:
 	 * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
 	 * @param[in]  nodeName       対象のノードパス.
 	 * @param[in]  materialsList  マテリアル情報のリスト.
+	 * @param[in]  shaderType      USDでのShaderの種類.
 	 */
-	void setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList);
+	void setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList, const USD_DATA::EXPORT::MATERIAL_SHADER_TYPE shaderType);
 
 	/**
 	 * NULLノードを出力.

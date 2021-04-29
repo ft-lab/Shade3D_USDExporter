@@ -1984,8 +1984,11 @@ namespace {
 /**
  * マテリアルを複製.
  * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
+ * @param[in]  nodeName       対象のノードパス.
+ * @param[in]  materialsList  マテリアル情報のリスト.
+ * @param[in]  shaderType      USDでのShaderの種類.
  */
-void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList)
+void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList, const USD_DATA::EXPORT::MATERIAL_SHADER_TYPE shaderType)
 {
 	if (!g_stage) return;
 
@@ -2054,8 +2057,12 @@ void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::
 			UsdPrim newPrimMat = g_stage->DefinePrim(SdfPath(newPath), TfToken("Material"));
 
 			// マテリアル情報を追加.
-			// TODO : Omniverseの場合は切り替え.
-			m_appendNodeMaterial(newPath, materialsList[mIndex]);
+			if (shaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+				m_appendNodeMaterial(newPath, materialsList[mIndex]);
+			} else {
+				// OmniverseのMDLの場合.
+				m_appendNodeMaterial_OmniverseMDL(newPath, materialsList[mIndex]);
+			}
 
 			// 参照を置き換え.
 			UsdShadeMaterial mat(newPrimMat);

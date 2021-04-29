@@ -1087,7 +1087,7 @@ void CSceneData::m_setLinkMaterials (CUSDExporter& usdExport, const int tIndex, 
 			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
 			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
 				// orgName内にある要素をたどり、「rel material:binding」のマテリアルの参照をorgNameに複製する.
-				usdExport.setMaterialsInScope(nodeD.name, materialsList);
+				usdExport.setMaterialsInScope(nodeD.name, materialsList, m_exportParam.materialShaderType);
 				break;
 			}
 		}
