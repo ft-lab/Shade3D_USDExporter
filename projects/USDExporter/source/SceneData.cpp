@@ -567,7 +567,7 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 	m_exportTextures(filePath);
 
 	// エクスポート開始.
-	usdExport.beginExport(filePath);
+	usdExport.beginExport(filePath, m_exportParam);
 
 	// プラグインバージョンを取得して渡す.
 	{
@@ -587,7 +587,7 @@ void CSceneData::exportUSD (sxsdk::shade_interface& shade, const std::string& fi
 		usdExport.SetImagesList(m_materialTextureBake->getImagesList());
 		for (size_t i = 0; i < materialsList.size(); ++i) {
 			const CMaterialData& matD = materialsList[i];
-			if (m_exportParam.materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+			if (!m_exportParam.useShaderMDL()) {
 				usdExport.appendNodeMaterial(matD);
 			} else {
 				usdExport.appendNodeMaterial_OmniverseMDL(matD);
@@ -1087,7 +1087,7 @@ void CSceneData::m_setLinkMaterials (CUSDExporter& usdExport, const int tIndex, 
 			CNodeNullData& nodeD = static_cast<CNodeNullData &>(nodeBaseD);
 			if (nodeRefData.shapeHandle == nodeD.shapeHandle) {
 				// orgName内にある要素をたどり、「rel material:binding」のマテリアルの参照をorgNameに複製する.
-				usdExport.setMaterialsInScope(nodeD.name, materialsList, m_exportParam.materialShaderType);
+				usdExport.setMaterialsInScope(nodeD.name, materialsList);
 				break;
 			}
 		}

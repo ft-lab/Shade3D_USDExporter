@@ -100,6 +100,9 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 		{
 			iDat = (int)data.materialShaderType;
 			stream->write_int(iDat);
+
+			iDat = data.separateOpacityAndTransmission ? 1 : 0;
+			stream->write_int(iDat);
 		}
 
 	} catch (...) { }
@@ -198,6 +201,9 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_105) {
 			stream->read_int(iDat);
 			data.materialShaderType = (USD_DATA::EXPORT::MATERIAL_SHADER_TYPE)iDat;
+
+			stream->read_int(iDat);
+			data.separateOpacityAndTransmission = iDat ? true : false;
 		}
 	} catch (...) { }
 }

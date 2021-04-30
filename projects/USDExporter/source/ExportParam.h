@@ -83,6 +83,9 @@ public:
 	bool optDividePolyTriQuad;								// 多角形を三角形/四角形に分割.
 	bool optDividePolyTri;									// 三角形分割.
 
+	// マテリアルオプション.
+	bool separateOpacityAndTransmission;					// 「不透明(Opacity)」と「透明(Transmission)」を分ける (MDL時).
+
 	// テクスチャオプション.
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
 	bool bakeWithoutProcessingTextures;						// テクスチャを加工せずにベイク.
@@ -101,6 +104,7 @@ public:
 		this->exportUSDZ           = v.exportUSDZ;
 		this->exportOutputTempFiles = v.exportOutputTempFiles;
 		this->materialShaderType   = v.materialShaderType;
+		this->separateOpacityAndTransmission = v.separateOpacityAndTransmission;
 
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;
@@ -123,6 +127,7 @@ public:
 		this->exportUSDZ           = v.exportUSDZ;
 		this->exportOutputTempFiles = v.exportOutputTempFiles;
 		this->materialShaderType   = v.materialShaderType;
+		this->separateOpacityAndTransmission = v.separateOpacityAndTransmission;
 
 		this->optTextureType       = v.optTextureType;
 		this->optMaxTextureSize    = v.optMaxTextureSize;
@@ -141,6 +146,12 @@ public:
 		return (*this);
 	}
 	void clear ();
+
+	/**
+	 * Shaderの種類としてMDLを使用するか.
+	 * これは、Macのusdz出力ではないこと、materialShaderTypeでmaterial_shader_type_NVIDIA_MDL_omniverseが選択されていることが条件.
+	 */
+	bool useShaderMDL () const;
 };
 
 #endif

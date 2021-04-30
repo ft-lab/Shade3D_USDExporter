@@ -17,6 +17,7 @@
 
 	<group label="Material">
 		<selection id="501" label="Shader:|UsdPreviewSurface|NVIDIA Omniverse (MDL)" />
+		<bool id="502" label="Separate Opacity and Transmission" />
 	</group>
 
 	<group label="Texture">

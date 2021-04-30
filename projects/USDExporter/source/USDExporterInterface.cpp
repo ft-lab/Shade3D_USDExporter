@@ -33,7 +33,8 @@ enum {
 	dlg_option_anim_keyframe_mode = 401,	// アニメーションのキーフレーム出力モード.
 	dlg_option_anim_keyframe_step = 402,	// アニメーションのキーフレームのステップ数.
 
-	dlg_material_shader_type = 501,			// USDでのShaderの種類.
+	dlg_material_shader_type = 501,				// USDでのShaderの種類.
+	slg_separateOpacityAndTransmission = 502,	// 「不透明(Opacity)」と「透明(Transmission)」を分ける.
 };
 
 CUSDExporterInterface::CUSDExporterInterface (sxsdk::shade_interface& shade) : shade(shade)
@@ -1016,7 +1017,12 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		item = &(d.get_dialog_item(dlg_material_shader_type));
 		item->set_selection((int)m_exportParam.materialShaderType);
 	}
-
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(slg_separateOpacityAndTransmission));
+		item->set_bool(m_exportParam.separateOpacityAndTransmission);
+		item->set_enabled(m_exportParam.materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_NVIDIA_MDL_omniverse);
+	}
 }
 
 void CUSDExporterInterface::save_dialog_data (sxsdk::dialog_interface &dialog,void *)
@@ -1105,6 +1111,11 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 
 	if (id == dlg_material_shader_type) {
 		m_exportParam.materialShaderType = (USD_DATA::EXPORT::MATERIAL_SHADER_TYPE)item.get_selection();
+		load_dialog_data(dialog);		// UIのディム状態を更新.
+		return true;
+	}
+	if (id == slg_separateOpacityAndTransmission) {
+		m_exportParam.separateOpacityAndTransmission = item.get_bool();
 		return true;
 	}
 

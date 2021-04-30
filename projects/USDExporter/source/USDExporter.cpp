@@ -354,9 +354,10 @@ void CUSDExporter::setVersionString (const std::string& verStr)
 /**
  * Export開始.
  */
-void CUSDExporter::beginExport (const std::string& fileName)
+void CUSDExporter::beginExport (const std::string& fileName, const CExportParam& exportParam)
 {
 	g_stage = UsdStage::CreateNew(fileName);
+	m_exportParam = exportParam;
 
 	if (g_stage) {
 		// rootノードを出力.
@@ -1986,9 +1987,8 @@ namespace {
  * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
  * @param[in]  nodeName       対象のノードパス.
  * @param[in]  materialsList  マテリアル情報のリスト.
- * @param[in]  shaderType      USDでのShaderの種類.
  */
-void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList, const USD_DATA::EXPORT::MATERIAL_SHADER_TYPE shaderType)
+void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList)
 {
 	if (!g_stage) return;
 
@@ -2057,7 +2057,7 @@ void CUSDExporter::setMaterialsInScope (const std::string& nodeName, const std::
 			UsdPrim newPrimMat = g_stage->DefinePrim(SdfPath(newPath), TfToken("Material"));
 
 			// マテリアル情報を追加.
-			if (shaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+			if (!m_exportParam.useShaderMDL()) {
 				m_appendNodeMaterial(newPath, materialsList[mIndex]);
 			} else {
 				// OmniverseのMDLの場合.

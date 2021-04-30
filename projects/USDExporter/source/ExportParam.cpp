@@ -32,6 +32,7 @@ void CExportParam::clear ()
 	exportUSDZ = true;
 	exportOutputTempFiles = true;
 	materialShaderType = USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface;
+	separateOpacityAndTransmission = false;
 
 	optTextureType = USD_DATA::EXPORT::TEXTURE_TYPE::texture_type_use_image_name;
 	optMaxTextureSize = USD_DATA::EXPORT::MAX_TEXTURE_SIZE::texture_size_2048;
@@ -47,3 +48,16 @@ void CExportParam::clear ()
 	animKeyframeMode = USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only;
 	animStep = 3;
 }
+
+/**
+ * Shaderの種類としてMDLを使用するか.
+ * これは、Macのusdz出力ではないこと、materialShaderTypeでmaterial_shader_type_NVIDIA_MDL_omniverseが選択されていることが条件.
+ */
+bool CExportParam::useShaderMDL () const
+{
+	if (materialShaderType != USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_NVIDIA_MDL_omniverse) return false;
+	if (exportAppleUSDZ) return false;
+
+	return true;
+}
+

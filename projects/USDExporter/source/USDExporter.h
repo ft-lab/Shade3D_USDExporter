@@ -16,6 +16,7 @@
 
 class CUSDExporter {
 private:
+	CExportParam m_exportParam;						// エクスポート時のパラメータ.
 	std::vector<std::string> m_pathStack;			// パスの格納スタック.
 	std::string m_currentPath;						// カレントの形状パス.
 	std::vector<CSkeletonData> m_skeletonsList;		// アニメーション時のスケルトン情報.
@@ -103,7 +104,7 @@ public:
 	/**
 	 * Export開始.
 	 */
-	void beginExport (const std::string& fileName);
+	void beginExport (const std::string& fileName, const CExportParam& exportParam);
 
 	/**
 	 * Export終了.
@@ -150,9 +151,8 @@ public:
 	 * これはShade3Dのリンク使用時に、マスターオブジェクトのスコープ内でマテリアルを参照できるようにする.
 	 * @param[in]  nodeName       対象のノードパス.
 	 * @param[in]  materialsList  マテリアル情報のリスト.
-	 * @param[in]  shaderType      USDでのShaderの種類.
 	 */
-	void setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList, const USD_DATA::EXPORT::MATERIAL_SHADER_TYPE shaderType);
+	void setMaterialsInScope (const std::string& nodeName, const std::vector<CMaterialData>& materialsList);
 
 	/**
 	 * NULLノードを出力.

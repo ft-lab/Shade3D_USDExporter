@@ -282,6 +282,7 @@
     <ClCompile Include="..\source\AlphaModeMaterialAttributeInterface.cpp" />
     <ClCompile Include="..\source\AnimationData.cpp" />
     <ClCompile Include="..\source\AnimKeyframeBake.cpp" />
+    <ClCompile Include="..\source\DOKIMaterialParam.cpp" />
     <ClCompile Include="..\source\ExportParam.cpp" />
     <ClCompile Include="..\source\FindNames.cpp" />
     <ClCompile Include="..\source\ImageData.cpp" />
@@ -311,6 +312,7 @@
     <ClInclude Include="..\source\AlphaModeMaterialData.h" />
     <ClInclude Include="..\source\AnimationData.h" />
     <ClInclude Include="..\source\AnimKeyframeBake.h" />
+    <ClInclude Include="..\source\DOKIMaterialParam.h" />
     <ClInclude Include="..\source\ExportParam.h" />
     <ClInclude Include="..\source\FindNames.h" />
     <ClInclude Include="..\source\GlobalHeader.h" />
