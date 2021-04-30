@@ -310,8 +310,23 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 		if (surface->get_has_roughness()) {
 			materialData.roughness = surface->get_roughness();
 		}
+
 		if (surface->get_has_transparency()) {
-			materialData.opacity = 1.0f - (surface->get_transparency());
+			const float transV = surface->get_transparency();
+			if (transV > 0.0f) {
+				if (m_exportParam.useShaderMDL() && m_exportParam.separateOpacityAndTransmission) {
+					// OmniPBRGlassを使用する場合.
+					materialData.useTransparency = true;
+					materialData.transparency = transV;
+					const sxsdk::rgb_class col = surface->get_transparency_color();
+					materialData.transparencyColor[0] = col.red;
+					materialData.transparencyColor[1] = col.green;
+					materialData.transparencyColor[2] = col.blue;
+
+				} else {
+					materialData.opacity = 1.0f - transV;
+				}
+			}
 		}
 		materialData.ior = surface->get_refraction();
 
@@ -822,6 +837,32 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		materialData.roughness = surface->get_roughness();
 	}
 
+	// OmniPBRGlassを使用する場合.
+	if (m_exportParam.useShaderMDL() && m_exportParam.separateOpacityAndTransmission) {
+		const sxsdk::enums::mapping_type iType = sxsdk::enums::transparency_mapping;
+
+		const float transV = imagesBlend.getTransparency();
+		if (transV > 0.0001f) {
+			materialData.useTransparency = true;
+			materialData.transparency = transV;
+			const sxsdk::rgb_class col = imagesBlend.getImageFactor(iType);
+			materialData.transparencyColor[0] = col.red;
+			materialData.transparencyColor[1] = col.green;
+			materialData.transparencyColor[2] = col.blue;
+
+			if (imagesBlend.hasImage(iType)) {
+				const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+				const sxsdk::rgb_class factor(1, 1, 1);
+				imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.transparencyTexture, masterImageName);
+
+				const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+				materialData.transparencyTexture.textureParam.repeatU = repeatV.x;
+				materialData.transparencyTexture.textureParam.repeatV = repeatV.y;
+				materialData.transparencyTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
+			}
+		}
+	}
+
 	{
 		const sxsdk::enums::mapping_type iType = MAPPING_TYPE_OPACITY;
 		if (imagesBlend.hasImage(iType)) {
@@ -948,6 +989,7 @@ int CMaterialTextureBake::m_storeCustomImage (const sxsdk::enums::mapping_type m
 	else if (mappingType == sxsdk::enums::reflection_mapping) imageName += "_metallic";
 	else if (mappingType == sxsdk::enums::roughness_mapping) imageName += "_roughness";
 	else if (mappingType == sxsdk::enums::normal_mapping) imageName += "_normal";
+	else if (mappingType == sxsdk::enums::transparency_mapping) imageName += "_transparency";
 	else if (mappingType == MAPPING_TYPE_OPACITY) imageName += "_opacity";
 	else if (mappingType == MAPPING_TYPE_USD_OCCLUSION) imageName += "_occlusion";
 	else imageName += "_texture";

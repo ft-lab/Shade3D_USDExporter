@@ -97,6 +97,13 @@ private:
 	 */
 	void m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr, const CMaterialData& materialData);
 
+	/**
+	 * 指定のUSDのパスにマテリアル情報を格納 (OmniverseのMDL用(Glass)).
+	 * @param[in] pathStr        USD上のパス (/root/xxx/red).
+	 * @param[in] materialData   マテリアルデータ.
+	 */
+	void m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& pathStr, const CMaterialData& materialData);
+
 public:
 	//-----------------------------------------------------------.
 	// USDエクスポート用.

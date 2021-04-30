@@ -76,6 +76,7 @@ void CImagesBlend::clear ()
 
 	m_diffuseColor  = sxsdk::rgb_class(1.0f, 1.0f, 1.0f);
 	m_emissiveColor = sxsdk::rgb_class(0.0f, 0.0f, 0.0f);
+	m_transparencyColor = sxsdk::rgb_class(1.0f, 1.0f, 1.0f);
 	m_metallic  = 0.0f;
 	m_roughness = 0.0f;
 	m_transparency = 0.0f;
@@ -1158,10 +1159,25 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
  */
 sxsdk::image_interface* CImagesBlend::m_storeOpasicyTransparencyTexture ()
 {
-	// TransparencyとOpacityMaskを持つ場合、合成してdstOpacityImageに入れる.
-	// 最終的にTransparencyテクスチャは削除し、m_opacityMaskImageに格納される.
 	sxsdk::image_interface* dstOpacityImage = NULL;
-	{
+	if (m_exportParam.useShaderMDL() && m_exportParam.separateOpacityAndTransmission) {
+		// 透明度と不透明マスクを分ける場合.
+		if (m_opacityMaskImage) {
+			const int width  = m_opacityMaskImage->get_size().x;
+			const int height = m_opacityMaskImage->get_size().y;
+
+			std::vector<sxsdk::rgba_class> col1A;
+			col1A.resize(width);
+
+			dstOpacityImage = m_pScene->create_image_interface(sx::vec<int,2>(width, height));
+			for (int y = 0; y < height; ++y) {
+				m_opacityMaskImage->get_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
+				dstOpacityImage->set_pixels_rgba_float(0, y, width, 1, &(col1A[0]));
+			}
+		}
+	} else {
+		// TransparencyとOpacityMaskを持つ場合、合成してdstOpacityImageに入れる.
+		// 最終的にTransparencyテクスチャは削除し、m_opacityMaskImageに格納される.
 		if (m_transparencyImage || m_opacityMaskImage) {
 			if (m_transparencyImage) m_transparency = 0.0f;
 			if (m_transparencyImage) {
@@ -1248,6 +1264,8 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 	m_diffuseColor.red   = std::min(col0.red, col.red);
 	m_diffuseColor.green = std::min(col0.green, col.green);
 	m_diffuseColor.blue  = std::min(col0.blue, col.blue);
+
+	m_transparencyColor = m_surface->get_transparency_color();
 
 	m_metallic     = reflectionV;
 	m_roughness    = m_surface->get_roughness();
@@ -1629,9 +1647,11 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 
 	// OpacityMaskにdstOpacityImageの内容を入れる.
 	if (dstOpacityImage) {
-		if (m_transparencyImage) {
-			IMAGE_INTERFACE_RELEASE(m_transparencyImage);
-			m_hasTransparencyImage = false;
+		if (!m_exportParam.useShaderMDL() || !m_exportParam.separateOpacityAndTransmission) {
+			if (m_transparencyImage) {
+				IMAGE_INTERFACE_RELEASE(m_transparencyImage);
+				m_hasTransparencyImage = false;
+			}
 		}
 		IMAGE_INTERFACE_RELEASE(m_opacityMaskImage);
 		m_opacityMaskImage = dstOpacityImage;
@@ -1656,6 +1676,7 @@ void CImagesBlend::m_noBakeShade3DToPBRMaterial ()
 		m_diffuseColor = sxsdk::rgb_class(1, 1, 1);
 	}
 
+	m_transparencyColor = m_surface->get_transparency_color();
 	m_metallic     = m_surface->get_reflection();
 	m_roughness    = m_surface->get_roughness();
 	m_transparency = m_surface->get_transparency();
@@ -1721,9 +1742,11 @@ void CImagesBlend::m_noBakeShade3DToPBRMaterial ()
 
 	// OpacityMaskにdstOpacityImageの内容を入れる.
 	if (dstOpacityImage) {
-		if (m_transparencyImage) {
-			IMAGE_INTERFACE_RELEASE(m_transparencyImage);
-			m_hasTransparencyImage = false;
+		if (!m_exportParam.useShaderMDL() || !m_exportParam.separateOpacityAndTransmission) {
+			if (m_transparencyImage) {
+				IMAGE_INTERFACE_RELEASE(m_transparencyImage);
+				m_hasTransparencyImage = false;
+			}
 		}
 		IMAGE_INTERFACE_RELEASE(m_opacityMaskImage);
 		m_opacityMaskImage = dstOpacityImage;
@@ -1816,6 +1839,10 @@ sxsdk::rgb_class CImagesBlend::getImageFactor (const sxsdk::enums::mapping_type 
 	if (mappingType == sxsdk::enums::glow_mapping) {
 		retCol = m_emissiveColor;
 	}
+	if (mappingType == sxsdk::enums::transparency_mapping) {
+		retCol = m_transparencyColor;
+	}
+
 	if (mappingType == sxsdk::enums::roughness_mapping) {
 		retCol = sxsdk::rgb_class(m_roughness, m_roughness, m_roughness);
 	}

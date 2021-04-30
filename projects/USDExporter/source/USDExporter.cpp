@@ -746,6 +746,12 @@ void CUSDExporter::m_outputTextureData (const std::string& pathStr, const CMater
  */
 void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr, const CMaterialData& materialData)
 {
+	// "OmniGlass"として格納.
+	if (materialData.useTransparency) {
+		m_appendNodeMaterial_OmniverseMDL_Glass(pathStr, materialData);
+		return;
+	}
+
 	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(pathStr));
 	if (!primMat.IsValid()) return;
 
@@ -1336,6 +1342,131 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				}
 			}
 		}
+	}
+
+	// MaterialからShaderをつなぐ.
+	UsdShadeOutput mdlOutput = mat.CreateSurfaceOutput(mdlToken);
+	mdlOutput.ConnectToSource(shader, TfToken("out"));
+}
+
+/**
+ * 指定のUSDのパスにマテリアル情報を格納 (OmniverseのMDL用(Glass)).
+ * @param[in] pathStr        USD上のパス (/root/xxx/red).
+ * @param[in] materialData   マテリアルデータ.
+ */
+void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& pathStr, const CMaterialData& materialData)
+{
+	UsdPrim primMat = g_stage->GetPrimAtPath(SdfPath(pathStr));
+	if (!primMat.IsValid()) return;
+
+	UsdShadeMaterial mat(primMat);
+	const TfToken mdlToken("mdl");
+
+	// OmniPBRの作成.
+	UsdPrim primShader = g_stage->DefinePrim(SdfPath(pathStr + std::string("/Shader")), TfToken("Shader"));
+	UsdShadeShader shader(primShader);
+
+	shader.SetSourceAsset(SdfAssetPath("OmniGlass.mdl"), mdlToken);
+	shader.GetPrim().CreateAttribute(TfToken("info:mdl:sourceAsset:subIdentifier"), SdfValueTypeNames->Token, false, SdfVariabilityUniform).Set(TfToken("OmniGlass")); 
+
+	//-----------------------------------------------.
+	// Depth.
+	//-----------------------------------------------.
+	{
+		UsdShadeInput in = shader.CreateInput(TfToken("depth"), SdfValueTypeNames->Float);
+		in.Set(0.001f);
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Color"));
+		attr.SetDisplayName(std::string("Volume Absorption Scale"));
+
+		// デフォルトの値を指定.
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(0.001f));
+		{
+			VtDictionary dic;
+			dic.SetValueAtPath("max", VtValue(1000.0f));
+			dic.SetValueAtPath("min", VtValue(0.0f));
+			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+	}
+
+	//-----------------------------------------------.
+	// Roughness.
+	//-----------------------------------------------.
+	{
+		UsdShadeInput in = shader.CreateInput(TfToken("frosting_roughness"), SdfValueTypeNames->Float);
+		in.Set(materialData.roughness);
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Roughness"));
+		attr.SetDisplayName(std::string("Glass Roughness"));
+
+		// デフォルトの値を指定.
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+		{
+			VtDictionary dic;
+			dic.SetValueAtPath("max", VtValue(1.0f));
+			dic.SetValueAtPath("min", VtValue(0.0f));
+			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+	}
+
+	//-----------------------------------------------.
+	// Glass Color.
+	//-----------------------------------------------.
+	{
+		// 色をリニアにする.
+		float vR, vG, vB;
+		vR = materialData.transparencyColor[0];
+		vG = materialData.transparencyColor[1];
+		vB = materialData.transparencyColor[2];
+		USD_DATA::convColorLinear(vR, vG, vB);
+
+		UsdShadeInput in = shader.CreateInput(TfToken("glass_color"), SdfValueTypeNames->Color3f);
+		in.Set(GfVec3f(vR, vG, vB));
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Color"));
+		attr.SetDisplayName(std::string("Glass Color"));
+
+		// デフォルトの値を指定.
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1, 1, 1)));
+		{
+			VtDictionary dic;
+			dic.SetValueAtPath("max", VtValue(GfVec3f(1, 1, 1)));
+			dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
+			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+	}
+
+	//-----------------------------------------------.
+	// Glass IOR.
+	//-----------------------------------------------.
+	{
+		UsdShadeInput in = shader.CreateInput(TfToken("glass_ior"), SdfValueTypeNames->Float);
+		in.Set(materialData.ior);
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Refraction"));
+		attr.SetDisplayName(std::string("Glass IOR"));
+
+		// デフォルトの値を指定.
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(1.491f));
+		{
+			VtDictionary dic;
+			dic.SetValueAtPath("max", VtValue(4.0f));
+			dic.SetValueAtPath("min", VtValue(1.0f));
+			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+	}
+
+	//-----------------------------------------------.
+	// thin.
+	//-----------------------------------------------.
+	{
+		UsdShadeInput in = shader.CreateInput(TfToken("thin_walled"), SdfValueTypeNames->Bool);
+		in.Set(false);
+		UsdAttribute attr = in.GetAttr();
+		attr.SetDisplayGroup(std::string("Refraction"));
+		attr.SetDisplayName(std::string("Thin Walled"));
+
+		attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
 	}
 
 	// MaterialからShaderをつなぐ.

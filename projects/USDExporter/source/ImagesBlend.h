@@ -68,6 +68,8 @@ private:
 	// テクスチャを使用しない場合のパラメータ.
 	sxsdk::rgb_class m_diffuseColor;							// Diffuse色.
 	sxsdk::rgb_class m_emissiveColor;							// Emmisive色.
+	sxsdk::rgb_class m_transparencyColor;						// 透明度の色.
+
 	float m_metallic;											// Metallic値.
 	float m_roughness;											// Roughness値.
 	float m_transparency;										// 透明度.
@@ -181,6 +183,11 @@ public:
 	 * 指定のマッピングの種類でのイメージフォーマットの種類を取得.
 	 */
 	USD_DATA::IMAGE_FORMAT_TYPE getImageFormatType (const sxsdk::enums::mapping_type mappingType);
+
+	/**
+	 * 透明度の強さを取得.
+	 */
+	float getTransparency () const { return m_transparency; }
 };
 
 #endif

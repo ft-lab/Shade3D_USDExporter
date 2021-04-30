@@ -76,6 +76,13 @@ void CMaterialData::clear ()
 	alphaModeParam.clear();
 	pSurface = NULL;
 	refCount = 0;
+
+	useTransparency = false;
+	transparency = 0.0f;
+	transparencyColor[0] = 1.0f;
+	transparencyColor[1] = 1.0f;
+	transparencyColor[2] = 1.0f;
+	transparencyTexture.clear();
 }
 
 /**
@@ -107,6 +114,13 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 
 	if (alphaModeParam.alphaModeType != mDat.alphaModeParam.alphaModeType) return false;
 	if (!MathUtil::isZero(alphaModeParam.alphaCutoff - mDat.alphaModeParam.alphaCutoff)) return false;
+
+	if (useTransparency != mDat.useTransparency) return false;
+	if (!MathUtil::isZero(useTransparency - mDat.useTransparency)) return false;
+	if (!MathUtil::isZero(transparencyColor[0] - mDat.transparencyColor[0])) return false;
+	if (!MathUtil::isZero(transparencyColor[1] - mDat.transparencyColor[1])) return false;
+	if (!MathUtil::isZero(transparencyColor[2] - mDat.transparencyColor[2])) return false;
+	if (!transparencyTexture.isSame(mDat.transparencyTexture)) return false;
 
 	return true;
 }

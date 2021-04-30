@@ -81,12 +81,18 @@ public:
 	void* pSurface;								// 表面材質(sxsdk::surface_class)のポインタ。これは外部参照の場合に外部参照内のマテリアルの判別を最適化するため.
 	int refCount;								// 形状からの参照数.
 
+	CTextureMappingData transparencyTexture;	// Transparecyテクスチャ.
+	bool useTransparency;						// 透明度を使用する。この場合は、MDLのOmniGlassを使用.
+	float transparency;							// 透明度.
+	float transparencyColor[3];					// 透明色.
+
 public:
 	CMaterialData ();
 	~CMaterialData ();
 
 	CMaterialData (const CMaterialData& v) {
 		this->name          = v.name;
+
 		this->diffuseColor[0] = v.diffuseColor[0];
 		this->diffuseColor[1] = v.diffuseColor[1];
 		this->diffuseColor[2] = v.diffuseColor[2];
@@ -115,6 +121,13 @@ public:
 		this->alphaModeParam = v.alphaModeParam;
 		this->pSurface = v.pSurface;
 		this->refCount = v.refCount;
+
+		this->useTransparency      = v.useTransparency;
+		this->transparency         = v.transparency;
+		this->transparencyColor[0] = v.transparencyColor[0];
+		this->transparencyColor[1] = v.transparencyColor[1];
+		this->transparencyColor[2] = v.transparencyColor[2];
+		this->transparencyTexture = v.transparencyTexture;
 	}
 
     CMaterialData& operator = (const CMaterialData &v) {
@@ -148,6 +161,13 @@ public:
 		this->alphaModeParam = v.alphaModeParam;
 		this->pSurface = v.pSurface;
 		this->refCount = v.refCount;
+
+		this->useTransparency      = v.useTransparency;
+		this->transparency         = v.transparency;
+		this->transparencyColor[0] = v.transparencyColor[0];
+		this->transparencyColor[1] = v.transparencyColor[1];
+		this->transparencyColor[2] = v.transparencyColor[2];
+		this->transparencyTexture = v.transparencyTexture;
 
 		return (*this);
 	}
