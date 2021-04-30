@@ -39,6 +39,8 @@ public:
 
 	void clear ();
 
+	int getCount () const { return m_namesList.size(); }
+
 	/**
 	 * 名前を格納.
 	 * @param[in] name      格納する名前 (/root/objects/sphere の表記).
