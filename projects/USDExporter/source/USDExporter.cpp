@@ -1072,9 +1072,9 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 			}
 			
 			// Mono Sourceを"mono_alpha"とすると、BaseColorのAlphaをOpacityとすることになる.
-			if (materialData.useDiffuseAlpha) {
+			{
 				UsdShadeInput in = shader.CreateInput(TfToken("opacity_mode"), SdfValueTypeNames->Int);
-				in.Set(0);
+				in.Set(materialData.useDiffuseAlpha ? 0 : 1);
 				UsdAttribute attr = in.GetAttr();
 				attr.SetDisplayGroup(std::string("Opacity"));
 				attr.SetDisplayName(std::string("Opacity Mono Source"));
@@ -1082,9 +1082,6 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				attr.SetMetadata(TfToken("renderType"), VtValue("::base::mono_mode"));
 
 				{
-					VtDictionary dic;
-					dic.SetValueAtPath("__SDR__enum_value", VtValue("mono_average"));
-					dic.SetValueAtPath("options", VtValue("mono_alpha:0|mono_average:1|mono_luminance:2|mono_maximum:3"));
 					NdrTokenMap tMap;
 					tMap[TfToken("__SDR__enum_value")].append("mono_average");
 					tMap[TfToken("options")].append("mono_alpha:0|mono_average:1|mono_luminance:2|mono_maximum:3");
@@ -1393,19 +1390,93 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 	// Roughness.
 	//-----------------------------------------------.
 	{
-		UsdShadeInput in = shader.CreateInput(TfToken("frosting_roughness"), SdfValueTypeNames->Float);
-		in.Set(materialData.roughness);
-		UsdAttribute attr = in.GetAttr();
-		attr.SetDisplayGroup(std::string("Roughness"));
-		attr.SetDisplayName(std::string("Glass Roughness"));
-
-		// デフォルトの値を指定.
-		attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+		const CTextureMappingData& mappingD = materialData.roughnessTexture;
 		{
-			VtDictionary dic;
-			dic.SetValueAtPath("max", VtValue(1.0f));
-			dic.SetValueAtPath("min", VtValue(0.0f));
-			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			UsdShadeInput in = shader.CreateInput(TfToken("frosting_roughness"), SdfValueTypeNames->Float);
+			in.Set(materialData.roughness);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Roughness"));
+			attr.SetDisplayName(std::string("Glass Roughness"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(1.0f));
+				dic.SetValueAtPath("min", VtValue(0.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
+		}
+
+		if (mappingD.textureParam.imageIndex >= 0) {
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("roughness_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("Roughness"));
+				attr.SetDisplayName(std::string("Roughness Texture"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("roughness_texture_influence"), SdfValueTypeNames->Float);
+				in.Set(1.0f);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Roughness"));
+				attr.SetDisplayName(std::string("Roughness Texture Influence"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(100000.f));
+					dic.SetValueAtPath("min", VtValue(-100000.f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+		}
+	}
+
+	//-----------------------------------------------.
+	// Normal.
+	//-----------------------------------------------.
+	if (materialData.normalTexture.textureParam.imageIndex >= 0) {
+		const CTextureMappingData& mappingD = materialData.normalTexture;
+
+		{
+			const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+			UsdShadeInput in = shader.CreateInput(TfToken("normal_map_texture"), SdfValueTypeNames->Asset);
+			in.Set(SdfAssetPath(fileName));
+
+			UsdAttribute attr = in.GetAttr();
+			attr.SetColorSpace(TfToken("raw"));
+			attr.SetDisplayGroup(std::string("Normal"));
+			attr.SetDisplayName(std::string("Normal Map Texture"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+		}
+
+		// Normal Mapの強さを指定.
+		{
+			UsdShadeInput in = shader.CreateInput(TfToken("normal_map_strength"), SdfValueTypeNames->Float);
+			in.Set(1.0f);
+			UsdAttribute attr = in.GetAttr();
+			attr.SetDisplayGroup(std::string("Normal"));
+			attr.SetDisplayName(std::string("Normal Map Strength"));
+
+			// デフォルトの値を指定.
+			attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+			{
+				VtDictionary dic;
+				dic.SetValueAtPath("max", VtValue(10.0f));
+				dic.SetValueAtPath("min", VtValue(0.0f));
+				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+			}
 		}
 	}
 
@@ -1453,6 +1524,99 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 			dic.SetValueAtPath("max", VtValue(4.0f));
 			dic.SetValueAtPath("min", VtValue(1.0f));
 			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+		}
+	}
+
+	//-----------------------------------------------.
+	// Opacity.
+	//-----------------------------------------------.
+	{
+		const CTextureMappingData& mappingD = materialData.opacityTexture;
+		if (mappingD.textureParam.imageIndex >= 0) {
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("enable_opacity"), SdfValueTypeNames->Bool);
+				in.Set(true);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Enable Opacity"));
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
+			}
+
+			// Opacityの影響度.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("cutout_opacity"), SdfValueTypeNames->Float);
+				in.Set(1.0f);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Amount"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
+			
+			// Mono Sourceを"mono_alpha"とすると、BaseColorのAlphaをOpacityとすることになる.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("cutout_opacity_mono_source"), SdfValueTypeNames->Int);
+				in.Set(materialData.useDiffuseAlpha ? 0 : 1);
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Mono Source"));
+
+				attr.SetMetadata(TfToken("renderType"), VtValue("::base::mono_mode"));
+
+				{
+					NdrTokenMap tMap;
+					tMap[TfToken("__SDR__enum_value")].append("mono_alpha");
+					tMap[TfToken("options")].append("mono_alpha:0|mono_average:1|mono_luminance:2|mono_maximum:3");
+
+					in.SetSdrMetadata(tMap);
+				}
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0));
+			}
+
+			// テクスチャの指定.
+			{
+				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
+				UsdShadeInput in = shader.CreateInput(TfToken("cutout_opacity_texture"), SdfValueTypeNames->Asset);
+				in.Set(SdfAssetPath(fileName));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetColorSpace(TfToken("auto"));
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Map"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(SdfAssetPath("")));
+			}
+
+			// Cutout(cutoff)の指定.
+			{
+				UsdShadeInput in = shader.CreateInput(TfToken("opacity_threshold"), SdfValueTypeNames->Float);
+				in.Set(0.0f);
+				if (materialData.alphaModeParam.alphaModeType == CommonParam::alpha_mode_type::alpha_mode_mask) {
+					in.Set(materialData.alphaModeParam.alphaCutoff);
+				}
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("Opacity"));
+				attr.SetDisplayName(std::string("Opacity Threshold"));
+
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(1.0f));
+					dic.SetValueAtPath("min", VtValue(0.0f));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+			}
 		}
 	}
 
