@@ -84,6 +84,7 @@ void CImagesBlend::clear ()
 	m_diffuseTexturesCount = 0;
 	m_useDiffuseAlpha = false;
 	m_normalTexturesCount = 0;
+	m_normalStrength = 1.0f;
 }
 
 /**
@@ -722,6 +723,68 @@ compointer<sxsdk::image_interface> CImagesBlend::m_duplicateImage (sxsdk::image_
 	return dstImage;
  }
 
+/**
+ * 1つのテクスチャイメージを持ち、かつ乗算合成かチェック.
+ * @param[in]  mappingType    マッピングの種類.
+ * @param[put] mWeight        乗算合成の場合の適用率.
+ * @return 単一テクスチャで乗算合成の場合はtrueを返す.
+ */
+bool CImagesBlend::m_singleTextureAndMulti (const sxsdk::enums::mapping_type mappingType, float& mWeight)
+{
+	mWeight = 1.0f;
+	int counter = 0;
+
+	const int layersCou = m_surface->get_number_of_mapping_layers();
+	for (int i = 0; i < layersCou; ++i) {
+		sxsdk::mapping_layer_class& mappingLayer = m_surface->mapping_layer(i);
+		if (mappingType != MAPPING_TYPE_USD_OCCLUSION) {
+			if (mappingLayer.get_pattern() != sxsdk::enums::image_pattern) continue;
+		} else {
+			if (!Shade3DUtil::isOcclusionMappingLayer(&mappingLayer)) continue;
+
+			try {
+				compointer<sxsdk::stream_interface> stream(mappingLayer.get_attribute_stream_interface_with_uuid(OCCLUSION_SHADER_INTERFACE_ID));
+				COcclusionShaderData occlusionD;
+				StreamCtrl::loadOcclusionParam(stream, occlusionD);
+			} catch (...) {
+				continue;
+			}
+		}
+		if (mappingLayer.get_projection() != 3) continue;		// UV投影でない場合.
+
+		float weight = std::min(std::max(mappingLayer.get_weight(), 0.0f), 1.0f);
+		const int type = mappingLayer.get_type();
+		const float weight2 = 1.0f - weight;
+		if (MathUtil::isZero(weight)) continue;
+
+		try {
+			compointer<sxsdk::image_interface> image(mappingLayer.get_image_interface());
+			if (!image || !(image->has_image())) continue;
+			const int width  = image->get_size().x;
+			const int height = image->get_size().y;
+			if (width <= 1 || height <= 1) continue;
+		} catch (...) { }
+
+		if (counter == 0) {
+			const int blendMode = mappingLayer.get_blend_mode();
+			if (blendMode == 7 || blendMode == sxsdk::enums::mapping_blend_mode) {		// 乗算合成または通常合成.
+				mWeight = weight;
+			} else {
+				break;
+			}
+		}
+
+		counter++;
+		if (counter > 2) break;
+	}
+
+	if (counter != 1) {
+		mWeight = 1.0f;
+		return false;
+	}
+
+	return true;
+}
 
 /**
  * 指定のテクスチャの合成処理.
@@ -751,6 +814,14 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 	}
 	if (mappingType == sxsdk::enums::glow_mapping) {
 		baseCol = sxsdk::rgba_class(m_surface->get_glow_color());
+	}
+
+	// 法線マップの適用率を法線の強さ、とするか.
+	bool useNormalStrength = false;
+	if (m_exportParam.useShaderMDL()) {		// MDLとして使用する場合.
+		if (mappingType == sxsdk::enums::normal_mapping) {
+			useNormalStrength = m_singleTextureAndMulti(mappingType, m_normalStrength);
+		}
 	}
 
 	// 法線の中立値.
@@ -794,6 +865,13 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		const int type = mappingLayer.get_type();
 		const float weight2 = 1.0f - weight;
 		if (MathUtil::isZero(weight)) continue;
+
+		// 法線の強さは分けて管理するため、適用率は1.0にする.
+		if (mappingType == sxsdk::enums::normal_mapping) {
+			if (useNormalStrength) {
+				weight = 1.0f;
+			}
+		}
 
 		bool alphaTrans = false;
 		if (mappingType == MAPPING_TYPE_OPACITY) {

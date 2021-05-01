@@ -862,8 +862,8 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 		// Normal Mapの強さを指定.
 		{
-			UsdShadeInput in = shader.CreateInput(TfToken("detail_bump_factor"), SdfValueTypeNames->Float);
-			in.Set(1.0f);
+			UsdShadeInput in = shader.CreateInput(TfToken("bump_factor"), SdfValueTypeNames->Float);
+			in.Set(materialData.normalStrength);
 			UsdAttribute attr = in.GetAttr();
 			attr.SetDisplayGroup(std::string("Normal"));
 			attr.SetDisplayName(std::string("Normal Map Strength"));
@@ -1464,7 +1464,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 		// Normal Mapの強さを指定.
 		{
 			UsdShadeInput in = shader.CreateInput(TfToken("normal_map_strength"), SdfValueTypeNames->Float);
-			in.Set(1.0f);
+			in.Set(materialData.normalStrength);
 			UsdAttribute attr = in.GetAttr();
 			attr.SetDisplayGroup(std::string("Normal"));
 			attr.SetDisplayName(std::string("Normal Map Strength"));

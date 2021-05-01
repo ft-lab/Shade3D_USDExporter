@@ -907,6 +907,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			materialData.normalTexture.textureParam.repeatU = repeatV.x;
 			materialData.normalTexture.textureParam.repeatV = repeatV.y;
 			materialData.normalTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
+			materialData.normalStrength = imagesBlend.getNormalStrength();
 		}
 	}
 

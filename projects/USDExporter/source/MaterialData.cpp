@@ -83,6 +83,8 @@ void CMaterialData::clear ()
 	transparencyColor[1] = 1.0f;
 	transparencyColor[2] = 1.0f;
 	transparencyTexture.clear();
+
+	normalStrength = 1.0f;
 }
 
 /**
@@ -121,6 +123,8 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 	if (!MathUtil::isZero(transparencyColor[1] - mDat.transparencyColor[1])) return false;
 	if (!MathUtil::isZero(transparencyColor[2] - mDat.transparencyColor[2])) return false;
 	if (!transparencyTexture.isSame(mDat.transparencyTexture)) return false;
+
+	if (!MathUtil::isZero(normalStrength - mDat.normalStrength)) return false;
 
 	return true;
 }

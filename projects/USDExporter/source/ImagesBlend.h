@@ -74,6 +74,8 @@ private:
 	float m_roughness;											// Roughness値.
 	float m_transparency;										// 透明度.
 
+	float m_normalStrength;										// 法線マップの強さ。MDLに出力する場合は、法線マップと強さを分離して扱える.
+
 private:
 	/**
 	 * 指定のテクスチャの合成処理.
@@ -138,6 +140,14 @@ private:
 	 */
 	void m_noBakeShade3DToPBRMaterial ();
 
+	/**
+	 * 1つのテクスチャイメージを持ち、かつ乗算合成かチェック.
+	 * @param[in]  mappingType    マッピングの種類.
+	 * @param[put] mWeight        乗算合成の場合の適用率.
+	 * @return 単一テクスチャで乗算合成の場合はtrueを返す.
+	 */
+	bool m_singleTextureAndMulti (const sxsdk::enums::mapping_type mappingType, float& mWeight);
+
 public:
 	CImagesBlend (sxsdk::scene_interface* scene, sxsdk::surface_class* surface);
 
@@ -188,6 +198,11 @@ public:
 	 * 透明度の強さを取得.
 	 */
 	float getTransparency () const { return m_transparency; }
+
+	/**
+	 * 法線マップの強さを取得.
+	 */
+	float getNormalStrength () const { return m_normalStrength; } 
 };
 
 #endif

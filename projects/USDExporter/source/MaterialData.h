@@ -86,6 +86,8 @@ public:
 	float transparency;							// 透明度.
 	float transparencyColor[3];					// 透明色.
 
+	float normalStrength;						// 法線マップの強さ。MDLに出力する場合は、法線マップと強さを分離して扱える.
+
 public:
 	CMaterialData ();
 	~CMaterialData ();
@@ -128,6 +130,8 @@ public:
 		this->transparencyColor[1] = v.transparencyColor[1];
 		this->transparencyColor[2] = v.transparencyColor[2];
 		this->transparencyTexture = v.transparencyTexture;
+
+		this->normalStrength = v.normalStrength;
 	}
 
     CMaterialData& operator = (const CMaterialData &v) {
@@ -168,6 +172,8 @@ public:
 		this->transparencyColor[1] = v.transparencyColor[1];
 		this->transparencyColor[2] = v.transparencyColor[2];
 		this->transparencyTexture = v.transparencyTexture;
+
+		this->normalStrength = v.normalStrength;
 
 		return (*this);
 	}
