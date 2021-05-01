@@ -1016,12 +1016,13 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(dlg_material_shader_type));
 		item->set_selection((int)m_exportParam.materialShaderType);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ);
 	}
 	{
 		sxsdk::dialog_item_class* item;
 		item = &(d.get_dialog_item(slg_separateOpacityAndTransmission));
 		item->set_bool(m_exportParam.separateOpacityAndTransmission);
-		item->set_enabled(m_exportParam.materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_NVIDIA_MDL_omniverse);
+		item->set_enabled(!m_exportParam.exportAppleUSDZ && m_exportParam.materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_NVIDIA_MDL_omniverse);
 	}
 }
 

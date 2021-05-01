@@ -85,6 +85,8 @@ void CMaterialData::clear ()
 	transparencyTexture.clear();
 
 	normalStrength = 1.0f;
+	glassThin = false;
+	emissiveIntensity = 1.0f;
 }
 
 /**
@@ -125,6 +127,8 @@ bool CMaterialData::isSame (const CMaterialData& mDat) const
 	if (!transparencyTexture.isSame(mDat.transparencyTexture)) return false;
 
 	if (!MathUtil::isZero(normalStrength - mDat.normalStrength)) return false;
+	if (glassThin != mDat.glassThin) return false;
+	if (!MathUtil::isZero(emissiveIntensity - mDat.emissiveIntensity)) return false;
 
 	return true;
 }

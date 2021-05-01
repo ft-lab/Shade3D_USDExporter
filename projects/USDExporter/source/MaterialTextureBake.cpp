@@ -9,6 +9,7 @@
 #include "MathUtil.h"
 #include "ImagesBlend.h"
 #include "OcclusionShaderData.h"
+#include "DOKIMaterialParam.h"
 
 /*
 	＜＜ Memo ＞＞
@@ -344,7 +345,7 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 
 		// 「陰影付けしない」を考慮して、Unlitになるように置き換え.
 		// iOS 13.1では、roughness 1 / metallic 1 にすると、完全透明部分は透過になっている.
-		if (materialData.unlitMode) {
+		if (!m_exportParam.useShaderMDL() && materialData.unlitMode) {
 			materialData.roughness = 1.0f;
 			materialData.metallic  = 0.0f;
 			materialData.ior       = 1.0f;
@@ -726,6 +727,9 @@ int CMaterialTextureBake::m_findMasterImageInImagesList (sxsdk::master_image_cla
  */
 bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData)
 {
+	// DOKI for Shade3D(OSPRay)でのGlass/Luminousなどの情報を反映.
+	if (m_getMaterialDOKIFromSurface(surface, materialData)) return true;
+
 	// 複数テクスチャの合成クラス.
 	CImagesBlend imagesBlend(m_pScene, surface);
 	CImagesBlend::IMAGE_BAKE_RESULT blendResult = imagesBlend.blendImages(m_exportParam);
@@ -909,6 +913,60 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 			materialData.normalTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 			materialData.normalStrength = imagesBlend.getNormalStrength();
 		}
+	}
+
+	return true;
+}
+
+/**
+ * DOKI for Shade3D(OSPRay)の情報を取得.
+ * @param[in]  surface           表面材質クラス.
+ * @param[out] materialData  マテリアル情報が返る.
+ */
+bool CMaterialTextureBake::m_getMaterialDOKIFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData)
+{
+	DOKI::CCustomMaterialData customMatD;
+	if (!DOKI::loadCustomMaterialData(surface, customMatD)) return false;
+
+	if (m_exportParam.useShaderMDL()) {
+		// 薄膜.
+		materialData.glassThin = customMatD.shade3D_thin;
+	}
+
+	//-------------------------------------------.
+	// Glass.
+	//-------------------------------------------.
+	if (customMatD.type == DOKI::CustomMaterialType::materialType_glass) {
+		materialData.useTransparency = true;
+		materialData.glassThin       = customMatD.glass_thin;
+		materialData.ior             = customMatD.glass_ior;
+		materialData.transparency    = 1.0f;
+		{
+			const sxsdk::rgb_class col = customMatD.glass_attenuationColor;
+			materialData.transparencyColor[0] = col.red;
+			materialData.transparencyColor[1] = col.green;
+			materialData.transparencyColor[2] = col.blue;
+		}
+		return true;
+	}
+
+	//-------------------------------------------.
+	// Luminous.
+	//-------------------------------------------.
+	if (customMatD.type == DOKI::CustomMaterialType::materialType_luminous) {
+		{
+			const sxsdk::rgb_class col = customMatD.luminous_color;
+			materialData.emissiveColor[0] = col.red;
+			materialData.emissiveColor[1] = col.green;
+			materialData.emissiveColor[2] = col.blue;
+		}
+		materialData.diffuseColor[0] = 0.0f;
+		materialData.diffuseColor[1] = 0.0f;
+		materialData.diffuseColor[2] = 0.0f;
+		materialData.roughness = 1.0f;
+
+		materialData.emissiveIntensity = customMatD.luminous_intensity;
+		return true;
 	}
 
 	return true;

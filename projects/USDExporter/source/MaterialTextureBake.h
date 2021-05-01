@@ -161,6 +161,13 @@ private:
 	 */
 	int m_existImage (sxsdk::image_interface* image, const sxsdk::rgb_class factor);
 
+	/**
+	 * DOKI for Shade3D(OSPRay)の情報を取得.
+	 * @param[in]  surface           表面材質クラス.
+	 * @param[out] materialData  マテリアル情報が返る.
+	 */
+	bool m_getMaterialDOKIFromSurface (sxsdk::surface_class* surface, CMaterialData& materialData);
+
 public:
 	CMaterialTextureBake (sxsdk::scene_interface* scene, const CExportParam& exportParam);
 	~CMaterialTextureBake ();

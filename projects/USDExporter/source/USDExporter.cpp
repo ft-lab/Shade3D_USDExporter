@@ -1186,7 +1186,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 		{
 			UsdShadeInput in = shader.CreateInput(TfToken("emissive_intensity"), SdfValueTypeNames->Float);
-			in.Set(10000.0f);		// TODO : Emissive Intensityは計算していれる.
+			in.Set(materialData.emissiveIntensity * 10000.0f);		// TODO : Emissive Intensityは計算していれる.
 			UsdAttribute attr = in.GetAttr();
 			attr.SetDisplayGroup(std::string("Emissive"));
 			attr.SetDisplayName(std::string("Emissive Intensity"));
@@ -1625,7 +1625,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 	//-----------------------------------------------.
 	{
 		UsdShadeInput in = shader.CreateInput(TfToken("thin_walled"), SdfValueTypeNames->Bool);
-		in.Set(false);
+		in.Set(materialData.glassThin);
 		UsdAttribute attr = in.GetAttr();
 		attr.SetDisplayGroup(std::string("Refraction"));
 		attr.SetDisplayName(std::string("Thin Walled"));

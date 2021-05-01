@@ -87,6 +87,8 @@ public:
 	float transparencyColor[3];					// 透明色.
 
 	float normalStrength;						// 法線マップの強さ。MDLに出力する場合は、法線マップと強さを分離して扱える.
+	bool glassThin;								// Glass時の薄膜の場合.
+	float emissiveIntensity;					// 発光の強さ.
 
 public:
 	CMaterialData ();
@@ -132,6 +134,8 @@ public:
 		this->transparencyTexture = v.transparencyTexture;
 
 		this->normalStrength = v.normalStrength;
+		this->glassThin = v.glassThin;
+		this->emissiveIntensity = v.emissiveIntensity;
 	}
 
     CMaterialData& operator = (const CMaterialData &v) {
@@ -174,6 +178,8 @@ public:
 		this->transparencyTexture = v.transparencyTexture;
 
 		this->normalStrength = v.normalStrength;
+		this->glassThin = v.glassThin;
+		this->emissiveIntensity = v.emissiveIntensity;
 
 		return (*this);
 	}
