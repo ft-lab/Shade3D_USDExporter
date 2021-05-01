@@ -759,7 +759,6 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 		if (imagesBlend.hasImage(iType)) {
 			materialData.useDiffuseAlpha = imagesBlend.getDiffuseAlphaTrans();
-
 			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
 			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.diffuseTexture, masterImageName, materialData.useDiffuseAlpha);
 			materialData.diffuseColor[0] = 1.0f;
@@ -969,7 +968,7 @@ bool CMaterialTextureBake::m_getMaterialDOKIFromSurface (sxsdk::surface_class* s
 		return true;
 	}
 
-	return true;
+	return false;
 }
 
 /**
