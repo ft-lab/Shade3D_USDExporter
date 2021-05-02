@@ -81,6 +81,10 @@
 		92C135BA25D4F91100E2024F /* libusdGeom.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 927D1E5125D39205009E397A /* libusdGeom.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		92C135BB25D4F91100E2024F /* libusdShade.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 927D1E5325D39208009E397A /* libusdShade.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		92C135BC25D4F91100E2024F /* libusdSkel.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 927D1E5225D39207009E397A /* libusdSkel.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		92D59E3B263ED662007C16B1 /* DOKIMaterialParam.h in Headers */ = {isa = PBXBuildFile; fileRef = 92D59E37263ED661007C16B1 /* DOKIMaterialParam.h */; };
+		92D59E3C263ED662007C16B1 /* DOKIMaterialParam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92D59E38263ED662007C16B1 /* DOKIMaterialParam.cpp */; };
+		92D59E3D263ED662007C16B1 /* CalcSurfaceArea.h in Headers */ = {isa = PBXBuildFile; fileRef = 92D59E39263ED662007C16B1 /* CalcSurfaceArea.h */; };
+		92D59E3E263ED662007C16B1 /* CalcSurfaceArea.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92D59E3A263ED662007C16B1 /* CalcSurfaceArea.cpp */; };
 		FFE6EF5D1A6667E60006CB66 /* shdplugin.icns in Resources */ = {isa = PBXBuildFile; fileRef = 16F9E21A0546323A00F09F49 /* shdplugin.icns */; };
 		FFE6EF5E1A6667E60006CB66 /* sxuls in Resources */ = {isa = PBXBuildFile; fileRef = A31F019408BD316A00C322BE /* sxuls */; };
 		FFE6EF611A6667E60006CB66 /* com.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C7BB47841980FA1500C9F408 /* com.cpp */; };
@@ -216,6 +220,10 @@
 		927D1E5225D39207009E397A /* libusdSkel.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusdSkel.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libusdSkel.dylib"; sourceTree = "<group>"; };
 		927D1E5325D39208009E397A /* libusdShade.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusdShade.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libusdShade.dylib"; sourceTree = "<group>"; };
 		927D1E5425D39208009E397A /* libusd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libusd.dylib; path = "../../../../../../../USD/USD-21.02/builds_no_python/lib/libusd.dylib"; sourceTree = "<group>"; };
+		92D59E37263ED661007C16B1 /* DOKIMaterialParam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DOKIMaterialParam.h; path = ../../source/DOKIMaterialParam.h; sourceTree = "<group>"; };
+		92D59E38263ED662007C16B1 /* DOKIMaterialParam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DOKIMaterialParam.cpp; path = ../../source/DOKIMaterialParam.cpp; sourceTree = "<group>"; };
+		92D59E39263ED662007C16B1 /* CalcSurfaceArea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CalcSurfaceArea.h; path = ../../source/CalcSurfaceArea.h; sourceTree = "<group>"; };
+		92D59E3A263ED662007C16B1 /* CalcSurfaceArea.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CalcSurfaceArea.cpp; path = ../../source/CalcSurfaceArea.cpp; sourceTree = "<group>"; };
 		A31F019508BD316A00C322BE /* en */ = {isa = PBXFileReference; lastKnownFileType = folder; name = en; path = ../../source/resources/en.lproj/sxuls; sourceTree = SOURCE_ROOT; };
 		A31F01A808BD318900C322BE /* ja */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ja; path = ../../source/resources/ja.lproj/sxuls; sourceTree = SOURCE_ROOT; };
 		A31F01B308BD319F00C322BE /* zh_CN */ = {isa = PBXFileReference; lastKnownFileType = folder; name = zh_CN; path = ../../source/resources/zh_CN.lproj/sxuls; sourceTree = SOURCE_ROOT; };
@@ -343,6 +351,10 @@
 		4A3E5BC70B0029410006A4FF /* sources */ = {
 			isa = PBXGroup;
 			children = (
+				92D59E3A263ED662007C16B1 /* CalcSurfaceArea.cpp */,
+				92D59E39263ED662007C16B1 /* CalcSurfaceArea.h */,
+				92D59E38263ED662007C16B1 /* DOKIMaterialParam.cpp */,
+				92D59E37263ED661007C16B1 /* DOKIMaterialParam.h */,
 				925EE73D25ECAE74000E5E68 /* WarningCheck.cpp */,
 				925EE73C25ECAE73000E5E68 /* WarningCheck.h */,
 				92117A6325D8BB2E00DE200E /* AlphaModeMaterialAttributeInterface.cpp */,
@@ -501,6 +513,7 @@
 				92117A6825D8BB3F00DE200E /* AlphaModeMaterialData.h in Headers */,
 				9206381A236DC024000BE4B9 /* USDExporter.h in Headers */,
 				9206386A236DC043000BE4B9 /* OcclusionShaderInterface.h in Headers */,
+				92D59E3B263ED662007C16B1 /* DOKIMaterialParam.h in Headers */,
 				92063866236DC043000BE4B9 /* ImagesBlend.h in Headers */,
 				92063871236DC043000BE4B9 /* MathUtil.h in Headers */,
 				92063813236DC024000BE4B9 /* TextureTransform.h in Headers */,
@@ -510,6 +523,7 @@
 				9206381F236DC024000BE4B9 /* FindNames.h in Headers */,
 				92063821236DC024000BE4B9 /* NodeData.h in Headers */,
 				92063816236DC024000BE4B9 /* MaterialTextureBake.h in Headers */,
+				92D59E3D263ED662007C16B1 /* CalcSurfaceArea.h in Headers */,
 				92117A6725D8BB3F00DE200E /* AlphaModeMaterialAttributeInterface.h in Headers */,
 				9206382B236DC024000BE4B9 /* JointMotionData.h in Headers */,
 				92063867236DC043000BE4B9 /* SceneData.h in Headers */,
@@ -620,6 +634,7 @@
 				92063810236DC024000BE4B9 /* MathUtil.cpp in Sources */,
 				92117A6425D8BB2F00DE200E /* AlphaModeMaterialAttributeInterface.cpp in Sources */,
 				9206383B236DC024000BE4B9 /* USDExporterInterface.cpp in Sources */,
+				92D59E3C263ED662007C16B1 /* DOKIMaterialParam.cpp in Sources */,
 				FFE6EF6A1A6667E60006CB66 /* vectors.cpp in Sources */,
 				92063814236DC024000BE4B9 /* TextureTransform.cpp in Sources */,
 				92063825236DC024000BE4B9 /* MaterialData.cpp in Sources */,
@@ -631,6 +646,7 @@
 				92063817236DC024000BE4B9 /* AnimKeyframeBake.cpp in Sources */,
 				92063815236DC024000BE4B9 /* ImageData.cpp in Sources */,
 				925EE73F25ECAE74000E5E68 /* WarningCheck.cpp in Sources */,
+				92D59E3E263ED662007C16B1 /* CalcSurfaceArea.cpp in Sources */,
 				9206383A236DC024000BE4B9 /* ImagesBlend.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -187,6 +187,7 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 * マテリアルで、マッピングレイヤの左右反転/上下反転/90度回転/色反転のベイク対応 (ver.0.0.2.0-)    
 * マテリアルで、「不透明マスク」「マット」対応 (ベイク出力時) (ver.0.0.2.0-)    
 * 表面材質の指定をPBRマテリアルと仮定して、加工せずに出力 (ver.0.1.0.0 - )
+* NVIDIAのOmniverse ( https://www.nvidia.com/ja-jp/omniverse/ )のため、マテリアルをMDL（OmniPBR/OmniGlass）として出力 (ver.0.1.1.0 - )
 
 ## シーン階層と形状
 
@@ -362,6 +363,8 @@ Occlusionで「適用率」値が反映されます。
 
 ## Unlit風表現
 
+※ この処理はエクスポート時に「Shader」で「UsdPewviewSurface」を使用した場合にのみ適用されます。    
+
 USDでは、テクスチャのシェーディングを行わずにテクスチャ色そのままを表現する「Unlit」の機能はありません。    
 そこで、Shade3Dの表面材質の「その他」-「陰影付けしない」がOnに場合に以下の変換を行い、「Unlit風」にするようにしました。    
 
@@ -473,6 +476,20 @@ Offにすると、面分割されずにそのままの面を出力します (ver
 usdviewやiPhone/iPadOSでのAR Quick Lookでは、四角形でも凹の形状になる場合はうまく面分割されない場合があるようです。    
 その場合は、「三角形分割」をOnにするようにしてください。    
 
+### マテリアル
+
+「Shader」で「UsdPreviewSurface」または「NVIDIA Omniverse (MDL)」を選択できます(ver.0.1.1.0-)。     
+「UsdPreviewSurface」は従来のUSDのマテリアルで使用される標準のShaderの指定です。     
+AppleのARで使用する場合もこれを選択する必要があります。     
+
+「NVIDIA Omniverse (MDL)」を選択すると、NVIDIA社のOmniverse( https://www.nvidia.com/ja-jp/omniverse/ )で使用できるMDL対応のShaderを割り当てます。     
+OmniverseでのUSD Exporter for Shade3Dの使用については「[NVIDIA Omniverse対応について](./Omniverse/readme.md)」をご参照くださいませ。     
+
+「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスは、「NVIDIA Omniverse (MDL)」を選択した場合に有効になります。     
+このチェックボックスをOnにすると、「不透明マスク」の指定はUSDのOpacityとして割り当て、
+「透明度」や「屈折」の指定がある場合はこれらは「透明度」として使用されます。      
+「透明度」使用時は、USDのマテリアルのShaderとしてMDLの「OmniGlass」が割り当てられます。     
+透明度が存在しないマテリアルの場合は、MDLの「OmniPBR」が割り当てられます。      
 
 ### テクスチャ
 

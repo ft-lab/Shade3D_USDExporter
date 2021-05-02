@@ -1,5 +1,10 @@
 # 更新履歴
 
+[2021/05/02] ver.0.1.1.0   
+* Changed : ノード名は、シーン階層が異なる場合に同一名も許可するように修正
+* Added : NVIDIA OmniverseのMDL(OmniPBR/OmniGlass)へのエクスポートの対応
+* Added : DOKI for Shade3D(OSPRay)のGlass/LuminousのマテリアルをUSDにも反映できるようにした(これはMDL時に反映される)
+
 [2021/03/01] ver.0.1.0.2   
 
 * Added : エクスポートオプションに「三角形に分割」を追加
