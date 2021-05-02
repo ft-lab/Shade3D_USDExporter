@@ -302,6 +302,7 @@ bool CMaterialTextureBake::m_getMaterialDataFromShape (sxsdk::master_surface_cla
 			materialData.emissiveColor[0] = col.red;
 			materialData.emissiveColor[1] = col.green;
 			materialData.emissiveColor[2] = col.blue;
+			materialData.emissiveIntensity = surface->get_glow();
 		}
 
 		if (surface->get_has_reflection()) {
@@ -804,7 +805,7 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::glow_mapping;
 		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
 		if (factor.red > 0.0f || factor.green > 0.0f || factor.blue > 0.0f) {
-			materialData.emissiveIntensity = 1.0f;
+			materialData.emissiveIntensity = imagesBlend.getEmissiveIntensity();
 			if (imagesBlend.hasImage(iType)) {
 				const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
 				imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);

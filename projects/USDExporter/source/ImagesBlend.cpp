@@ -84,7 +84,8 @@ void CImagesBlend::clear ()
 	m_diffuseTexturesCount = 0;
 	m_useDiffuseAlpha = false;
 	m_normalTexturesCount = 0;
-	m_normalStrength = 1.0f;
+	m_normalStrength    = 1.0f;
+	m_emissiveIntensity = 0.0f;
 }
 
 /**
@@ -1349,7 +1350,13 @@ void CImagesBlend::m_convShade3DToPBRMaterial ()
 	m_roughness    = m_surface->get_roughness();
 	m_transparency = m_surface->get_transparency();
 
-	const float emissiveV = std::min(1.0f, std::max(0.0f, m_surface->get_glow()));
+	float emissiveIntensity = m_surface->get_glow();
+	if (m_exportParam.useShaderMDL()) {		// MDLとして使用する場合.
+		m_emissiveIntensity = emissiveIntensity;
+		if (m_emissiveIntensity > 0.0f) emissiveIntensity = 1.0f;
+	}
+
+	const float emissiveV = std::min(1.0f, emissiveIntensity);
 	const sxsdk::rgb_class emCol0 = m_glowImage ? sxsdk::rgb_class(1, 1, 1) : (m_surface->get_glow_color());
 	sxsdk::rgb_class emCol = emCol0 * emissiveV;
 	m_emissiveColor = emCol;
@@ -1759,7 +1766,13 @@ void CImagesBlend::m_noBakeShade3DToPBRMaterial ()
 	m_roughness    = m_surface->get_roughness();
 	m_transparency = m_surface->get_transparency();
 
-	m_emissiveColor = (m_surface->get_glow_color()) * (m_surface->get_glow());
+	float emissiveIntensity = m_surface->get_glow();
+	if (m_exportParam.useShaderMDL()) {		// MDLとして使用する場合.
+		m_emissiveIntensity = emissiveIntensity;
+		if (m_emissiveIntensity > 0.0f) emissiveIntensity = 1.0f;
+	}
+
+	m_emissiveColor = (m_surface->get_glow_color()) * emissiveIntensity;
 	if (m_glowImage) m_emissiveColor = sxsdk::rgb_class(1, 1, 1);
 
 	// 「不透明」と「透明」のテクスチャを分離もしくは合成して再格納.

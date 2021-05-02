@@ -75,6 +75,7 @@ private:
 	float m_transparency;										// 透明度.
 
 	float m_normalStrength;										// 法線マップの強さ。MDLに出力する場合は、法線マップと強さを分離して扱える.
+	float m_emissiveIntensity;									// 発光の強さ.
 
 private:
 	/**
@@ -203,6 +204,12 @@ public:
 	 * 法線マップの強さを取得.
 	 */
 	float getNormalStrength () const { return m_normalStrength; } 
+
+	/**
+	 * 発光の強さを取得.
+	 */
+	float getEmissiveIntensity () const { return m_emissiveIntensity; }
+
 };
 
 #endif
