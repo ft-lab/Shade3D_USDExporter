@@ -55,21 +55,21 @@ USDのマテリアルのShaderとしてMDL用の出力を行います。
 エクスポート時に「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスをOnにすると、Shade3Dの「不透明マスク」はCutout(Cutoff)として使用されます。    
 なお、「不透明マスク」でCutout表現を行う際は表面材質ウィンドウの「情報」で「AlphaMode (glTF/USD)」を選択し、      
 「AlphaMode」で「MASK」を選択するようにします。     
-<img src="../docs/images/usd_export_material_alpha_cutoff_02.png" />    
+<img src="../images/usd_export_material_alpha_cutoff_02.png" />    
 テクスチャのピクセル値で「AlphaCutoff」値をしきい値にしてピクセル単位のトリミングを行います。     
 これにより、木の葉のような表現を行うことができます。      
 
 「透明」が0.0よりも大きい場合は、Omniverseに渡したときに「OmniGlass」のShaderが割り当てられます。     
-<img src="../docs/images/usd_export_transparency_01.png" />    
+<img src="../images/usd_export_transparency_01.png" />    
 「透明」スライダの値はOmniverse側では反映されず、常に「グラス」になります。      
 また、「OmniGlass」のShaderでは「屈折」の値を反映することができます。      
 ガラスを濁らせる場合は「荒さ」の値を上げるようにしてください。    
 
 以下はShade3D上でのレンダリング(DOKI for Shade3D(OSPRay)を使用)です。    
-<img src="../docs/images/usd_export_transparency_02.jpg" />    
+<img src="../images/usd_export_transparency_02.jpg" />    
 これをUSDでエクスポートしてOmniverse Createに渡すと、以下のようになりました。     
 RTX Path-tracedのリアルタイムパストレーシング表現です。     
-<img src="../docs/images/usd_export_transparency_03.jpg" />    
+<img src="../images/usd_export_transparency_03.jpg" />    
 なお、現在のUSD Exporter for Shade3Dで渡されるのは3Dモデルとテクスチャのみです。     
 背景のHDRIや光源はOmniverse側で割り当てました。     
 
@@ -81,15 +81,13 @@ RTX Path-tracedのリアルタイムパストレーシング表現です。
 
 表面材質の「発光」が0.0よりも大きい場合、スライダの値が発光の強さとして使用されます。      
 また発光の色は発光色として使用されます。      
-<img src="../docs/images/usd_export_emissive_01.png" />    
+<img src="../images/usd_export_emissive_01.png" />    
 Omniverseに渡す際は「発光の強さ * 5000」が「OmniPBR」の「Emissive Intensity」に入ります。      
 
 以下はShade3D上でのレンダリング(DOKI for Shade3D(OSPRay)を使用)です。    
-<img src="../docs/images/usd_export_emissive_02.jpg" />    
+<img src="../images/usd_export_emissive_02.jpg" />    
 これをUSDでエクスポートしてOmniverse Createに渡すと、以下のようになりました。     
-<img src="../docs/images/usd_export_emissive_03.jpg" />    
-
-
+<img src="../images/usd_export_emissive_03.jpg" />    
 
 ## Omniverseでの制限事項
 
