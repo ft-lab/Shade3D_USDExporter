@@ -43,7 +43,7 @@ USD Exporter for Shade3Dでは、この「OmniPBR」と「OmniGlass」の出力�
 
 エクスポートダイアログボックスの「マテリアル」の「Shader」で「NVIDIA Omniverse(MDL)」を選択すると、     
 USDのマテリアルのShaderとしてMDL用の出力を行います。     
-<img src="../docs/images/usd_export_dlg_03.png" />    
+<img src="../images/usd_export_dlg_03.png" />    
 
 なお、MDL用の出力を行った場合、Pixarの提供するusdviewやAppleのAR Quick Lookではマテリアルが正しく表現できなくなるため注意が必要です。      
 「OmniPBR」や「OmniGlass」のMDL出力は、Omniverse環境でのみ使用できる指定になります。     

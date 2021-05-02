@@ -518,6 +518,10 @@ Shade3Dの表面材質（Shade3Dマテリアルの指定）はPBRマテリアル
 モーションウィンドウのキーフレームのみ出力するか、
 一定間隔のステップ数でキーフレームを出力するか、の指定になります。    
 
+## NVIDIA Omniverse対応
+
+* [NVIDIA Omniverse対応について](./docs/Omniverse/readme.md)
+
 ## サンプルファイル
 
 以下のページに、Shade3Dのshdファイルと    
