@@ -803,23 +803,26 @@ bool CMaterialTextureBake::m_getMaterialMultiMappingFromSurface (sxsdk::surface_
 	{
 		const sxsdk::enums::mapping_type iType = sxsdk::enums::glow_mapping;
 		const sxsdk::rgb_class factor = imagesBlend.getImageFactor(iType);
-		if (imagesBlend.hasImage(iType)) {
-			const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
-			imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
+		if (factor.red > 0.0f || factor.green > 0.0f || factor.blue > 0.0f) {
+			materialData.emissiveIntensity = 1.0f;
+			if (imagesBlend.hasImage(iType)) {
+				const USD_DATA::IMAGE_FORMAT_TYPE imgFormatType = imagesBlend.getImageFormatType(iType);
+				imageIndex = m_storeCustomImage(iType, imgFormatType, materialName, imagesBlend.getImage(iType), factor, materialData.emissiveTexture, masterImageName);
 
-			materialData.emissiveColor[0] = 1.0f;
-			materialData.emissiveColor[1] = 1.0f;
-			materialData.emissiveColor[2] = 1.0f;
+				materialData.emissiveColor[0] = 1.0f;
+				materialData.emissiveColor[1] = 1.0f;
+				materialData.emissiveColor[2] = 1.0f;
 
-			const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
-			materialData.emissiveTexture.textureParam.repeatU = repeatV.x;
-			materialData.emissiveTexture.textureParam.repeatV = repeatV.y;
-			materialData.emissiveTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
+				const sx::vec<int,2> repeatV = imagesBlend.getImageRepeat(iType);
+				materialData.emissiveTexture.textureParam.repeatU = repeatV.x;
+				materialData.emissiveTexture.textureParam.repeatV = repeatV.y;
+				materialData.emissiveTexture.textureParam.uvLayerIndex = imagesBlend.getTexCoord(iType);
 
-		} else {
-			materialData.emissiveColor[0] = factor.red;
-			materialData.emissiveColor[1] = factor.green;
-			materialData.emissiveColor[2] = factor.blue;
+			} else {
+				materialData.emissiveColor[0] = factor.red;
+				materialData.emissiveColor[1] = factor.green;
+				materialData.emissiveColor[2] = factor.blue;
+			}
 		}
 	}
 
@@ -959,6 +962,8 @@ bool CMaterialTextureBake::m_getMaterialDOKIFromSurface (sxsdk::surface_class* s
 			materialData.emissiveColor[1] = col.green;
 			materialData.emissiveColor[2] = col.blue;
 		}
+
+		// TODO : 発光時はベースの色を黒にする必要があるか要検討.
 		materialData.diffuseColor[0] = 0.0f;
 		materialData.diffuseColor[1] = 0.0f;
 		materialData.diffuseColor[2] = 0.0f;

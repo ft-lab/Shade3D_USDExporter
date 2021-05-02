@@ -40,7 +40,7 @@
 // 以下のnamespace内に、UsdXXXXのクラスがある.
 using namespace PXR_INTERNAL_NS;
 
- UsdStageRefPtr g_stage = NULL;		// USDエクスポート時のクラス.
+UsdStageRefPtr g_stage = NULL;		// USDエクスポート時のクラス.
 
 #define ROOT_PATH  "/root"
 #define MATERIAL_ROOT_PATH  "/root/Materials"
@@ -1186,7 +1186,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 		{
 			UsdShadeInput in = shader.CreateInput(TfToken("emissive_intensity"), SdfValueTypeNames->Float);
-			in.Set(materialData.emissiveIntensity * 10000.0f);		// TODO : Emissive Intensityは計算していれる.
+			in.Set(materialData.emissiveIntensity * 5000.0f);
 			UsdAttribute attr = in.GetAttr();
 			attr.SetDisplayGroup(std::string("Emissive"));
 			attr.SetDisplayName(std::string("Emissive Intensity"));

@@ -86,7 +86,7 @@ void CMaterialData::clear ()
 
 	normalStrength = 1.0f;
 	glassThin = false;
-	emissiveIntensity = 1.0f;
+	emissiveIntensity = 0.0f;
 }
 
 /**
