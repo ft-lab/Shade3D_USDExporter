@@ -518,6 +518,10 @@ Shade3Dの表面材質（Shade3Dマテリアルの指定）はPBRマテリアル
 モーションウィンドウのキーフレームのみ出力するか、
 一定間隔のステップ数でキーフレームを出力するか、の指定になります。    
 
+## DOKI for Shade3Dとの連携
+
+* [DOKI for Shade3Dとの連携](./docs/doki/readme.md)
+
 ## NVIDIA Omniverse対応
 
 * [NVIDIA Omniverse対応について](./docs/Omniverse/readme.md)
