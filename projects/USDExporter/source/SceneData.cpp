@@ -87,9 +87,7 @@ std::string CSceneData::appendShape (sxsdk::shape_class* shape, sxsdk::shape_cla
 
 	// ルートノード名.
 	if (!shape->has_dad()) {
-		if (!StringUtil::checkASCII(name2)) {
-			name2 = std::string(ROOT_PATH);
-		}
+		name2 = std::string(ROOT_PATH);
 	}
 
 	// マスターオブジェクトパートの場合.
