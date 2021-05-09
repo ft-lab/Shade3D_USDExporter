@@ -480,6 +480,12 @@ void CSceneData::appendNodeMesh (sxsdk::shape_class* shape, const std::string& n
 			matIndex = (int)materialsList.size();
 			materialsList.push_back(materialD);
 
+			for (size_t j = 0; j < tmpMaterialIndexList.size(); ++j) {
+				if ((void *)tmpMaterialSurfaceList[j] == materialD.pSurface) {
+					tmpMaterialIndexList[j] = matIndex;
+				}
+			}
+
 		} else {
 			materialsList[matIndex].refCount++;
 		}
