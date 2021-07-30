@@ -478,14 +478,14 @@ usdviewやiPhone/iPadOSでのAR Quick Lookでは、四角形でも凹の形状�
 
 ### マテリアル
 
-「Shader」で「UsdPreviewSurface」または「NVIDIA Omniverse (MDL)」を選択できます(ver.0.1.1.0-)。     
+「Shader」で「UsdPreviewSurface」または「OmniPBR (NVIDIA Omniverse)」を選択できます(ver.0.1.1.0-)。     
 「UsdPreviewSurface」は従来のUSDのマテリアルで使用される標準のShaderの指定です。     
 AppleのARで使用する場合もこれを選択する必要があります。     
 
-「NVIDIA Omniverse (MDL)」を選択すると、NVIDIA社のOmniverse( https://www.nvidia.com/ja-jp/omniverse/ )で使用できるMDL対応のShaderを割り当てます。     
+「OmniPBR (NVIDIA Omniverse)」を選択すると、NVIDIA社のOmniverse( https://www.nvidia.com/ja-jp/omniverse/ )で使用できるMDL対応のShaderを割り当てます。     
 OmniverseでのUSD Exporter for Shade3Dの使用については「[NVIDIA Omniverse対応について](./docs/Omniverse/readme.md)」をご参照くださいませ。     
 
-「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスは、「NVIDIA Omniverse (MDL)」を選択した場合に有効になります。     
+「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスは、「OmniPBR (NVIDIA Omniverse)」を選択した場合に有効になります。     
 このチェックボックスをOnにすると、「不透明マスク」の指定はUSDのOpacityとして割り当て、
 「透明度」や「屈折」の指定がある場合はこれらは「透明度」として使用されます。      
 「透明度」使用時は、USDのマテリアルのShaderとしてMDLの「OmniGlass」が割り当てられます。     

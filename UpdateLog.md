@@ -1,5 +1,12 @@
 # 更新履歴
 
+[2021/07/30] ver.0.1.1.2   
+
+* Changed : エクスポート時のオプションShaderを"OmniPBR (NVIDIA Omniverse)"に名前変更
+* Changed : Shaderを"OmniPBR"で出力したとき、Roughness/Metallic/Occlusion/Opacity MapのColor Spaceを"raw"に変更
+* Fixed : Macからのエクスポート時、Shaderを"OmniPBR"で出力したときに正しくUSDファイルが出力できていなかった問題を修正
+* Fixed : "OmniPBR (NVIDIA Omniverse)"時に、テクスチャのマッピングの繰り返しが不正になることがあった問題を修正
+
 [2021/05/11] ver.0.1.1.1   
 * Fixed : ルートパート名が英字の場合に正しく出力できない問題を修正
 * Fixed : 同一マスターサーフェスを参照するフェイスグループを使った形状で、マスターサーフェスが複数作られてしまう問題を修正

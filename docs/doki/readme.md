@@ -109,7 +109,7 @@ DOKIのレンダリングには反映されませんが、表面材質の「発�
 
 DOKI for Shade3Dのレンダリング結果に近くなるようにUSDをエクスポートする場合、     
 エクスポートオプションの「マテリアル」で
-「Shader」を「NVIDIA Omniverse(MDL)」とし、    
+「Shader」を「OmniPBR (NVIDIA Omniverse)」とし、    
 「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスをOnにするようにしてください。      
 また「テクスチャを加工せずにベイク」チェックボックスをOnにするようにしてください（DOKIの「PBRマテリアル」を割り当てている場合）。      
 

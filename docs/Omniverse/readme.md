@@ -41,7 +41,7 @@ Omniverseでは「OmniPBR」と「OmniGlass」といった、あらかじめ用�
 MDLを使用すると、より表現の幅が広がります。      
 USD Exporter for Shade3Dでは、この「OmniPBR」と「OmniGlass」の出力に対応しています。      
 
-エクスポートダイアログボックスの「マテリアル」の「Shader」で「NVIDIA Omniverse(MDL)」を選択すると、     
+エクスポートダイアログボックスの「マテリアル」の「Shader」で「OmniPBR (NVIDIA Omniverse)」を選択すると、     
 USDのマテリアルのShaderとしてMDL用の出力を行います。     
 <img src="../images/usd_export_dlg_03.png" />    
 
@@ -50,7 +50,7 @@ USDのマテリアルのShaderとしてMDL用の出力を行います。
 
 ## 不透明(Opacity)と透明度(Transmission)を分ける
 
-※ この表現は「NVIDIA Omniverse(MDL)」時にのみ有効です。      
+※ この表現は「OmniPBR (NVIDIA Omniverse)」時にのみ有効です。      
 
 エクスポート時に「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスをOnにすると、Shade3Dの「不透明マスク」はCutout(Cutoff)として使用されます。    
 なお、「不透明マスク」でCutout表現を行う際は表面材質ウィンドウの「情報」で「AlphaMode (glTF/USD)」を選択し、      
@@ -77,7 +77,7 @@ RTX Path-tracedのリアルタイムパストレーシング表現です。
 
 ## 発光の指定
 
-※ この表現は「NVIDIA Omniverse(MDL)」時にのみ有効です。      
+※ この表現は「OmniPBR (NVIDIA Omniverse)」時にのみ有効です。      
 
 表面材質の「発光」が0.0よりも大きい場合、スライダの値が発光の強さとして使用されます。      
 また発光の色は発光色として使用されます。      
