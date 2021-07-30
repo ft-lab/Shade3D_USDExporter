@@ -1,13 +1,13 @@
 # NVIDIA Omniverse対応について
 
-これは、Omniverse Create 2021.1.1使用時の情報になります。     
+これは、Omniverse Create 2021.1.1/2021.3.1使用時の情報になります。     
 
 ## NVIDIA Omniverseとは ?
 
 NVIDIA OmniverseはNVIDIA社が提供しています。      
 Omniverseはリアルタイムシミュレーションや、複数人で3D情報を共有して共同で作業を行う場を提供したりできる、     
 オープンなプラットフォームです。      
-2021年5月段階ではオープンベータです。      
+2021年7月段階ではオープンベータです。      
 
 https://www.nvidia.com/ja-jp/omniverse/
 
