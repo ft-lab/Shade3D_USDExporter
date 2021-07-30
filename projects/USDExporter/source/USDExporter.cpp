@@ -1099,7 +1099,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("auto"));
+				attr.SetColorSpace(TfToken("raw"));
 				attr.SetDisplayGroup(std::string("Opacity"));
 				attr.SetDisplayName(std::string("Opacity Map"));
 
@@ -1415,7 +1415,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("auto"));
+				attr.SetColorSpace(TfToken("raw"));
 				attr.SetDisplayGroup(std::string("Roughness"));
 				attr.SetDisplayName(std::string("Roughness Texture"));
 
@@ -1589,7 +1589,7 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("auto"));
+				attr.SetColorSpace(TfToken("raw"));
 				attr.SetDisplayGroup(std::string("Opacity"));
 				attr.SetDisplayName(std::string("Opacity Map"));
 
