@@ -46,6 +46,9 @@ UsdStageRefPtr g_stage = NULL;		// USDエクスポート時のクラス.
 #define MATERIAL_ROOT_PATH  "/root/Materials"
 #define SKELETONS_ROOT_PATH  "/root/Skeletons"
 
+// min-max範囲指定を使用するかどうか.
+#define USE_DICTIONARY_RANGE  0
+
  namespace {
 	 /**
 	  * UsdPrimに行列 (移動/回転/スケール)を指定.
@@ -784,12 +787,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 		// デフォルトの値を指定.
 		attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(0.2f, 0.2f, 0.2f)));
+#if USE_DICTIONARY_RANGE
 		{
 			VtDictionary dic;
 			dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
 			dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
 			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 		}
+#endif
 
 	} else {
 		// BaseColorテクスチャを指定.
@@ -831,12 +836,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1, 1, 1)));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
 				dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 	}
 
@@ -870,12 +877,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(100000.0f));
 				dic.SetValueAtPath("min", VtValue(-100000.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 	}
 
@@ -894,12 +903,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(1.0f));
 				dic.SetValueAtPath("min", VtValue(0.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		} else {
 			{
 				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
@@ -923,12 +934,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -948,12 +961,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.5f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(1.0f));
 				dic.SetValueAtPath("min", VtValue(0.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		} else {
 			{
 				const std::string fileName = m_imagesList[mappingD.textureParam.imageIndex].fileName;
@@ -979,12 +994,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -1017,12 +1034,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(100000.0f));
 					dic.SetValueAtPath("min", VtValue(-100000.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -1063,12 +1082,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 			
 			// Mono Sourceを"mono_alpha"とすると、BaseColorのAlphaをOpacityとすることになる.
@@ -1120,12 +1141,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				attr.SetDisplayName(std::string("Opacity Threshold"));
 
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -1176,12 +1199,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1.0f, 0.1f, 0.1f)));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(GfVec3f(100000, 100000, 100000)));
 				dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 
 		{
@@ -1193,12 +1218,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(40.0f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(100000.0f));
 				dic.SetValueAtPath("min", VtValue(-100000.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 	}
 
@@ -1331,12 +1358,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec2f(1, 1)));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(GfVec2f(100000, 100000)));
 					dic.SetValueAtPath("min", VtValue(GfVec2f(-100000, -100000)));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -1378,12 +1407,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 		// デフォルトの値を指定.
 		attr.SetCustomDataByKey(TfToken("default"), VtValue(0.001f));
+#if USE_DICTIONARY_RANGE
 		{
 			VtDictionary dic;
 			dic.SetValueAtPath("max", VtValue(1000.0f));
 			dic.SetValueAtPath("min", VtValue(0.0f));
 			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 		}
+#endif
 	}
 
 	//-----------------------------------------------.
@@ -1400,12 +1431,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(1.0f));
 				dic.SetValueAtPath("min", VtValue(0.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 
 		if (mappingD.textureParam.imageIndex >= 0) {
@@ -1431,12 +1464,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(100000.f));
 					dic.SetValueAtPath("min", VtValue(-100000.f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
@@ -1471,12 +1506,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 			// デフォルトの値を指定.
 			attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+#if USE_DICTIONARY_RANGE
 			{
 				VtDictionary dic;
 				dic.SetValueAtPath("max", VtValue(10.0f));
 				dic.SetValueAtPath("min", VtValue(0.0f));
 				attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 			}
+#endif
 		}
 	}
 
@@ -1499,12 +1536,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 		// デフォルトの値を指定.
 		attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec3f(1, 1, 1)));
+#if USE_DICTIONARY_RANGE
 		{
 			VtDictionary dic;
 			dic.SetValueAtPath("max", VtValue(GfVec3f(1, 1, 1)));
 			dic.SetValueAtPath("min", VtValue(GfVec3f(0, 0, 0)));
 			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 		}
+#endif
 	}
 
 	//-----------------------------------------------.
@@ -1519,12 +1558,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 		// デフォルトの値を指定.
 		attr.SetCustomDataByKey(TfToken("default"), VtValue(1.491f));
+#if USE_DICTIONARY_RANGE
 		{
 			VtDictionary dic;
 			dic.SetValueAtPath("max", VtValue(4.0f));
 			dic.SetValueAtPath("min", VtValue(1.0f));
 			attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 		}
+#endif
 	}
 
 	//-----------------------------------------------.
@@ -1553,12 +1594,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 
 				// デフォルトの値を指定.
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(1.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 			
 			// Mono Sourceを"mono_alpha"とすると、BaseColorのAlphaをOpacityとすることになる.
@@ -1610,12 +1653,14 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 				attr.SetDisplayName(std::string("Opacity Threshold"));
 
 				attr.SetCustomDataByKey(TfToken("default"), VtValue(0.0f));
+#if USE_DICTIONARY_RANGE
 				{
 					VtDictionary dic;
 					dic.SetValueAtPath("max", VtValue(1.0f));
 					dic.SetValueAtPath("min", VtValue(0.0f));
 					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
 				}
+#endif
 			}
 		}
 	}
