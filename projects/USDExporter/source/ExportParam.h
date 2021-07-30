@@ -20,8 +20,9 @@ namespace USD_DATA {
 		 * Shaderの種類.
 		 */
 		enum MATERIAL_SHADER_TYPE {
-			material_shader_type_UsdPreviewSurface = 0,		// デフォルト.
-			material_shader_type_NVIDIA_MDL_omniverse,		// OmniverseのOmnPBRなど.
+			material_shader_type_UsdPreviewSurface = 0,				// デフォルト.
+			material_shader_type_OmniPBR_NVIDIA_omniverse,			// OmniPBR (NVIDIA Omniverse).
+			material_shader_type_OmniSurface_NVIDIA_omniverse,		// OmniSurface (NVIDIA Omniverse).
 		};
 
 		/**
@@ -149,7 +150,7 @@ public:
 
 	/**
 	 * Shaderの種類としてMDLを使用するか.
-	 * これは、Macのusdz出力ではないこと、materialShaderTypeでmaterial_shader_type_NVIDIA_MDL_omniverseが選択されていることが条件.
+	 * これは、Macのusdz出力ではないこと、materialShaderTypeでmaterial_shader_type_OmniPBR_NVIDIA_omniverseが選択されていることが条件.
 	 */
 	bool useShaderMDL () const;
 };

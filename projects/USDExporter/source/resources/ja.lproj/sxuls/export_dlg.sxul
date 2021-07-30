@@ -16,7 +16,7 @@
 	</group>
 
 	<group label="マテリアル">
-		<selection id="501" label="Shader:|UsdPreviewSurface|NVIDIA Omniverse (MDL)" />
+		<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)|OmniSurface (NVIDIA Omniverse)" />
 		<bool id="502" label="「不透明(Opacity)」と「透明(Transmission)」を分ける" />
 	</group>
 

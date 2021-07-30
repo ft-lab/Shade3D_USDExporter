@@ -55,7 +55,7 @@ void CExportParam::clear ()
  */
 bool CExportParam::useShaderMDL () const
 {
-	if (materialShaderType != USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_NVIDIA_MDL_omniverse) return false;
+	if (materialShaderType == USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) return false;
 	if (exportAppleUSDZ) return false;
 
 	return true;
