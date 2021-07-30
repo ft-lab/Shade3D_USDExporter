@@ -117,7 +117,7 @@ CImagesBlend::IMAGE_BAKE_RESULT CImagesBlend::blendImages (const CExportParam& e
 		sx::vec<int,2> dRepeat(0, 0);
 		bool chkF = false;
 
-		if (!m_exportParam.bakeWithoutProcessingTextures) {
+		if (!m_exportParam.bakeWithoutProcessingTextures || m_exportParam.materialShaderType != USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
 			if (m_hasTransparencyImage) {
 				if (dRepeat[0] == 0) dRepeat = m_transparencyRepeat;
 				if (dRepeat != m_transparencyRepeat) chkF = true;
@@ -146,6 +146,14 @@ CImagesBlend::IMAGE_BAKE_RESULT CImagesBlend::blendImages (const CExportParam& e
 				if (dRepeat[0] == 0) dRepeat = m_occlusionRepeat;
 				if (dRepeat != m_occlusionRepeat) chkF = true;
 			}
+
+			if (m_exportParam.materialShaderType != USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+				if (m_hasNormalImage) {
+					if (dRepeat[0] == 0) dRepeat = m_normalRepeat;
+					if (dRepeat != m_normalRepeat) chkF = true;
+				}
+			}
+
 			if (chkF) {
 				result = CImagesBlend::bake_mixed_repeat;
 				m_transparencyRepeat = repeat1;
@@ -155,6 +163,12 @@ CImagesBlend::IMAGE_BAKE_RESULT CImagesBlend::blendImages (const CExportParam& e
 				m_roughnessRepeat = repeat1;
 				m_glowRepeat = repeat1;
 				m_occlusionRepeat = repeat1;
+
+				if (m_exportParam.materialShaderType != USD_DATA::EXPORT::MATERIAL_SHADER_TYPE::material_shader_type_UsdPreviewSurface) {
+					if (m_hasNormalImage) {
+						m_normalRepeat = repeat1;
+					}
+				}
 			}
 		} else {
 			// テクスチャを加工せずにベイクする場合.
