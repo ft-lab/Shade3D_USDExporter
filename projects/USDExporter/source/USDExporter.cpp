@@ -918,7 +918,12 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
+
 				attr.SetDisplayGroup(std::string("Reflectivity"));
 				attr.SetDisplayName(std::string("Metallic Map"));
 
@@ -976,7 +981,12 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
+
 				attr.SetDisplayGroup(std::string("Reflectivity"));
 				attr.SetDisplayName(std::string("Roughness Map"));
 
@@ -1018,7 +1028,12 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
+
 				attr.SetDisplayGroup(std::string("AO"));
 				attr.SetDisplayName(std::string("Ambient Occlusion Map"));
 
@@ -1120,7 +1135,12 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL (const std::string& pathStr
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
+
 				attr.SetDisplayGroup(std::string("Opacity"));
 				attr.SetDisplayName(std::string("Opacity Map"));
 
@@ -1448,7 +1468,11 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
 				attr.SetDisplayGroup(std::string("Roughness"));
 				attr.SetDisplayName(std::string("Roughness Texture"));
 
@@ -1632,7 +1656,12 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 				in.Set(SdfAssetPath(fileName));
 
 				UsdAttribute attr = in.GetAttr();
-				attr.SetColorSpace(TfToken("raw"));
+				if (m_exportParam.grayscaleTexturesColorSpace == USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw) {
+					attr.SetColorSpace(TfToken("raw"));
+				} else {
+					attr.SetColorSpace(TfToken("sRGB"));
+				}
+
 				attr.SetDisplayGroup(std::string("Opacity"));
 				attr.SetDisplayName(std::string("Opacity Map"));
 

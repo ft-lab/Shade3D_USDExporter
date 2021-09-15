@@ -56,6 +56,14 @@ namespace USD_DATA {
 		};
 
 		/**
+		 * Color Space.
+		 */
+		enum TEXTURE_COLOR_SPACE {
+			texture_colorspace_raw = 0,				// raw.
+			texture_colorspace_sRGB,				// sRGB.
+		};
+
+		/**
 		 * 最大テクスチャサイズを数値で取得.
 		 */
 		int getTextureSize (const USD_DATA::EXPORT::MAX_TEXTURE_SIZE size);
@@ -86,6 +94,7 @@ public:
 
 	// マテリアルオプション.
 	bool separateOpacityAndTransmission;					// 「不透明(Opacity)」と「透明(Transmission)」を分ける (MDL時).
+	USD_DATA::EXPORT::TEXTURE_COLOR_SPACE grayscaleTexturesColorSpace;				// グレイスケールテクスチャのColor Space.
 
 	// テクスチャオプション.
 	bool texOptConvGrayscale;								// R/G/B/A要素のテクスチャがある場合に、それぞれをグレイスケール変換する.
@@ -117,6 +126,7 @@ public:
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
+		this->grayscaleTexturesColorSpace   = v.grayscaleTexturesColorSpace;
 
 		this->animKeyframeMode = v.animKeyframeMode;
 		this->animStep = v.animStep;
@@ -140,6 +150,7 @@ public:
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
+		this->grayscaleTexturesColorSpace   = v.grayscaleTexturesColorSpace;
 
 		this->animKeyframeMode = v.animKeyframeMode;
 		this->animStep = v.animStep;

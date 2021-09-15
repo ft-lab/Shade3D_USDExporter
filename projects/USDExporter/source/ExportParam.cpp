@@ -44,6 +44,7 @@ void CExportParam::clear ()
 
 	texOptConvGrayscale     = false;
 	bakeWithoutProcessingTextures = false;
+	grayscaleTexturesColorSpace = USD_DATA::EXPORT::TEXTURE_COLOR_SPACE::texture_colorspace_raw;
 
 	animKeyframeMode = USD_DATA::EXPORT::ANIM_KEYFRAME_MODE::anim_keyframe_only;
 	animStep = 3;

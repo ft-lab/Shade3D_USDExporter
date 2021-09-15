@@ -20,6 +20,7 @@
 		<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)" />
 
 		<bool id="502" label="Separate Opacity and Transmission" />
+		<selection id="503" label="Color Space for Grayscale Textures:|raw|sRGB" />		
 	</group>
 
 	<group label="Texture">

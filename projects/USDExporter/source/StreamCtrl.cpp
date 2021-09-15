@@ -105,6 +105,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 
+		// ver.106 - 
+		{
+			iDat = (int)data.grayscaleTexturesColorSpace;
+			stream->write_int(iDat);
+		}
+
 	} catch (...) { }
 }
 
@@ -205,6 +211,13 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 			stream->read_int(iDat);
 			data.separateOpacityAndTransmission = iDat ? true : false;
 		}
+
+		// ver.106 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_106) {
+			stream->read_int(iDat);
+			data.grayscaleTexturesColorSpace = (USD_DATA::EXPORT::TEXTURE_COLOR_SPACE)iDat;
+		}
+
 	} catch (...) { }
 }
 
