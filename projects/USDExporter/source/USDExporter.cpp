@@ -1707,6 +1707,81 @@ void CUSDExporter::m_appendNodeMaterial_OmniverseMDL_Glass (const std::string& p
 		attr.SetCustomDataByKey(TfToken("default"), VtValue(false));
 	}
 
+	//-----------------------------------------------.
+	// テクスチャの繰り返しの指定.
+	// すべてのテクスチャで、同一の繰り返し数の場合のみ反映される.
+	//-----------------------------------------------.
+	{
+		int texRepeatX, texRepeatY;
+		texRepeatX = texRepeatY = 0;
+		bool sameF = true;
+		{
+			{
+				const CTextureMappingData& mappingD = materialData.normalTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.roughnessTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+			{
+				const CTextureMappingData& mappingD = materialData.opacityTexture;
+				if (mappingD.textureParam.imageIndex >= 0) {
+					if (texRepeatX == 0) {
+						texRepeatX = mappingD.textureParam.repeatU;
+						texRepeatY = mappingD.textureParam.repeatV;
+					} else {
+						if (texRepeatX != mappingD.textureParam.repeatU || texRepeatY != mappingD.textureParam.repeatV) {
+							sameF = false;
+						}
+					}
+				}
+			}
+
+			if (!sameF || texRepeatX == 0) {
+				texRepeatX = texRepeatY = 1;
+			}
+
+			if (texRepeatX != 1 || texRepeatY != 1) {
+				UsdShadeInput in = shader.CreateInput(TfToken("texture_scale"), SdfValueTypeNames->Float2);
+				in.Set(GfVec2f(texRepeatX, texRepeatY));
+
+				UsdAttribute attr = in.GetAttr();
+				attr.SetDisplayGroup(std::string("UV"));
+				attr.SetDisplayName(std::string("Texture Scale"));
+
+				// デフォルトの値を指定.
+				attr.SetCustomDataByKey(TfToken("default"), VtValue(GfVec2f(1, 1)));
+#if USE_DICTIONARY_RANGE
+				{
+					VtDictionary dic;
+					dic.SetValueAtPath("max", VtValue(GfVec2f(100000, 100000)));
+					dic.SetValueAtPath("min", VtValue(GfVec2f(-100000, -100000)));
+					attr.SetCustomDataByKey(TfToken("range"), VtValue(dic));
+				}
+#endif
+			}
+		}
+	}
+
 	// MaterialからShaderをつなぐ.
 	UsdShadeOutput mdlOutput = mat.CreateSurfaceOutput(mdlToken);
 	mdlOutput.ConnectToSource(shader, TfToken("out"));
