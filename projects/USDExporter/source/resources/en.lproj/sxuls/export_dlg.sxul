@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dialog default_button="true" title="USD Export">
-	<group label="File output">
-		<bool id="103" label="Apple usdz compatible" />
-		<selection id="101" label="Format:|usda (ASCII)|usdc (binary)" />
-		<bool id="102" label="output usdz" />
-		<bool id="104" label="Output work files when outputting to usdz" />
-	</group>
+	<tab id="1000">
+		<vbox label="Options">
+			<group label="File output">
+				<bool id="103" label="Apple usdz compatible" />
+				<selection id="101" label="Format:|usda (ASCII)|usdc (binary)" />
+				<bool id="102" label="output usdz" />
+				<bool id="104" label="Output work files when outputting to usdz" />
+			</group>
 
-	<group label="Output options">
-		<bool id="206" label="Subdivison" />
-		<bool id="203" label="Output bones and skins" />
-		<bool id="204" label="Output vertex color" />
-		<bool id="207" label="Divide polygons into triangles/quadrangles" />
-		<bool id="208" label="Divide polygons into triangles" />
-	</group>
+			<group label="Output options">
+				<bool id="206" label="Subdivison" />
+				<bool id="203" label="Output bones and skins" />
+				<bool id="204" label="Output vertex color" />
+				<bool id="207" label="Divide polygons into triangles/quadrangles" />
+				<bool id="208" label="Divide polygons into triangles" />
+			</group>
+		</vbox>
 
-	<group label="Material">
-		<!-- <selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)|OmniSurface (NVIDIA Omniverse)" /> -->
-		<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)" />
+		<vbox label="Material">
+			<!-- <selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)|OmniSurface (NVIDIA Omniverse)" /> -->
+			<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)" />
 
-		<bool id="502" label="Separate Opacity and Transmission" />
-		<selection id="503" label="Color Space for Grayscale Textures:|raw|sRGB" />		
-	</group>
+			<bool id="502" label="Separate Opacity and Transmission" />
+			<selection id="503" label="Color Space for Grayscale Textures:|raw|sRGB" />		
+		</vbox>
 
-	<group label="Texture">
-		<selection id="301" label="Texture output:|Browse extension from image name|Replace with png|Replace with jpeg" />
-		<selection id="302" label="Maximum texture size:|Unspecified|256|512|1024|2048|4096" />
-		<bool id="303" label="R/G/B/A is output in grayscale" />
-		<bool id="305" label="Bake without processing textures" />
-	</group>
+		<vbox label="Texture">
+			<selection id="301" label="Texture output:|Browse extension from image name|Replace with png|Replace with jpeg" />
+			<selection id="302" label="Maximum texture size:|Unspecified|256|512|1024|2048|4096" />
+			<bool id="303" label="R/G/B/A is output in grayscale" />
+			<bool id="305" label="Bake without processing textures" />
+		</vbox>
 
-	<group label="Animation">
-		<selection id="401" label="Output:|None|Keyframe only|Step" />
-		<int id="402" label="Step" />
-	</group>
+		<vbox label="Animation">
+			<selection id="401" label="Output:|None|Keyframe only|Step" />
+			<int id="402" label="Step" />
+		</vbox>
+	</tab>
 </dialog>

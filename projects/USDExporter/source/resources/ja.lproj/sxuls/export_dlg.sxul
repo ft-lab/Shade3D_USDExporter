@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dialog default_button="true" title="USD Export">
-	<group label="ファイル出力">
-		<bool id="103" label="Appleのusdz互換" />
-		<selection id="101" label="出力形式:|usda (ASCII)|usdc (バイナリ)" />
-		<bool id="102" label="usdzを出力" />
-		<bool id="104" label="usdz出力時に作業ファイルを出力" />
-	</group>
+	<tab id="1000">
+		<vbox label="オプション">
+			<group label="ファイル出力">
+				<bool id="103" label="Appleのusdz互換" />
+				<selection id="101" label="出力形式:|usda (ASCII)|usdc (バイナリ)" />
+				<bool id="102" label="usdzを出力" />
+				<bool id="104" label="usdz出力時に作業ファイルを出力" />
+			</group>
 
-	<group label="出力オプション">
-		<bool id="206" label="Subdivison" />
-		<bool id="203" label="ボーンとスキンを出力" />
-		<bool id="204" label="頂点カラーを出力" />
-		<bool id="207" label="多角形を三角形/四角形に分割" />
-		<bool id="208" label="三角形に分割" />
-	</group>
+			<group label="出力オプション">
+				<bool id="206" label="Subdivison" />
+				<bool id="203" label="ボーンとスキンを出力" />
+				<bool id="204" label="頂点カラーを出力" />
+				<bool id="207" label="多角形を三角形/四角形に分割" />
+				<bool id="208" label="三角形に分割" />
+			</group>
+		</vbox>
 
-	<group label="マテリアル">
-		<!-- <selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)|OmniSurface (NVIDIA Omniverse)" /> -->
-		<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)" />
+		<vbox label="マテリアル">
+			<!-- <selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)|OmniSurface (NVIDIA Omniverse)" /> -->
+			<selection id="501" label="Shader:|UsdPreviewSurface|OmniPBR (NVIDIA Omniverse)" />
 
-		<bool id="502" label="「不透明(Opacity)」と「透明(Transmission)」を分ける" />
-		<selection id="503" label="グレイスケールテクスチャのColor Space:|raw|sRGB" />
-	</group>
+			<bool id="502" label="「不透明(Opacity)」と「透明(Transmission)」を分ける" />
+			<selection id="503" label="グレイスケールテクスチャのColor Space:|raw|sRGB" />
+		</vbox>
 
-	<group label="テクスチャ">
-		<selection id="301" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
-		<selection id="302" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />
-		<bool id="303" label="R/G/B/A指定をグレイスケールに分けて出力" />
-		<bool id="305" label="テクスチャを加工せずにベイク" />
-	</group>
+		<vbox label="テクスチャ">
+			<selection id="301" label="テクスチャ出力:|イメージ名から拡張子を参照|pngに置き換え|jpegに置き換え" />
+			<selection id="302" label="最大テクスチャサイズ:|指定なし|256|512|1024|2048|4096" />
+			<bool id="303" label="R/G/B/A指定をグレイスケールに分けて出力" />
+			<bool id="305" label="テクスチャを加工せずにベイク" />
+		</vbox>
 
-	<group label="アニメーション">
-		<selection id="401" label="出力:|なし|キーフレームのみ|ステップ指定" />
-		<int id="402" label="ステップ" />
-	</group>
+		<vbox label="アニメーション">
+			<selection id="401" label="出力:|なし|キーフレームのみ|ステップ指定" />
+			<int id="402" label="ステップ" />
+		</vbox>
+	</tab>
 </dialog>
