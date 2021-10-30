@@ -24,6 +24,7 @@ enum {
 	dlg_option_subdivision = 206,			// Subdivision情報を出力.
 	dlg_option_divide_poly_tri_quad = 207,	// 多角形を三角形/四角形に分割.
 	dlg_option_divide_poly_tri = 208,		// 三角形に分割.
+	dlg_option_kind = 209,					// Kind.
 
 	dlg_option_texture = 301,				// テクスチャ出力.
 	dlg_option_max_texture_size = 302,		// 最大テクスチャサイズ.
@@ -990,6 +991,11 @@ void CUSDExporterInterface::load_dialog_data (sxsdk::dialog_interface &d,void *)
 		item->set_bool(m_exportParam.optDividePolyTri);
 		item->set_enabled(!m_exportParam.exportAppleUSDZ && m_exportParam.optDividePolyTriQuad);
 	}
+	{
+		sxsdk::dialog_item_class* item;
+		item = &(d.get_dialog_item(dlg_option_kind));
+		item->set_selection((int)(m_exportParam.optKind));
+	}
 
 	{
 		sxsdk::dialog_item_class* item;
@@ -1099,6 +1105,10 @@ bool CUSDExporterInterface::respond (sxsdk::dialog_interface &dialog, sxsdk::dia
 	}
 	if (id == dlg_option_divide_poly_tri) {
 		m_exportParam.optDividePolyTri = item.get_bool();
+		return true;
+	}
+	if (id == dlg_option_kind) {
+		m_exportParam.optKind = (USD_DATA::EXPORT::KIND_TYPE)item.get_selection();
 		return true;
 	}
 

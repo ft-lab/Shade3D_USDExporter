@@ -15,6 +15,7 @@
 				<bool id="204" label="頂点カラーを出力" />
 				<bool id="207" label="多角形を三角形/四角形に分割" />
 				<bool id="208" label="三角形に分割" />
+				<selection id="209" label="種類:|指定なし|subcomponent|component|assembly|group" />
 			</group>
 		</vbox>
 

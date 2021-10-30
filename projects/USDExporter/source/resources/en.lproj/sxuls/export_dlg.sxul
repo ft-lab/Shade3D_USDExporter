@@ -15,6 +15,7 @@
 				<bool id="204" label="Output vertex color" />
 				<bool id="207" label="Divide polygons into triangles/quadrangles" />
 				<bool id="208" label="Divide polygons into triangles" />
+				<selection id="209" label="Kind:|None|subcomponent|component|assembly|group" />
 			</group>
 		</vbox>
 

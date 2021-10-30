@@ -16,6 +16,7 @@
 #include "pxr/usd/usdGeom/sphere.h"
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/nurbsCurves.h"
+#include "pxr/usd/usd/modelAPI.h"							// SetKind.
 
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdShade/shader.h"
@@ -365,6 +366,30 @@ void CUSDExporter::beginExport (const std::string& fileName, const CExportParam&
 	if (g_stage) {
 		// rootノードを出力.
 		UsdPrim prim = g_stage->DefinePrim(SdfPath(ROOT_PATH), TfToken("Xform"));
+
+		// rootノードのkindを指定.
+		// "", "subcomponent", "component", "assembly", "group"
+		if (exportParam.optKind != USD_DATA::EXPORT::KIND_TYPE::kind_none) {
+			std::string kindStr = "";
+			switch (exportParam.optKind) {
+			case USD_DATA::EXPORT::KIND_TYPE::kind_subcomponent:
+				kindStr = "subcomponent";
+				break;
+
+			case USD_DATA::EXPORT::KIND_TYPE::kind_component:
+				kindStr = "component";
+				break;
+
+			case USD_DATA::EXPORT::KIND_TYPE::kind_assembly:
+				kindStr = "assembly";
+				break;
+
+			case USD_DATA::EXPORT::KIND_TYPE::kind_group:
+				kindStr = "group";
+				break;
+			}
+			UsdModelAPI(prim).SetKind(TfToken(kindStr.c_str()));
+		}
 
 		// 外部参照される場合のデフォルトPrimの指定.
 		g_stage->SetDefaultPrim(prim);

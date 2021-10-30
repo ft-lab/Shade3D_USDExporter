@@ -41,6 +41,7 @@ void CExportParam::clear ()
 	optSubdivision = false;
 	optDividePolyTriQuad = true;
 	optDividePolyTri = false;
+	optKind = USD_DATA::EXPORT::KIND_TYPE::kind_none;
 
 	texOptConvGrayscale     = false;
 	bakeWithoutProcessingTextures = false;

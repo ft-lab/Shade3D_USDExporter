@@ -64,6 +64,17 @@ namespace USD_DATA {
 		};
 
 		/**
+		 * Kind.
+		 */
+		enum KIND_TYPE {
+			kind_none = 0,
+			kind_subcomponent,
+			kind_component,
+			kind_assembly,
+			kind_group,
+		};
+
+		/**
 		 * 最大テクスチャサイズを数値で取得.
 		 */
 		int getTextureSize (const USD_DATA::EXPORT::MAX_TEXTURE_SIZE size);
@@ -91,6 +102,8 @@ public:
 	bool optSubdivision;									// Subdivisionを有効にする場合はtrue.
 	bool optDividePolyTriQuad;								// 多角形を三角形/四角形に分割.
 	bool optDividePolyTri;									// 三角形分割.
+
+	USD_DATA::EXPORT::KIND_TYPE optKind;					// Kind.
 
 	// マテリアルオプション.
 	bool separateOpacityAndTransmission;					// 「不透明(Opacity)」と「透明(Transmission)」を分ける (MDL時).
@@ -123,6 +136,7 @@ public:
 		this->optSubdivision       = v.optSubdivision;
 		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 		this->optDividePolyTri     = v.optDividePolyTri;
+		this->optKind              = v.optKind;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;
@@ -147,6 +161,7 @@ public:
 		this->optSubdivision       = v.optSubdivision;
 		this->optDividePolyTriQuad = v.optDividePolyTriQuad;
 		this->optDividePolyTri     = v.optDividePolyTri;
+		this->optKind              = v.optKind;
 
 		this->texOptConvGrayscale     = v.texOptConvGrayscale;
 		this->bakeWithoutProcessingTextures = v.bakeWithoutProcessingTextures;

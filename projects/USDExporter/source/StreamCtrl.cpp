@@ -111,6 +111,12 @@ void StreamCtrl::saveExportDialogParam (sxsdk::shade_interface& shade, const CEx
 			stream->write_int(iDat);
 		}
 
+		// ver.107 - 
+		{
+			iDat = (int)data.optKind;
+			stream->write_int(iDat);
+		}
+
 	} catch (...) { }
 }
 
@@ -216,6 +222,12 @@ void StreamCtrl::loadExportDialogParam (sxsdk::shade_interface& shade, CExportPa
 		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_106) {
 			stream->read_int(iDat);
 			data.grayscaleTexturesColorSpace = (USD_DATA::EXPORT::TEXTURE_COLOR_SPACE)iDat;
+		}
+
+		// ver.107 - 
+		if (iVersion >= USD_EXPORTER_DLG_STREAM_VERSION_107) {
+			stream->read_int(iDat);
+			data.optKind = (USD_DATA::EXPORT::KIND_TYPE)iDat;
 		}
 
 	} catch (...) { }
