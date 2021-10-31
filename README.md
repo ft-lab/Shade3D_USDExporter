@@ -23,7 +23,7 @@ https://github.com/PixarAnimationStudios/USD
 ## 動作環境
 
 * Windows 7/8/10以降のOS    
-* macOS 10.11以降   
+* macOS 10.11以降 (M1には対応していません)   
 * Shade3D ver.14以降で、Standard/Professional版（Basic版では動作しません）  
   Shade3Dの64bit版のみで使用できます。32bit版のShade3Dには対応していません。   
 
@@ -133,7 +133,7 @@ Shade3Dが起動したら、メインメニューの「ファイル」-「エク
 モデリング時の注意点などは後述します。    
 メインメニューの「ファイル」-「エクスポート」-「USD」を選択します。    
 この項目が存在しない場合は、プラグインやUSDを作成するためのdllのパスが適切に指定されているか確認してください。    
-<img src="./docs/images/usd_export_dlg.png" />    
+<img src="./docs/images/usd_export_dlg_tab_option.png" />    
 「USD Export」ダイアログボックスでオプションを指定できます。    
 エクスポートオプションについては後述します。    
 OKボタンを押すと、ファイルダイアログボックスが表示されるため、usdcまたはusdaとして指定のフォルダに保存します。   
@@ -188,6 +188,7 @@ usdzとして出力する場合は、ファイルサイズを小さくするた�
 * マテリアルで、「不透明マスク」「マット」対応 (ベイク出力時) (ver.0.0.2.0-)    
 * 表面材質の指定をPBRマテリアルと仮定して、加工せずに出力 (ver.0.1.0.0 - )
 * NVIDIAのOmniverse ( https://www.nvidia.com/ja-jp/omniverse/ )のため、マテリアルをMDL（OmniPBR/OmniGlass）として出力 (ver.0.1.1.0 - )
+* ルートPrimでのKind(subcomponent/component/assembly/group)を指定 (ver.0.1.2.0 - )
 
 ## シーン階層と形状
 
@@ -433,7 +434,7 @@ ver.0.0.1.1より、階層化されたボールジョイントのモーション
 
 USD出力時は、キーフレーム間は線形補間されます。    
 そのため、Shade3Dで割り当てた動きよりも直線的になってしまいます。    
-USD Export時のオプションで「アニメーション」-「出力」を「ステップ指定」とすることで、     
+USD Export時のオプションで「アニメーション」タブを選択し「出力」を「ステップ指定」とすることで、     
 Shade3Dのキーフレームを指定のステップ数で分割して出力します。    
 <img src="./docs/images/usd_export_dlg_02.png" />    
 キーフレーム間隔を細かくすることで、Shade3Dでのアニメーションの動きに忠実になります。    
@@ -446,9 +447,11 @@ Shade3Dのキーフレームを指定のステップ数で分割して出力し�
 ## エクスポートオプション
 
 USD Export時のオプションの説明です。    
-<img src="./docs/images/usd_export_dlg.png" />    
+<img src="./docs/images/usd_export_dlg_tab_option.png" />    
 
-### ファイル出力
+「オプション」「マテリアル」「テクスチャ」「アニメーション」のタブに分かれています (ver.0.1.2.0 - )。     
+
+### ファイル : ファイル出力
 
 「Appleのusdz互換」をOnにすると、出力形式を「usdc」、「usdzを出力」をOnとします。    
 また、この時はすべての面は三角形分割されます(ver.0.1.0.2-)。     
@@ -461,7 +464,7 @@ iOS13の場合は、「usda(ASCII)」「usdc(バイナリ)」のどちらでもu
 usdzファイルを出力時にusda(usdc)/テクスチャファイルを出力する場合はOnにします。    
 usdzファイルだけを出力する場合はOffにします。    
 
-### 出力オプション
+### ファイル : 出力オプション
 「Subdivision」はサブディビジョンを保持したまま出力するかどうかの指定です。    
 これはまだ未実装部分が多いため、検証用としています。    
 チェックボックスをOffにすると、Subdivisionを使用したポリゴンメッシュはエクスポート時に再分割されます。    
@@ -476,7 +479,16 @@ Offにすると、面分割されずにそのままの面を出力します (ver
 usdviewやiPhone/iPadOSでのAR Quick Lookでは、四角形でも凹の形状になる場合はうまく面分割されない場合があるようです。    
 その場合は、「三角形分割」をOnにするようにしてください。    
 
+「種類」はルートPrimに対してUSDの"Kind"を選択します。 (ver.0.1.2.0 - )     
+これは、子形状をどのように扱うかという分類の情報です。     
+指定のない場合は"None"を選択。出力するusdを一塊として扱う場合は"component"を指定することになります。     
+"subcomponent", "component", "assembly", "group"を選択できます。     
+KindについてはUSDのAPIの「 https://graphics.pixar.com/usd/docs/api/kind_page_front.html 」もご参照くださいませ。    
+
+
 ### マテリアル
+
+<img src="./docs/images/usd_export_dlg_tab_material.png" />    
 
 「Shader」で「UsdPreviewSurface」または「OmniPBR (NVIDIA Omniverse)」を選択できます(ver.0.1.1.0-)。     
 「UsdPreviewSurface」は従来のUSDのマテリアルで使用される標準のShaderの指定です。     
@@ -491,9 +503,16 @@ OmniverseでのUSD Exporter for Shade3Dの使用については「[NVIDIA Omnive
 「透明度」使用時は、USDのマテリアルのShaderとしてMDLの「OmniGlass」が割り当てられます。     
 透明度が存在しないマテリアルの場合は、MDLの「OmniPBR」が割り当てられます。      
 
+「グレイスケールテクスチャのColor Space」は、
+Roughness/Metallic/Opacity/Occlusionのグレイスケールテクスチャで、
+rawとして出力するかsRGBとして出力するか選べます (ver.0.1.2.0 - )。     
+デフォルトはrawです。      
+
 ### テクスチャ
 
-「テクスチャ」で出力するテクスチャイメージの種類を選択します。    
+<img src="./docs/images/usd_export_dlg_tab_texture.png" />    
+
+「テクスチャ出力」で出力するテクスチャイメージの種類を選択します。    
 「イメージ名から拡張子を参照」でブラウザ上のマスターイメージ名に拡張子が指定されている場合、それを優先して採用します。    
 png/jpeg以外はpngに置き換えられます。    
 「pngに置き換え」でテクスチャを強制的にpngとして出力します。    
@@ -512,6 +531,8 @@ Onにすると、表面材質ウィンドウの各パラメータをPBRマテリ
 Shade3Dの表面材質（Shade3Dマテリアルの指定）はPBRマテリアルではありませんが、「テクスチャを加工せずにベイク」をOffにすると、PBRマテリアルに近づけるように近似して出力します。    
 
 ### アニメーション
+
+<img src="./docs/images/usd_export_dlg_tab_animation.png" />    
 
 「出力」で「なし」「キーフレームのみ」「ステップ指定」を選択できます。    
 これは、キーフレームを出力するか（アニメーションさせるか）、
