@@ -1,13 +1,13 @@
 # NVIDIA Omniverse対応について
 
-これは、Omniverse Create 2021.1.1/2021.3.1使用時の情報になります。     
+これは、Omniverse Create 2021.3.6使用時の情報になります。     
 
 ## NVIDIA Omniverseとは ?
 
 NVIDIA OmniverseはNVIDIA社が提供しています。      
 Omniverseはリアルタイムシミュレーションや、複数人で3D情報を共有して共同で作業を行う場を提供したりできる、     
 オープンなプラットフォームです。      
-2021年7月段階ではオープンベータです。      
+2021年10月段階ではオープンベータです。      
 
 https://www.nvidia.com/ja-jp/omniverse/
 
@@ -41,9 +41,9 @@ Omniverseでは「OmniPBR」と「OmniGlass」といった、あらかじめ用�
 MDLを使用すると、より表現の幅が広がります。      
 USD Exporter for Shade3Dでは、この「OmniPBR」と「OmniGlass」の出力に対応しています。      
 
-エクスポートダイアログボックスの「マテリアル」の「Shader」で「OmniPBR (NVIDIA Omniverse)」を選択すると、     
+エクスポートダイアログボックスの「マテリアル」タブの「Shader」で「OmniPBR (NVIDIA Omniverse)」を選択すると、     
 USDのマテリアルのShaderとしてMDL用の出力を行います。     
-<img src="../images/usd_export_dlg_03.png" />    
+<img src="../images/usd_export_doki_06.png" />    
 
 なお、MDL用の出力を行った場合、Pixarの提供するusdviewやAppleのAR Quick Lookではマテリアルが正しく表現できなくなるため注意が必要です。      
 「OmniPBR」や「OmniGlass」のMDL出力は、Omniverse環境でのみ使用できる指定になります。     
@@ -92,7 +92,7 @@ Omniverseに渡す際は「発光の強さ * 5000」が「OmniPBR」の「Emissi
 ## Omniverseでの制限事項
 
 現在は以下のような制限があります。     
-Omniverse Create 2021.1.1段階の情報です。     
+Omniverse Create 2021.3.6段階の情報です。     
 
 * DoubleSided指定は反映されません (USDファイル内の属性としては付与されています)。     
 Omniverse Create上では常に両面描画となります。      
@@ -102,7 +102,8 @@ Omniverse Create上では常に両面描画となります。
 この場合は、USD Exporter for Shade3Dのエクスポートオプションで「多角形を三角形/四角形に分割」「三角形に分割」チェックボックスをOnにしてください。    
 * Unlit表現はできません（これはUSD自身にその仕様がないため）。
 * テクスチャを使用する場合、すべてのテクスチャ要素の「反復」は同じ値を使用するようにしてください。    
-* Omniverseは、1つにまとめられたusdzの読み込みに対応できていない箇所があります。      
+* ~~Omniverseは、1つにまとめられたusdzの読み込みに対応できていない箇所があります。~~    
+→ Omniverse Create 2021.3.6段階ではusdzを直接開けるようになっています。     
 Omniverse Createでusdファイルをインポートする際に、テクスチャファイルが参照できる場所に実体として展開されている必要があります。     
 そのため、USDエクスポート時は「Appleのusdz互換」「usdzを出力」チェックボックスをオフにして出力するようにしてください。    
 こうすることで、参照されるテクスチャファイルはusdファイル(usdcまたはusda)と同じディレクトリに出力されます。     

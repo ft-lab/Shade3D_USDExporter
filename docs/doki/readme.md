@@ -108,12 +108,13 @@ DOKIのレンダリングには反映されませんが、表面材質の「発�
 ## USDエクスポートの指定
 
 DOKI for Shade3Dのレンダリング結果に近くなるようにUSDをエクスポートする場合、     
-エクスポートオプションの「マテリアル」で
+エクスポートオプションの「マテリアル」タブで
 「Shader」を「OmniPBR (NVIDIA Omniverse)」とし、    
 「不透明(Opacity)と透明度(Transmission)を分ける」チェックボックスをOnにするようにしてください。      
-また「テクスチャを加工せずにベイク」チェックボックスをOnにするようにしてください（DOKIの「PBRマテリアル」を割り当てている場合）。      
-
 <img src="../images/usd_export_doki_06.png" />    
+また「テクスチャ」タブの「テクスチャを加工せずにベイク」チェックボックスをOnにするようにしてください（DOKIの「PBRマテリアル」を割り当てている場合）。      
+<img src="../images/usd_export_doki_07.png" />    
+
 発光と屈折のある透明（ガラス表現）が含まれる場合、USDの標準のUsdPreviewSurfaceではきれいに表現できません。     
 
 極力OSPRayの結果に近づけたい場合は、OmniverseのMDLのようなShaderの拡張が必要となります。       
