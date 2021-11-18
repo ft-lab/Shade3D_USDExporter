@@ -828,7 +828,7 @@ bool CImagesBlend::m_blendImages (const sxsdk::enums::mapping_type mappingType, 
 		//baseCol = sxsdk::rgba_class(m_surface->get_diffuse_color());
 	}
 	if (mappingType == sxsdk::enums::glow_mapping) {
-		baseCol = sxsdk::rgba_class(m_surface->get_glow_color());
+		baseCol = sxsdk::rgba_class(m_surface->get_glow_color()) * (m_surface->get_glow());
 	}
 
 	// 法線マップの適用率を法線の強さ、とするか.

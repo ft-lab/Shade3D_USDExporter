@@ -489,7 +489,7 @@ void CUSDExporter::appendNodeMaterial_OmniverseMDL (const CMaterialData& materia
 }
 
 /**
- * 指定のUSDのパスにマテリアル情報を格納.
+ * 指定のUSDのパスにマテリアル(UsdPreviewSurface)情報を格納.
  * @param[in] pathStr        USD上のパス (/root/xxx/red).
  * @param[in] materialData   マテリアルデータ.
  */
@@ -759,6 +759,15 @@ void CUSDExporter::m_outputTextureData (const std::string& pathStr, const CMater
 		shader.CreateInput(TfToken(connectSource), SdfValueTypeNames->Float).ConnectToSource(shaderTexture, TfToken(mappingSource));
 	}
 
+#if false
+	// ColorSpaceを指定.
+	if (patternType == USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_difuseColor || patternType == USD_DATA::TEXTURE_PATTERN_TYPE::texture_pattern_type_emissiveColor) {
+		shaderTexture.CreateInput(TfToken("sourceColorSpace"), SdfValueTypeNames->Token).Set(TfToken("sRGB"));
+	} else {
+		shaderTexture.CreateInput(TfToken("sourceColorSpace"), SdfValueTypeNames->Token).Set(TfToken("raw"));
+	}
+#endif
+	
 	// UVの接続.
 	UsdShadeInput stInput = mat.CreateInput(TfToken((uvIndex == 0) ? "frame:stPrimvarName" : "frame:stPrimvarName2"), SdfValueTypeNames->Token);
 	stInput.Set(TfToken((uvIndex == 0) ? "st" : "st2"));
